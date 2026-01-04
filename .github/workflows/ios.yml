@@ -37,11 +37,10 @@ jobs:
 
       - name: Create IPA
         run: |
-          mkdir -p build/ipa
-          cp -r build/ios/iphoneos/Runner.app build/ipa/Payload
-          cd build/ipa
-          zip -r ../FutureProof.ipa .
-          cd ../..
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r FutureProof.zip Payload/
+          mv FutureProof.zip FutureProof.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
