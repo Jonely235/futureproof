@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Add iOS platform
+        run: flutter create --platforms=ios .
+
       - name: Build iOS app (no codesign)
         run: |
           flutter build ios --release --no-codesign
