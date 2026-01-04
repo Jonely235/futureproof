@@ -30,8 +30,9 @@ migrate_working_dir/
 .pub/
 /build/
 
-# IPA files
-*.ipa
+# IPA files - Allow build/*.ipa but ignore others
+# *.ipa
+!build/*.ipa
 build/ipa/
 
 # Symbolication related

@@ -33,21 +33,32 @@ jobs:
 
       - name: Build iOS app (no codesign)
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign --no-pub
+          echo "Build completed successfully"
 
       - name: Create IPA
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r FutureProof.zip Payload/
-          mv FutureProof.zip FutureProof.ipa
+          zip -r FutureProof.ipa Payload/
+          ls -lh FutureProof.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: FutureProof-iOS
-          path: build/FutureProof.ipa
+          path: FutureProof.ipa
           retention-days: 30
+
+      - name: Commit .ipa to repository
+        run: |
+          mkdir -p build
+          mv FutureProof.ipa build/FutureProof.ipa
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add build/FutureProof.ipa
+          git diff --staged --quiet || git commit -m "📱 Auto-update: Build iOS .ipa file [skip ci]"
+          git push
 
       - name: Get build info
         if: success()
