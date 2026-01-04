@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -52,7 +54,7 @@ jobs:
 
       - name: Commit .ipa to repository
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p build
           mv FutureProof.ipa build/FutureProof.ipa
