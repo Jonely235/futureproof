@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../services/finance_calculator.dart';
+import '../services/database_service.dart';
 import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,18 +12,41 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // TODO: Replace with actual data from Firebase
-  final List<Transaction> _transactions = [];
+  List<Transaction> _transactions = [];
   double _monthlyIncome = 5000.0;
   double _savingsGoal = 1000.0;
 
   FinanceStatus? _status;
   bool _isLoading = false;
+  bool _isLoadingTransactions = true;
 
   @override
   void initState() {
     super.initState();
-    _calculateStatus();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    setState(() {
+      _isLoadingTransactions = true;
+    });
+
+    try {
+      final dbService = DatabaseService();
+      final transactions = await dbService.getAllTransactions();
+
+      setState(() {
+        _transactions = transactions;
+        _isLoadingTransactions = false;
+      });
+
+      _calculateStatus();
+    } catch (e) {
+      print('Error loading transactions: $e');
+      setState(() {
+        _isLoadingTransactions = false;
+      });
+    }
   }
 
   void _calculateStatus() {
@@ -242,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           MaterialPageRoute(
                             builder: (context) => const AddExpenseScreen(),
                           ),
-                        ).then((_) => _calculateStatus());
+                        ).then((_) => _loadTransactions());
                       },
                       icon: const Icon(Icons.add),
                       label: const Text('Add Expense'),

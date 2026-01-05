@@ -25,8 +25,25 @@ class Transaction {
       category: map['category'] as String,
       note: map['note'] as String?,
       date: DateTime.parse(map['date'] as String),
-      householdId: map['household_id'] as String,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      householdId: map['household_id'] as String? ?? '',
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'] as String)
+          : DateTime.now(),
+    );
+  }
+
+  // Create from SQLite (ID is in the map)
+  factory Transaction.fromSqliteMap(Map<String, dynamic> map) {
+    return Transaction(
+      id: map['id'] as String,
+      amount: (map['amount'] as num).toDouble(),
+      category: map['category'] as String,
+      note: map['note'] as String?,
+      date: DateTime.parse(map['date'] as String),
+      householdId: map['householdId'] as String? ?? '',
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : DateTime.now(),
     );
   }
 

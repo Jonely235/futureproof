@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/add_expense_screen.dart';
+import 'services/database_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database
+  try {
+    final dbService = DatabaseService();
+    await dbService.database; // Trigger initialization
+    print('Database initialized successfully');
+  } catch (e) {
+    print('Error initializing database: $e');
+  }
+
   runApp(const FutureProofApp());
 }
 

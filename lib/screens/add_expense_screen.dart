@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../models/transaction.dart';
+import '../services/database_service.dart';
+import 'package:uuid/uuid.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -15,6 +17,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   String _selectedCategory = 'Groceries';
   bool _isExpense = true;
+  bool _isSaving = false;
 
   final List<String> _categories = [
     'Groceries',
@@ -47,7 +50,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  void _saveExpense() {
+  void _saveExpense() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -60,26 +63,58 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       return;
     }
 
-    // TODO: Save to Firebase
-    final transaction = {
-      'amount': _isExpense ? -amount : amount,
-      'category': _selectedCategory,
-      'note': _noteController.text.trim(),
-      'date': DateTime.now().toIso8601String(),
-    };
+    setState(() {
+      _isSaving = true;
+    });
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${_categoryEmojis[_selectedCategory]} ${_isExpense ? "Expense" : "Income"} added: \$${amount.toStringAsFixed(2)}',
-        ),
-        backgroundColor: Colors.green,
-      ),
-    );
+    try {
+      // Create transaction object
+      final transaction = Transaction(
+        id: const Uuid().v4(),
+        amount: _isExpense ? -amount : amount,
+        category: _selectedCategory,
+        note: _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim(),
+        date: DateTime.now(),
+        householdId: '', // Empty for single user
+        createdAt: DateTime.now(),
+      );
 
-    // Go back to home screen
-    Navigator.pop(context, transaction);
+      // Save to database
+      final dbService = DatabaseService();
+      await dbService.addTransaction(transaction);
+
+      if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${_categoryEmojis[_selectedCategory]} ${_isExpense ? "Expense" : "Income"} saved: \$${amount.toStringAsFixed(2)}',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Go back to home screen
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving transaction: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   @override
@@ -200,7 +235,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _saveExpense,
+                  onPressed: _isSaving ? null : _saveExpense,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isExpense ? Colors.red : Colors.green,
                     foregroundColor: Colors.white,
@@ -210,13 +245,23 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     ),
                     elevation: 2,
                   ),
-                  child: Text(
-                    'Add ${_isExpense ? "Expense" : "Income"}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'Add ${_isExpense ? "Expense" : "Income"}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
