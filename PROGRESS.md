@@ -7,7 +7,7 @@
 ## 📊 Overall Progress
 
 ```
-Phase 1 (MVP):        [███████░░░] 80%
+Phase 1 (MVP):        [██████████] 95%
 Phase 2 (Sync):       [░░░░░░░░░░] 0%
 Phase 3 (AI):         [░░░░░░░░░░] 0%
 App Store Launch:     [░░░░░░░░░░] 0%
@@ -67,20 +67,19 @@ App Store Launch:     [░░░░░░░░░░] 0%
 
 ### Week 3: Firebase Integration
 
-#### Firebase Service
-- [ ] Initialize Firebase in app
-- [ ] Implement Firestore CRUD operations
-  - [ ] Create transaction
-  - [ ] Read transactions
-  - [ ] Update transaction
-  - [ ] Delete transaction
-- [ ] Implement authentication flow
-  - [ ] Sign up
-  - [ ] Log in
-  - [ ] Log out
-- [ ] Test all Firebase operations
+#### Data Persistence (SQLite)
+- [x] Initialize SQLite database
+- [x] Implement local database CRUD operations
+  - [x] Create transaction
+  - [x] Read transactions
+  - [x] Update transaction
+  - [x] Delete transaction
+- [ ] ~~Implement authentication flow~~ (Phase 2)
+- [x] Test all database operations
 
-**Completion:** [x] 0% / [ ] 25% / [ ] 50% / [ ] 75% / [ ] 100%
+**Note:** Switched from Firebase to SQLite for MVP to enable offline-first functionality. Firebase integration planned for Phase 2.
+
+**Completion:** [ ] 0% / [ ] 25% / [ ] 50% / [ ] 75% / [x] 100%
 
 ---
 
@@ -92,18 +91,19 @@ App Store Launch:     [░░░░░░░░░░] 0%
   - [x] Calculate remaining budget
   - [x] Determine status (green/yellow/red)
   - [x] Generate message
-- [ ] Connect to Firebase data
-- [x] Test with sample data
+- [x] Connect to SQLite database
+- [x] Test with real data
 - [x] Polish UI/UX
 
 #### Quick Add Expense
 - [x] Design add expense screen
 - [x] Create form (amount, category, note)
-- [ ] Implement save to Firebase
+- [x] Implement save to SQLite database
 - [x] Add validation
+- [x] Add loading states
 - [x] Test on device
 
-**Completion:** [ ] 0% / [ ] 25% / [ ] 50% / [x] 75% / [ ] 100%
+**Completion:** [ ] 0% / [ ] 25% / [ ] 50% / [ ] 75% / [x] 100%
 
 ---
 
@@ -112,18 +112,19 @@ App Store Launch:     [░░░░░░░░░░] 0%
 #### Main Dashboard
 - [x] Design dashboard layout
 - [x] Show monthly summary
-- [ ] Display recent transactions list
+- [x] Load transactions from database
 - [x] Add navigation between screens
-- [ ] Implement bottom navigation bar
+- [ ] ~~Implement bottom navigation bar~~ (using button navigation instead)
 
-#### Transaction List
-- [ ] Create transaction list widget
-- [ ] Group by date
-- [ ] Add delete functionality
-- [ ] Pull to refresh
-- [ ] Empty state design
+#### Transaction History
+- [x] Create transaction list screen
+- [x] Group by date (Today, Yesterday, specific dates)
+- [x] Add delete functionality (swipe-to-delete)
+- [x] Pull to refresh
+- [x] Empty state design
+- [x] Search/filter functionality
 
-**Completion:** [ ] 0% / [x] 25% / [ ] 50% / [ ] 75% / [ ] 100%
+**Completion:** [ ] 0% / [ ] 25% / [ ] 50% / [ ] 75% / [x] 100%
 
 ---
 
