@@ -1,0 +1,17 @@
+# Flutter Launcher Icons Configuration
+
+flutter_launcher_icons:
+  android: false
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+
+  # iOS specific settings
+  ios:
+    generate: true
+
+  # Optional: Remove alpha channel for iOS
+  remove_alpha_ios: true
+
+  # Optional: Adaptive icons for Android (future)
+  # adaptive_icon_background: "#ffffff"
+  # adaptive_icon_foreground: "assets/icon/app_icon_adaptive.png"

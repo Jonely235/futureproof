@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'widgets/main_navigation.dart';
 import 'services/database_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    print('Firebase initialized successfully');
+  } catch (e) {
+    print('Note: Firebase not configured yet. Running in local-only mode.');
+    print('Error: $e');
+  }
 
   // Initialize database
   try {
