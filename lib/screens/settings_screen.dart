@@ -367,6 +367,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
 
+                  const SizedBox(height: 16),
+
+                  // Profile Card
+                  Card(
+                    elevation: 2,
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.person,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      title: const Text('Profile'),
+                      subtitle: const Text('View and edit your profile'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        HapticFeedback.lightImpact();
+                        try {
+                          final authService = AuthService();
+                          final user = await authService.getCurrentAppUser();
+                          if (user != null && mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProfileScreen(user: user),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error loading profile: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ),
+
                   const SizedBox(height: 32),
 
                   // About Section

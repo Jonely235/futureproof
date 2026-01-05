@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets/auth_wrapper.dart';
 import 'widgets/main_navigation.dart';
 import 'services/database_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -50,7 +51,7 @@ class FutureProofApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,
-      home: const MainNavigation(),
+      home: const AuthWrapper(),
     );
   }
 }
