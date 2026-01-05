@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
+import '../services/analytics_service.dart';
+import 'profile_screen.dart';
 
 /// Settings Screen
 ///
@@ -160,6 +163,156 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Widget _buildBudgetRecommendations() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: AnalyticsService().getQuickStats(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SizedBox.shrink();
+        }
+
+        final stats = snapshot.data!;
+        final totalSpending = stats['totalSpending'] as double;
+        final monthlyIncome = stats['monthlyIncome'] as double;
+        final savings = stats['savings'] as double;
+        final savingsRate = stats['savingsRate'] as double;
+        final isOnTrack = stats['isOnTrack'] as bool;
+
+        return Card(
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: Colors.purple,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'AI Budget Recommendations',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Current spending vs income
+                _buildRecommendationItem(
+                  icon: Icons.account_balance_wallet,
+                  title: 'Spending Analysis',
+                  description: 'You\'re spending \$${totalSpending.toStringAsFixed(0)} of \$${monthlyIncome.toStringAsFixed(0)} monthly income',
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 12),
+
+                // Savings status
+                _buildRecommendationItem(
+                  icon: isOnTrack ? Icons.check_circle : Icons.warning,
+                  title: isOnTrack ? 'On Track!' : 'Savings Alert',
+                  description: isOnTrack
+                      ? 'Great job! You\'re saving \$${savings.toStringAsFixed(0)}/month (${savingsRate.toStringAsFixed(1)}% rate)'
+                      : 'You\'re saving \$${savings.toStringAsFixed(0)}/month, which is below your goal. Consider reducing expenses.',
+                  color: isOnTrack ? Colors.green : Colors.orange,
+                ),
+                const SizedBox(height: 12),
+
+                // Recommended budget allocation
+                _buildRecommendationItem(
+                  icon: Icons.lightbulb,
+                  title: 'Recommended Budget Allocation',
+                  description: _getBudgetRecommendation(monthlyIncome),
+                  color: Colors.purple,
+                ),
+                const SizedBox(height: 12),
+
+                // Top spending category
+                if (stats['topCategory'] != null)
+                  _buildRecommendationItem(
+                    icon: Icons.trending_up,
+                    title: 'Highest Expense Category',
+                    description: '${stats['topCategory']} at \$${(stats['topCategoryAmount'] as double).toStringAsFixed(0)}/month. Consider if this can be reduced.',
+                    color: Colors.red,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecommendationItem({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getBudgetRecommendation(double income) {
+    // 50/30/20 rule: 50% needs, 30% wants, 20% savings
+    final needs = income * 0.50;
+    final wants = income * 0.30;
+    final savings = income * 0.20;
+
+    return 'Based on your income, consider: \$${needs.toStringAsFixed(0)} for needs (housing, food), \$${wants.toStringAsFixed(0)} for wants (entertainment, dining), and \$${savings.toStringAsFixed(0)} for savings.';
+  }
+
   @override
   void dispose() {
     _incomeController.dispose();
@@ -290,6 +443,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+
+                  // AI Budget Recommendations
+                  _buildBudgetRecommendations(),
                   const SizedBox(height: 24),
 
                   // Info Box
