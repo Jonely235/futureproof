@@ -3,6 +3,7 @@ import '../models/transaction.dart';
 import '../services/finance_calculator.dart';
 import '../services/database_service.dart';
 import 'add_expense_screen.dart';
+import 'transaction_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -281,7 +282,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        // TODO: Show transactions list
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const TransactionHistoryScreen(),
+                          ),
+                        ).then((_) => _loadTransactions());
                       },
                       icon: const Icon(Icons.list),
                       label: const Text('History'),
