@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
 import 'package:uuid/uuid.dart';
@@ -85,6 +86,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       final dbService = DatabaseService();
       await dbService.addTransaction(transaction);
 
+      // Haptic feedback on success
+      HapticFeedback.lightImpact();
+
       if (mounted) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,6 +104,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
+      HapticFeedback.heavyImpact();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

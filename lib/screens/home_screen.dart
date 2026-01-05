@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/finance_calculator.dart';
 import '../services/database_service.dart';
-import 'add_expense_screen.dart';
-import 'transaction_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,10 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTransactions();
+    loadTransactions();
   }
 
-  Future<void> _loadTransactions() async {
+  Future<void> loadTransactions() async {
     setState(() {
       _isLoadingTransactions = true;
     });
@@ -63,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onAreWeOkayPressed() async {
+    HapticFeedback.heavyImpact();
     setState(() {
       _isLoading = true;
     });
@@ -76,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = false;
     });
 
+    HapticFeedback.lightImpact();
     if (_status != null) {
       _showStatusDialog();
     }
@@ -250,57 +251,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                   ],
                 ),
-              ),
-            ),
-
-            // Quick Actions
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AddExpenseScreen(),
-                          ),
-                        ).then((_) => _loadTransactions());
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Expense'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const TransactionHistoryScreen(),
-                          ),
-                        ).then((_) => _loadTransactions());
-                      },
-                      icon: const Icon(Icons.list),
-                      label: const Text('History'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],

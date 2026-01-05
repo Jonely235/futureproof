@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'widgets/main_navigation.dart';
 import 'services/database_service.dart';
 
 void main() async {
@@ -40,7 +40,7 @@ class FutureProofApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,
-      home: const HomeScreen(),
+      home: const MainNavigation(),
     );
   }
 }

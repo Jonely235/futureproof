@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
 
@@ -22,10 +23,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTransactions();
+    loadTransactions();
   }
 
-  Future<void> _loadTransactions() async {
+  Future<void> loadTransactions() async {
     setState(() {
       _isLoading = true;
     });
@@ -90,14 +91,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   Future<void> _deleteTransaction(Transaction transaction) async {
     try {
+      HapticFeedback.mediumImpact();
       final dbService = DatabaseService();
       await dbService.deleteTransaction(transaction.id);
 
       if (mounted) {
+        HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Transaction deleted')),
         );
-        _loadTransactions();
+        loadTransactions();
       }
     } catch (e) {
       if (mounted) {
@@ -151,7 +154,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ),
                 )
               : RefreshIndicator(
-                  onRefresh: _loadTransactions,
+                  onRefresh: loadTransactions,
                   child: Column(
                     children: [
                       // Search bar
