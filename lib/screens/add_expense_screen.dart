@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
+import '../services/firestore_sync_service.dart';
+import '../services/auth_service.dart';
 import 'package:uuid/uuid.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -19,6 +21,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   String _selectedCategory = 'Groceries';
   bool _isExpense = true;
   bool _isSaving = false;
+  final _authService = AuthService();
+  final _syncService = FirestoreSyncService();
 
   final List<String> _categories = [
     'Groceries',
@@ -82,9 +86,32 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         createdAt: DateTime.now(),
       );
 
-      // Save to database
+      // Save to local database
       final dbService = DatabaseService();
       await dbService.addTransaction(transaction);
+
+      // Upload to Firestore if authenticated
+      try {
+        final user = await _authService.getCurrentAppUser();
+        if (user != null && user.hasHousehold) {
+          // Create transaction with householdId for cloud
+          final cloudTransaction = Transaction(
+            id: transaction.id,
+            amount: transaction.amount,
+            category: transaction.category,
+            note: transaction.note,
+            date: transaction.date,
+            householdId: user.householdId ?? '',
+            createdAt: transaction.createdAt,
+          );
+
+          await _syncService.uploadTransaction(cloudTransaction);
+          print('Transaction synced to Firestore');
+        }
+      } catch (e) {
+        print('Note: Cloud sync not available: $e');
+        // Don't fail the operation if cloud sync fails
+      }
 
       // Haptic feedback on success
       HapticFeedback.lightImpact();

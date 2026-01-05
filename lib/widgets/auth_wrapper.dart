@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../services/auth_service.dart';
+import '../services/firestore_sync_service.dart';
 import '../screens/login_screen.dart';
-import '../screens/signup_screen.dart';
 import '../screens/household_setup_screen.dart';
 import '../widgets/main_navigation.dart';
 
@@ -21,6 +21,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   final AuthService _authService = AuthService();
+  final FirestoreSyncService _syncService = FirestoreSyncService();
   bool _isCheckingAuth = true;
   bool _isAuthenticated = false;
   bool _needsHousehold = false;
@@ -68,6 +69,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _isAuthenticated = true;
           _needsHousehold = !hasHousehold;
         });
+
+        // Auto-sync from cloud if has household
+        if (hasHousehold && user.householdId != null) {
+          try {
+            print('Auto-syncing transactions from cloud...');
+            await _syncService.fullSync(user.householdId!);
+            print('Auto-sync complete!');
+          } catch (e) {
+            print('Auto-sync failed (non-critical): $e');
+            // Don't fail the app if sync fails
+          }
+        }
       } else {
         setState(() {
           _isCheckingAuth = false;

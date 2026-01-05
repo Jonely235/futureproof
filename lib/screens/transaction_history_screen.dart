@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
+import '../services/firestore_sync_service.dart';
+import '../services/auth_service.dart';
 import 'edit_transaction_screen.dart';
 
 /// Transaction History Screen
@@ -20,6 +22,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   List<Transaction> _transactions = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  final _authService = AuthService();
+  final _syncService = FirestoreSyncService();
 
   @override
   void initState() {
@@ -93,8 +97,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   Future<void> _deleteTransaction(Transaction transaction) async {
     try {
       HapticFeedback.mediumImpact();
+
+      // Delete from local database
       final dbService = DatabaseService();
       await dbService.deleteTransaction(transaction.id);
+
+      // Delete from Firestore if authenticated
+      try {
+        final user = await _authService.getCurrentAppUser();
+        if (user != null && user.hasHousehold) {
+          await _syncService.deleteTransaction(transaction.id);
+          print('Transaction deleted from Firestore');
+        }
+      } catch (e) {
+        print('Note: Cloud sync not available: $e');
+        // Don't fail the operation if cloud sync fails
+      }
 
       if (mounted) {
         HapticFeedback.lightImpact();
