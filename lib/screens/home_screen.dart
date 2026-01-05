@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction.dart';
 import '../services/finance_calculator.dart';
 import '../services/database_service.dart';
@@ -23,7 +24,26 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     loadTransactions();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final monthlyIncome = prefs.getDouble('monthly_income');
+      final savingsGoal = prefs.getDouble('savings_goal');
+
+      if (monthlyIncome != null || savingsGoal != null) {
+        setState(() {
+          _monthlyIncome = monthlyIncome ?? _monthlyIncome;
+          _savingsGoal = savingsGoal ?? _savingsGoal;
+        });
+        _calculateStatus();
+      }
+    } catch (e) {
+      print('Error loading settings: $e');
+    }
   }
 
   Future<void> loadTransactions() async {

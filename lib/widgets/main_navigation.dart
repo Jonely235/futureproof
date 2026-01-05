@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../screens/home_screen.dart';
 import '../screens/transaction_history_screen.dart';
 import '../screens/add_expense_screen.dart';
+import '../screens/settings_screen.dart';
 
 /// Main Navigation Widget
 ///
@@ -20,6 +21,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const TransactionHistoryScreen(),
+    const SettingsScreen(),
   ];
 
   void _refreshCurrentScreen() {
@@ -51,6 +53,10 @@ class _MainNavigationState extends State<MainNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long),
             label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
         selectedFontSize: 14,

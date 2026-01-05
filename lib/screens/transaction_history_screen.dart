@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
+import 'edit_transaction_screen.dart';
 
 /// Transaction History Screen
 ///
@@ -267,6 +268,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: ListTile(
+          onTap: () async {
+            HapticFeedback.lightImpact();
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditTransactionScreen(
+                  transaction: transaction,
+                ),
+              ),
+            );
+            // Refresh if transaction was updated or deleted
+            if (result == true || result == false) {
+              loadTransactions();
+            }
+          },
           leading: CircleAvatar(
             backgroundColor: transaction.amount < 0
                 ? Colors.red.shade100
