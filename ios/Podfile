@@ -28,8 +28,6 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_modular_headers!
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
@@ -42,16 +40,6 @@ post_install do |installer|
       # Fix for -G flag compilation error
       config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
       config.build_settings['OTHER_LDFLAGS'].delete('-G') if config.build_settings['OTHER_LDFLAGS'].include?('-G')
-
-      # Fix for Flutter/Flutter.h not found in plugins
-      config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
-      config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter'
-      config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter/Flutter.framework/Headers'
-
-      # Ensure only active arch for debug builds
-      if config.build_settings['PRODUCT_NAME'] == 'Runner'
-        config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'
-      end
     end
   end
 end
