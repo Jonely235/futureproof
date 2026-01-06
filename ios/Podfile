@@ -43,6 +43,11 @@ post_install do |installer|
       # Fix for -G flag compilation error
       config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
       config.build_settings['OTHER_LDFLAGS'].delete('-G') if config.build_settings['OTHER_LDFLAGS'].include?('-G')
+
+      # Fix for Flutter/Flutter.h not found in plugins
+      config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+      config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter'
+      config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter/Flutter.framework/Headers'
     end
   end
 end
