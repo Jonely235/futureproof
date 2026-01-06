@@ -33,6 +33,18 @@ jobs:
       - name: Add iOS platform
         run: flutter create --platforms=ios .
 
+      - name: Clean iOS build artifacts
+        run: |
+          cd ios
+          rm -rf Pods Podfile.lock .symlinks build
+          cd ..
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+          cd ..
+
       - name: Build iOS app (no codesign)
         run: |
           flutter build ios --release --no-codesign
