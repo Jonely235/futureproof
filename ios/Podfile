@@ -27,8 +27,8 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
-# Use modular headers globally for Swift Firebase pods
-use_modular_headers!
+# Use frameworks for Firebase Swift pods - compatible with Flutter
+use_frameworks! :linkage => :static
 
 target 'Runner' do
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -43,11 +43,6 @@ post_install do |installer|
       # Fix for -G flag compilation error
       config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
       config.build_settings['OTHER_LDFLAGS'].delete('-G') if config.build_settings['OTHER_LDFLAGS'].include?('-G')
-
-      # Fix for Flutter/Flutter.h not found in plugins
-      config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
-      config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter'
-      config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter/Flutter.framework/Headers'
     end
   end
 end
