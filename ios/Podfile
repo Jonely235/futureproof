@@ -27,6 +27,9 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
+# Use modular headers for Firebase Swift pods
+use_modular_headers!
+
 target 'Runner' do
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
@@ -42,9 +45,15 @@ post_install do |installer|
       config.build_settings['OTHER_LDFLAGS'].delete('-G') if config.build_settings['OTHER_LDFLAGS'].include?('-G')
 
       # Fix for Flutter/Flutter.h not found in plugins
+      # Add header search paths for Flutter framework
       config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
       config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter'
       config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Flutter/Flutter.framework/Headers'
+
+      # For Flutter plugin pods, ensure they can find Flutter.h
+      if target.name.start_with?('sqflite') || target.name.start_with?('path_provider') || target.name.start_with?('shared_preferences')
+        config.build_settings['HEADER_SEARCH_PATHS'] << '${BUILT_PRODUCTS_DIR}/Flutter/Flutter.framework/Headers'
+      end
     end
   end
 end
