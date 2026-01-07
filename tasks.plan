@@ -1,0 +1,52 @@
+# iOS Build Fix - Implementation Plan
+
+## Problem
+iOS build fails with `'Flutter/Flutter.h' file not found` error in sqflite_darwin plugin.
+This is caused by incompatibility between:
+- Flutter 3.38.5
+- sqflite_darwin 2.4.2
+- Firebase Swift pods (require use_modular_headers!)
+
+## Solution Selected: Option 4 - Firebase-Only Storage
+
+### Why This Solution?
+✅ **Minimal refactoring** - Firestore already implemented
+✅ **Immediate iOS build fix** - Removes sqflite dependency
+✅ **Better architecture** - Single source of truth
+✅ **Offline support** - Firestore has built-in cache
+✅ **Already paid for** - Using Firebase in Phase 2
+
+### Implementation Steps
+
+#### Phase 1: Update DatabaseService to use Firestore
+- [ ] Remove sqflite import and dependencies
+- [ ] Rewrite DatabaseService methods to use Firestore
+- [ ] Keep same method signatures (no breaking changes to UI)
+- [ ] Add proper error handling for Firestore operations
+
+#### Phase 2: Remove sqflite dependencies
+- [ ] Update pubspec.yaml (remove sqflite)
+- [ ] Run flutter pub get
+- [ ] Clean iOS Pods
+
+#### Phase 3: Test & Verify
+- [ ] Test transaction CRUD operations
+- [ ] Test offline behavior
+- [ ] Commit and push changes
+- [ ] Verify iOS CI build succeeds
+
+#### Phase 4: Cleanup (Optional)
+- [ ] Remove FirestoreSyncService (no longer needed)
+- [ ] Update documentation
+
+## Expected Outcome
+- iOS build succeeds without sqflite
+- App works with Firebase-only storage
+- Offline support maintained via Firestore cache
+- Simpler codebase with less complexity
+
+## Time Estimate
+- Phase 1: 30 minutes
+- Phase 2: 5 minutes
+- Phase 3: 15 minutes
+- **Total: ~50 minutes**

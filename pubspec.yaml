@@ -20,8 +20,8 @@ dependencies:
   intl: ^0.18.1
   uuid: ^4.3.3
 
-  # Data Persistence
-  sqflite: ^2.3.0
+  # Data Persistence (Firebase-only - no SQLite needed)
+  # sqflite removed due to iOS build incompatibility with Firebase
   path_provider: ^2.1.1
   path: ^1.8.3
   shared_preferences: ^2.2.2
