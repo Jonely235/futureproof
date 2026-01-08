@@ -36,8 +36,8 @@ jobs:
       - name: Disable code signing
         run: |
           cd ios
-          plutil -replace DEVELOPMENT_TEAM -string "" Runner.xcodeproj/project.pbxproj
-          plutil -replace CODE_SIGN_STYLE -string "Manual" Runner.xcodeproj/project.pbxproj
+          sed -i.bak 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' Runner.xcodeproj/project.pbxproj
+          echo "Disabled automatic code signing"
           cd ..
 
       - name: Build iOS app (no codesign)
