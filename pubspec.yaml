@@ -20,9 +20,10 @@ dependencies:
   intl: ^0.18.1
   uuid: ^4.3.3
 
-  # Data Persistence (Firebase-only - no SQLite or local file access needed)
+  # Data Persistence (Firebase-only - removed shared_preferences due to iOS CocoaPods conflicts)
   # Removed: sqflite (iOS incompatibility), path_provider (only for SQLite), path (only for SQLite)
-  shared_preferences: ^2.2.2
+  # Removed: shared_preferences (CocoaPods conflict with Firebase)
+  # shared_preferences: ^2.2.2
 
   # Firebase (Phase 2) - Older versions for Flutter 3.16.0 compatibility
   firebase_core: ^2.24.2
