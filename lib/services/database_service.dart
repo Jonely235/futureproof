@@ -17,19 +17,31 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    try {
+      _database = await _initDatabase();
+      return _database!;
+    } catch (e) {
+      print('❌ Error initializing database: $e');
+      rethrow;
+    }
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'futureproof.db');
+    try {
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, 'futureproof.db');
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+      print('📁 Database path: $path');
+
+      return await openDatabase(
+        path,
+        version: 1,
+        onCreate: _onCreate,
+      );
+    } catch (e) {
+      print('❌ Error in _initDatabase: $e');
+      rethrow;
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {

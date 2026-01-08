@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'widgets/main_navigation.dart';
-import 'services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -8,14 +7,8 @@ void main() async {
   // For iOS/Android, sqflite handles initialization automatically
   print('✅ Running on mobile platform');
 
-  // Initialize SQLite database
-  try {
-    final dbService = DatabaseService();
-    await dbService.database; // Trigger initialization
-    print('✅ SQLite database initialized successfully');
-  } catch (e) {
-    print('❌ Error initializing database: $e');
-  }
+  // NOTE: Database initialization moved to lazy loading
+  // This prevents app crash if database fails to initialize
 
   runApp(const FutureProofApp());
 }
