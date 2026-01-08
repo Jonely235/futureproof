@@ -19,8 +19,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   String _selectedCategory = 'Groceries';
   bool _isExpense = true;
   bool _isSaving = false;
-  final _authService = AuthService();
-  final _syncService = FirestoreSyncService();
 
   final List<String> _categories = [
     'Groceries',

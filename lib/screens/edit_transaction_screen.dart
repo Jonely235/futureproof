@@ -27,8 +27,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   late String _selectedCategory;
   late bool _isExpense;
   bool _isSaving = false;
-  final _authService = AuthService();
-  final _syncService = FirestoreSyncService();
 
   final List<String> _categories = [
     'Groceries',

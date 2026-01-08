@@ -20,8 +20,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   List<Transaction> _transactions = [];
   bool _isLoading = true;
   String _searchQuery = '';
-  final _authService = AuthService();
-  final _syncService = FirestoreSyncService();
 
   @override
   void initState() {
