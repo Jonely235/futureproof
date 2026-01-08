@@ -45,19 +45,20 @@ jobs:
           cd ios
           # Remove all DEVELOPMENT_TEAM entries
           sed -i.bak '/DEVELOPMENT_TEAM/d' Runner.xcodeproj/project.pbxproj || true
-          # Set CODE_SIGN_IDENTITY to empty
-          sed -i.bak 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/' Runner.xcodeproj/project.pbxproj || true
-          sed -i.bak 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/' Runner.xcodeproj/project.pbxproj || true
+          # Set CODE_SIGN_IDENTITY to "-" for ad-hoc signing
+          sed -i.bak "s/CODE_SIGN_IDENTITY = \"Apple Development\";/CODE_SIGN_IDENTITY = \"-\";/" Runner.xcodeproj/project.pbxproj || true
+          sed -i.bak "s/CODE_SIGN_IDENTITY = \"iPhone Developer\";/CODE_SIGN_IDENTITY = \"-\";/" Runner.xcodeproj/project.pbxproj || true
           # Change CODE_SIGN_STYLE to Manual
           sed -i.bak 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' Runner.xcodeproj/project.pbxproj || true
-          echo "Disabled code signing completely"
+          # Set CODE_SIGN_IDENTITY at project level
+          sed -i.bak 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/' Runner.xcodeproj/project.pbxproj || true
+          echo "Configured ad-hoc code signing"
           cd ..
 
-      - name: Build iOS app for device (no codesign)
+      - name: Build iOS app for device (ad-hoc signing)
         run: |
-          # Build for iOS device (AltStore will re-sign it)
-          # Use no-codesign approach by setting environment variable
-          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO flutter build ios --release
+          # Build for iOS device with ad-hoc signing (AltStore can re-sign)
+          flutter build ios --release
           echo "Build completed successfully"
 
       - name: Create IPA from device build
