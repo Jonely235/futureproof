@@ -101,8 +101,6 @@ jobs:
               <false/>
               <key>stripSwiftSymbols</key>
               <false/>
-              <key>teamID</key>
-              <string></string>
           </dict>
           </plist>
           EOF
