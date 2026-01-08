@@ -30,8 +30,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Add iOS platform
-        run: flutter create --platforms=ios .
+      - name: Prepare iOS platform
+        run: |
+          # Ensure iOS platform exists
+          if [ ! -d "ios" ]; then
+            flutter create --platforms=ios .
+          fi
 
       - name: Disable code signing
         run: |
