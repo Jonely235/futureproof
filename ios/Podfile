@@ -1,9 +1,6 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '15.0'
 
-# Use modular headers for better compatibility
-use_modular_headers!
-
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -44,8 +41,8 @@ post_install do |installer|
       config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
       config.build_settings['OTHER_LDFLAGS'].delete('-G') if config.build_settings['OTHER_LDFLAGS'].include?('-G')
 
-      # Ensure Flutter framework is properly linked
-      config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+      # Explicitly link Flutter framework for all pods
+      config.build_settings['OTHER_LDFLAGS'] << ' -framework Flutter'
     end
   end
 
