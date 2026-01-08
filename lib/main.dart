@@ -5,6 +5,9 @@ import 'services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // For iOS/Android, sqflite handles initialization automatically
+  print('✅ Running on mobile platform');
+
   // Initialize SQLite database
   try {
     final dbService = DatabaseService();
