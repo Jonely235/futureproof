@@ -4,8 +4,8 @@ class Transaction {
   final String category;
   final String? note;
   final DateTime date;
-  final String householdId;
-  final DateTime createdAt;
+  final String householdId; // Optional for MVP
+  final DateTime createdAt; // Optional for MVP
 
   Transaction({
     required this.id,
@@ -13,9 +13,9 @@ class Transaction {
     required this.category,
     this.note,
     required this.date,
-    required this.householdId,
-    required this.createdAt,
-  });
+    this.householdId = '',
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   // Create from Firestore
   factory Transaction.fromMap(Map<String, dynamic> map, String id) {

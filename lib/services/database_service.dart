@@ -226,6 +226,8 @@ class DatabaseService {
       category: map['category'] as String,
       date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int),
       note: map['note'] as String?,
+      householdId: '', // MVP: No households
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
     );
   }
 }

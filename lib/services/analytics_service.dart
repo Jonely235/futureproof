@@ -1,7 +1,6 @@
 import '../models/spending_analysis.dart';
 import '../models/transaction.dart' as model;
 import 'database_service.dart';
-import 'auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Analytics Service
