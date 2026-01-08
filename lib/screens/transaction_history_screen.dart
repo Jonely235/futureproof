@@ -98,17 +98,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       final dbService = DatabaseService();
       await dbService.deleteTransaction(transaction.id);
 
-      // Delete from Firestore if authenticated
-      try {
-        final user = await _authService.getCurrentAppUser();
-        if (user != null && user.hasHousehold) {
-          await _syncService.deleteTransaction(transaction.id);
-          print('Transaction deleted from Firestore');
-        }
-      } catch (e) {
-        print('Note: Cloud sync not available: $e');
-        // Don't fail the operation if cloud sync fails
-      }
+      // Note: Cloud sync removed in MVP (Phase 1)
 
       if (mounted) {
         HapticFeedback.lightImpact();

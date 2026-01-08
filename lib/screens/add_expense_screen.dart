@@ -86,28 +86,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       final dbService = DatabaseService();
       await dbService.addTransaction(transaction);
 
-      // Upload to Firestore if authenticated
-      try {
-        final user = await _authService.getCurrentAppUser();
-        if (user != null && user.hasHousehold) {
-          // Create transaction with householdId for cloud
-          final cloudTransaction = Transaction(
-            id: transaction.id,
-            amount: transaction.amount,
-            category: transaction.category,
-            note: transaction.note,
-            date: transaction.date,
-            householdId: user.householdId ?? '',
-            createdAt: transaction.createdAt,
-          );
-
-          await _syncService.uploadTransaction(cloudTransaction);
-          print('Transaction synced to Firestore');
-        }
-      } catch (e) {
-        print('Note: Cloud sync not available: $e');
-        // Don't fail the operation if cloud sync fails
-      }
+      // Note: Cloud sync removed in MVP (Phase 1)
 
       // Haptic feedback on success
       HapticFeedback.lightImpact();

@@ -113,29 +113,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       final dbService = DatabaseService();
       await dbService.updateTransaction(updatedTransaction);
 
-      // Update in Firestore if authenticated
-      try {
-        final user = await _authService.getCurrentAppUser();
-        if (user != null && user.hasHousehold) {
-          final cloudTransaction = Transaction(
-            id: widget.transaction.id,
-            amount: _isExpense ? -amount : amount,
-            category: _selectedCategory,
-            note: _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
-            date: widget.transaction.date,
-            householdId: user.householdId ?? '',
-            createdAt: widget.transaction.createdAt,
-          );
-
-          await _syncService.uploadTransaction(cloudTransaction);
-          print('Transaction updated in Firestore');
-        }
-      } catch (e) {
-        print('Note: Cloud sync not available: $e');
-        // Don't fail the operation if cloud sync fails
-      }
+      // Note: Cloud sync removed in MVP (Phase 1)
 
       HapticFeedback.lightImpact();
 
@@ -202,17 +180,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         final dbService = DatabaseService();
         await dbService.deleteTransaction(widget.transaction.id);
 
-        // Delete from Firestore if authenticated
-        try {
-          final user = await _authService.getCurrentAppUser();
-          if (user != null && user.hasHousehold) {
-            await _syncService.deleteTransaction(widget.transaction.id);
-            print('Transaction deleted from Firestore');
-          }
-        } catch (e) {
-          print('Note: Cloud sync not available: $e');
-          // Don't fail the operation if cloud sync fails
-        }
+        // Note: Cloud sync removed in MVP (Phase 1)
 
         HapticFeedback.lightImpact();
 
