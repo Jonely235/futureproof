@@ -53,18 +53,18 @@ jobs:
           echo "Disabled code signing completely"
           cd ..
 
-      - name: Build iOS app (simulator, no codesign)
+      - name: Build iOS app for device (no codesign)
         run: |
-          # Build for iOS simulator (no code signing required)
-          flutter build ios --simulator
+          # Build for iOS device (AltStore will re-sign it)
+          # Use no-codesign approach by setting environment variable
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO flutter build ios --release
           echo "Build completed successfully"
 
-      - name: Create IPA from simulator build
+      - name: Create IPA from device build
         run: |
-          # Simulator builds are in Build/Products/Debug-iphonesimulator
+          # Device builds are in build/ios/iphoneos/Runner.app
           mkdir -p Payload
-          cp -r build/ios/Debug-iphonesimulator/Runner.app Payload/ 2>/dev/null || \
-          cp -r build/ios/iphoneos/Runner.app Payload/ 2>/dev/null
+          cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r FutureProof.ipa Payload/
           ls -lh FutureProof.ipa
 
