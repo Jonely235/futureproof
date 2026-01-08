@@ -1,22 +1,47 @@
 import 'package:flutter/material.dart';
-import 'widgets/main_navigation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // For iOS/Android, sqflite handles initialization automatically
-  print('✅ Running on mobile platform');
+  // MINIMAL TEST - Just show a white screen with text
+  // If this works, the issue is with plugins/widgets
+  // If this crashes, the issue is with Flutter/iOS compatibility
 
-  // NOTE: Database initialization moved to lazy loading
-  // This prevents app crash if database fails to initialize
+  runApp(const TestApp());
+}
 
-  // Catch all Flutter errors
-  FlutterError.onError = (FlutterErrorDetails details) {
-    print('❌ Flutter Error: ${details.exception}');
-    print('Stack trace: ${details.stack}');
-  };
+class TestApp extends StatelessWidget {
+  const TestApp({super.key});
 
-  runApp(const FutureProofApp());
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                '🎉',
+                style: TextStyle(fontSize: 100),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'FutureProof Works!',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'If you see this, the app launches!',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class FutureProofApp extends StatelessWidget {
