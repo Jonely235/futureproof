@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/auth_service.dart';
 import '../services/analytics_service.dart';
-import 'profile_screen.dart';
 
 /// Settings Screen
 ///
@@ -521,46 +519,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Profile Card
-                  Card(
-                    elevation: 2,
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.person,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      title: const Text('Profile'),
-                      subtitle: const Text('View and edit your profile'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () async {
-                        HapticFeedback.lightImpact();
-                        try {
-                          final authService = AuthService();
-                          final user = await authService.getCurrentAppUser();
-                          if (user != null && mounted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProfileScreen(user: user),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error loading profile: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      },
                     ),
                   ),
 

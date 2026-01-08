@@ -20,14 +20,11 @@ dependencies:
   intl: ^0.18.1
   uuid: ^4.3.3
 
-  # Data Persistence (Firebase-only - no SQLite or local file access needed)
-  # Removed: sqflite (iOS incompatibility), path_provider (only for SQLite), path (only for SQLite)
+  # Data Persistence (Phase 1: SQLite - MVP without Firebase)
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  path_provider: ^2.1.1
   shared_preferences: ^2.2.2
-
-  # Firebase (Phase 2) - Older versions for Flutter 3.16.0 compatibility
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.16.0
-  cloud_firestore: ^4.14.0
 
 dev_dependencies:
   flutter_test:
