@@ -1,9 +1,13 @@
 ---
 active: true
 iteration: 1
-max_iterations: 100
+max_iterations: 150
 completion_promise: null
-started_at: "2026-01-08T11:18:54Z"
+started_at: "2026-01-08T11:26:16Z"
 ---
 
-help me make my repo clean that remove all the md but gather all necessary and very very important information into tasks.md, just one file then it will be friendly aswell as please also remove the FutureProff-Auto too tq make 100 loop to make sure that you have not missed out any important information into the final file called tasks.md tq
+1. **Option 1: Downgrade Flutter** (RECOMMENDED)
+   - Change 
+   - Set  or lower
+   - Firebase and plugins work fine
+   - Low risk, well-tested try this solution to fix it first then loop 150 times then after one changes then verify it then if fail then continue until 150 times then conclude why still cannot successfully ok every changes need to commit to git too  --complete-promise Done
