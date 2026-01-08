@@ -37,6 +37,9 @@ jobs:
           # Fix bundle ID to avoid conflicts
           cd ios
           sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+          # Clean pods to ensure fresh installation
+          rm -rf Pods Podfile.lock
+          pod install --repo-update
           cd ..
 
       - name: Disable code signing
