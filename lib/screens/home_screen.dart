@@ -47,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadTransactions() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoadingTransactions = true;
     });
@@ -55,17 +57,23 @@ class _HomeScreenState extends State<HomeScreen> {
       final dbService = DatabaseService();
       final transactions = await dbService.getAllTransactions();
 
+      if (!mounted) return;
+
       setState(() {
         _transactions = transactions;
         _isLoadingTransactions = false;
       });
 
       _calculateStatus();
-    } catch (e) {
-      print('Error loading transactions: $e');
-      setState(() {
-        _isLoadingTransactions = false;
-      });
+    } catch (e, stackTrace) {
+      print('❌ Error loading transactions: $e');
+      print('Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _transactions = [];
+          _isLoadingTransactions = false;
+        });
+      }
     }
   }
 

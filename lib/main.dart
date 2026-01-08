@@ -10,6 +10,12 @@ void main() async {
   // NOTE: Database initialization moved to lazy loading
   // This prevents app crash if database fails to initialize
 
+  // Catch all Flutter errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('❌ Flutter Error: ${details.exception}');
+    print('Stack trace: ${details.stack}');
+  };
+
   runApp(const FutureProofApp());
 }
 
