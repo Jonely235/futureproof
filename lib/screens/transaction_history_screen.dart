@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
-import '../services/auth_service.dart';
 import 'edit_transaction_screen.dart';
 
 /// Transaction History Screen

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import '../models/transaction.dart';
