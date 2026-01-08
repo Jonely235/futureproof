@@ -1,4 +1,4 @@
-name: Build iOS
+name: Build iOS - Test Multiple Flutter Versions
 
 on:
   push:
@@ -13,14 +13,19 @@ jobs:
     permissions:
       contents: write
 
+    strategy:
+      matrix:
+        flutter-version: ['3.16.0', '3.13.0', '3.10.0', '3.7.0']
+      fail-fast: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
+      - name: Set up Flutter ${{ matrix.flutter-version }}
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.0'
+          flutter-version: ${{ matrix.flutter-version }}
           channel: 'stable'
           cache: true
 
@@ -36,35 +41,25 @@ jobs:
       - name: Build iOS app (no codesign)
         run: |
           flutter build ios --release --no-codesign
-          echo "Build completed successfully"
+          echo "Build completed successfully for Flutter ${{ matrix.flutter-version }}"
 
       - name: Create IPA
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r FutureProof.ipa Payload/
-          ls -lh FutureProof.ipa
+          zip -r FutureProof-${{ matrix.flutter-version }}.ipa Payload/
+          ls -lh FutureProof-${{ matrix.flutter-version }}.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: FutureProof-iOS
-          path: FutureProof.ipa
+          name: FutureProof-iOS-Flutter-${{ matrix.flutter-version }}
+          path: FutureProof-${{ matrix.flutter-version }}.ipa
           retention-days: 30
 
-      - name: Commit .ipa to repository
-        run: |
-          mkdir -p build
-          mv FutureProof.ipa build/FutureProof.ipa
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add build/FutureProof.ipa
-          git diff --staged --quiet || git commit -m "📱 Auto-update: Build iOS .ipa file [skip ci]"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Jonely235/futureproof.git
-
-      - name: Get build info
+      - name: Success message
         if: success()
         run: |
-          echo "✅ iOS build successful!"
-          echo "IPA file created: build/FutureProof.ipa"
-          ls -lh build/FutureProof.ipa
+          echo "✅ iOS build successful with Flutter ${{ matrix.flutter-version }}!"
+          echo "This version WORKS!"
