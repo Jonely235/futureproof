@@ -57,3 +57,4 @@ Desktop.ini
 *.temp
 *.swp
 *~.nib
+build/
