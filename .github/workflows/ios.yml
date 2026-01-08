@@ -36,12 +36,20 @@ jobs:
       - name: Disable code signing
         run: |
           cd ios
+          # Remove all DEVELOPMENT_TEAM entries
+          sed -i.bak '/DEVELOPMENT_TEAM/d' Runner.xcodeproj/project.pbxproj
           # Set CODE_SIGN_IDENTITY to empty
           sed -i.bak 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/' Runner.xcodeproj/project.pbxproj || true
           sed -i.bak 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/' Runner.xcodeproj/project.pbxproj || true
           # Change CODE_SIGN_STYLE to Manual
           sed -i.bak 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' Runner.xcodeproj/project.pbxproj
-          echo "Disabled code signing"
+          # Add explicit empty DEVELOPMENT_TEAM
+          /bin/bash -c 'if ! grep -q "DEVELOPMENT_TEAM = \"\";" Runner.xcodeproj/project.pbxproj; then
+            sed -i.bak ''"/buildSettings = {/a\\
+\				DEVELOPMENT_TEAM = \"\";
+            "'' Runner.xcodeproj/project.pbxproj || true
+          fi'
+          echo "Disabled code signing completely"
           cd ..
 
       - name: Build iOS app (no codesign)
