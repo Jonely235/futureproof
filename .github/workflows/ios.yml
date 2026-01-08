@@ -33,6 +33,13 @@ jobs:
       - name: Add iOS platform
         run: flutter create --platforms=ios .
 
+      - name: Disable code signing
+        run: |
+          cd ios
+          plutil -replace DEVELOPMENT_TEAM -string "" Runner.xcodeproj/project.pbxproj
+          plutil -replace CODE_SIGN_STYLE -string "Manual" Runner.xcodeproj/project.pbxproj
+          cd ..
+
       - name: Build iOS app (no codesign)
         run: |
           flutter build ios --release --no-codesign
