@@ -1,27 +1,9 @@
 ---
 active: true
 iteration: 1
-max_iterations: 0
+max_iterations: 100
 completion_promise: null
-started_at: "2026-01-05T14:47:17Z"
+started_at: "2026-01-08T11:18:54Z"
 ---
 
- C:\Users\US\FutureProof\FutureProof-Auto\DETAILED_PLAN.md
-  C:\Users\US\FutureProof\FutureProof-Auto\TASKS.md
-
-  Quick Overview:
-
-  1. DETAILED_PLAN.md - Strategic roadmap covering:
-    - Data persistence with SQLite
-    - Transaction history UI
-    - Transaction management (edit/delete)
-    - Testing, documentation, and polish
-  2. TASKS.md - 73 granular, autonomous-ready tasks (15-45 min each):
-    - 35 Critical (MVP blockers)
-    - 20 Recommended (UX polish)
-    - 18 Optional (enhancements)
-    - Each includes: steps, code examples, verification, error handling
-
-  Total estimated effort: ~15 hours (5-7 hours for core MVP completion)
-
-  These documents are now ready to hand off to an AI agent (like Ralph) for autonomous execution, or use as your implementation guide --complete-promise DOMEEEEEE
+help me make my repo clean that remove all the md but gather all necessary and very very important information into tasks.md, just one file then it will be friendly aswell as please also remove the FutureProff-Auto too tq make 100 loop to make sure that you have not missed out any important information into the final file called tasks.md tq

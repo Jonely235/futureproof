@@ -485,3 +485,9 @@ Previously tracked issues:
 **Last Updated**: January 4, 2025
 
 **Keep moving forward! 🚀**
+
+
+1. Replace sqflite with a cross-platform alternative (drift, objectbox, etc.)
+  2. Downgrade Flutter to a version that works with this dependency stack
+  3. Wait for upstream fixes in sqflite or Firebase plugins
+  4. Use Firebase-only and remove local SQLite storage

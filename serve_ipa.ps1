@@ -37,7 +37,7 @@ if (-not $ipAddress) {
 }
 
 $port = 8000
-Write-Host "🌐 Starting server on: http://$ipAddress:$port" -ForegroundColor Cyan
+Write-Host "🌐 Starting server on: http://${ipAddress}:${port}" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Yellow
 Write-Host "  INSTRUCTIONS FOR YOUR IPHONE:" -ForegroundColor Yellow
@@ -45,7 +45,7 @@ Write-Host "================================================" -ForegroundColor Y
 Write-Host ""
 Write-Host "1. Make sure iPhone is on the same WiFi network" -ForegroundColor White
 Write-Host "2. Open Safari on your iPhone" -ForegroundColor White
-Write-Host "3. Go to: http://$ipAddress:$port" -ForegroundColor Cyan
+Write-Host "3. Go to: http://${ipAddress}:${port}" -ForegroundColor Cyan
 Write-Host "4. Download and install the .ipa file using AltStore" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop the server" -ForegroundColor Red
