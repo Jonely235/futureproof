@@ -55,6 +55,13 @@ jobs:
           echo "Configured ad-hoc code signing"
           cd ..
 
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          rm -rf Pods Podfile.lock
+          pod install --repo-update
+          cd ..
+
       - name: Build iOS app for device (ad-hoc signing)
         run: |
           # Build for iOS device using xcodebuild directly
