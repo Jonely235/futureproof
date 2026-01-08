@@ -42,7 +42,7 @@ jobs:
 
       - name: Build iOS app (no codesign)
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --no-codesign
           echo "Build completed successfully"
 
       - name: Create IPA
