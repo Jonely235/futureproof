@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   bool _isCalculating = false;
   int _previousTransactionCount = 0;
+  bool _hasInitialized = false;
 
   @override
   void initState() {
@@ -30,8 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadSettings();
     // Load transactions via provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hasInitialized = true;
       context.read<TransactionProvider>().loadTransactions();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload settings when returning to this screen (e.g., from Settings)
+    if (_hasInitialized && mounted) {
+      Future.microtask(() => _calculateStatus());
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -184,8 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = context.watch<TransactionProvider>();
     final currentTransactionCount = provider.transactions.length;
 
-    // Recalculate status if transaction count changed AND we're not already calculating
-    if (currentTransactionCount != _previousTransactionCount && !_isCalculating) {
+    // Always reload settings and recalculate if transaction count changed
+    if (currentTransactionCount != _previousTransactionCount) {
       _previousTransactionCount = currentTransactionCount;
       // Recalculate status asynchronously without blocking UI
       Future.microtask(() => _calculateStatus());
