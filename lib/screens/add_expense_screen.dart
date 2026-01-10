@@ -247,13 +247,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveExpense,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isExpense ? Colors.red : Colors.green,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
                   ),
                   child: _isSaving
                       ? const SizedBox(

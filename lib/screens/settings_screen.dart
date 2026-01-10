@@ -210,12 +210,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Icon(
                       Icons.auto_awesome,
-                      color: Colors.purple,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'AI Budget Recommendations',
+                      'Budget Recommendations',
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
@@ -232,7 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.account_balance_wallet,
                   title: 'Spending Analysis',
                   description: 'You\'re spending \$${totalSpending.toStringAsFixed(0)} of \$${monthlyIncome.toStringAsFixed(0)} monthly income',
-                  color: Colors.blue,
+                  color: Colors.grey[900]!,
                 ),
                 const SizedBox(height: 12),
 
@@ -243,7 +243,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   description: isOnTrack
                       ? 'Great job! You\'re saving \$${savings.toStringAsFixed(0)}/month (${savingsRate.toStringAsFixed(1)}% rate)'
                       : 'You\'re saving \$${savings.toStringAsFixed(0)}/month, which is below your goal. Consider reducing expenses.',
-                  color: isOnTrack ? Colors.green : Colors.orange,
+                  color: isOnTrack ? Colors.grey[800]! : Colors.grey[700]!,
                 ),
                 const SizedBox(height: 12),
 
@@ -252,7 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.lightbulb,
                   title: 'Recommended Budget Allocation',
                   description: _getBudgetRecommendation(monthlyIncome),
-                  color: Colors.purple,
+                  color: Colors.grey[900]!,
                 ),
                 const SizedBox(height: 12),
 
@@ -262,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.trending_up,
                     title: 'Highest Expense Category',
                     description: '${stats['topCategory']} at \$${(stats['topCategoryAmount'] as double).toStringAsFixed(0)}/month. Consider if this can be reduced.',
-                    color: Colors.red,
+                    color: Colors.grey[800]!,
                   ),
               ],
             ),
@@ -427,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               Icon(
                                 Icons.savings,
-                                color: Colors.green,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                               const SizedBox(width: 12),
                               Text(
@@ -470,20 +470,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.shade200),
+                      border: Border.all(color: Colors.grey[300]!),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue.shade700),
+                        Icon(Icons.info_outline, color: Colors.grey[700]),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'These settings are used to calculate your "Are We Okay?" status. Adjust them based on your actual financial situation.',
                             style: TextStyle(
-                              color: Colors.blue.shade900,
+                              color: Colors.grey[900],
                               fontSize: 14,
                             ),
                           ),

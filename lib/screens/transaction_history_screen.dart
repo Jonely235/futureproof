@@ -115,7 +115,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       Icon(
                         Icons.receipt_long,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: Colors.grey[300],
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -217,7 +217,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        color: Colors.red,
+        color: Theme.of(context).colorScheme.error,
         child: const Icon(
           Icons.delete,
           color: Colors.white,
@@ -271,8 +271,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           },
           leading: CircleAvatar(
             backgroundColor: transaction.amount < 0
-                ? Colors.red.shade100
-                : Colors.green.shade100,
+                ? Colors.grey[200]
+                : Colors.grey[900],
             child: Text(
               transaction.categoryEmoji,
               style: const TextStyle(fontSize: 20),
@@ -283,7 +283,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: transaction.amount < 0 ? Colors.red : Colors.green,
+              color: transaction.amount < 0 ? Colors.grey[900] : Colors.grey[600],
             ),
           ),
           subtitle: Column(
