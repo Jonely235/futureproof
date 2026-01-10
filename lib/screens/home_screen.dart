@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   FinanceStatus? _status;
   bool _isLoading = false;
+  int _previousTransactionCount = 0;
 
   @override
   void initState() {
@@ -28,18 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // Load transactions via provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TransactionProvider>().loadTransactions();
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Reload transactions and recalculate status when returning to home screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<TransactionProvider>().loadTransactions();
-        _calculateStatus();
-      }
     });
   }
 
@@ -61,7 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _calculateStatus() {
+  void _calculateStatus() async {
+    // Reload settings first to get latest values
+    await _loadSettings();
+
     final provider = context.read<TransactionProvider>();
     final totalExpenses = provider.totalExpenses;
 
@@ -176,6 +168,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
+    final currentTransactionCount = provider.transactions.length;
+
+    // Recalculate status if transaction count changed
+    if (currentTransactionCount != _previousTransactionCount) {
+      _previousTransactionCount = currentTransactionCount;
+      // Recalculate status asynchronously without blocking UI
+      Future.microtask(() => _calculateStatus());
+    }
 
     return Scaffold(
       appBar: AppBar(

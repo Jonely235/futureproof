@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../config/finance_config.dart';
@@ -56,28 +55,16 @@ class FinanceCalculator {
 
     if (remaining >= buffer) {
       level = StatusLevel.good;
-      message = _chooseRandom([
-        "You're doing great! You have ${formatter.format(remaining)} left. Maybe treat yourselves to something nice?",
-        "On track and then some! ${formatter.format(remaining)} remaining. You're crushing it!",
-        "Excellent! ${formatter.format(remaining)} left this month. Consider putting extra toward savings.",
-      ]);
+      message = "You're doing great! You have ${formatter.format(remaining)} remaining this month.";
     } else if (remaining > 0) {
       level = StatusLevel.good;
       message = "You're on track! ${formatter.format(remaining)} left for flexible spending.";
     } else if (remaining > -buffer) {
       level = StatusLevel.caution;
-      message = _chooseRandom([
-        "You're ${formatter.format(remaining.abs())} over this month. Consider reviewing dining expenses this weekend.",
-        "Slightly over budget by ${formatter.format(remaining.abs())}. Hold off on non-essential spending until next month.",
-        "${formatter.format(remaining.abs())} over. Look for subscriptions or recurring expenses you can pause.",
-      ]);
+      message = "You're ${formatter.format(remaining.abs())} over budget. Consider reviewing your spending.";
     } else {
       level = StatusLevel.danger;
-      message = _chooseRandom([
-        "Over budget by ${formatter.format(remaining.abs())}. Review all spending this week and pause non-essentials.",
-        "${formatter.format(remaining.abs())} over. Focus on groceries instead of dining out until next month.",
-        "Budget alert: ${formatter.format(remaining.abs())} over. Time for a spending freeze until next income.",
-      ]);
+      message = "Over budget by ${formatter.format(remaining.abs())}. Review all spending and pause non-essentials.";
     }
 
     return FinanceStatus(
@@ -85,10 +72,6 @@ class FinanceCalculator {
       level: level,
       remaining: remaining,
     );
-  }
-
-  static String _chooseRandom(List<String> messages) {
-    return messages[Random().nextInt(messages.length)];
   }
 
   static double calculateTotalExpenses(List transactions) {
