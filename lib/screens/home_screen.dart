@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   FinanceStatus? _status;
   bool _isLoading = false;
+  bool _isCalculating = false;
   int _previousTransactionCount = 0;
 
   @override
@@ -52,8 +53,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _calculateStatus() async {
+    // Prevent multiple simultaneous calculations
+    if (_isCalculating) return;
+    if (!mounted) return;
+
+    _isCalculating = true;
+
     // Reload settings first to get latest values
     await _loadSettings();
+
+    if (!mounted) {
+      _isCalculating = false;
+      return;
+    }
 
     final provider = context.read<TransactionProvider>();
     final totalExpenses = provider.totalExpenses;
@@ -64,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
         monthlyExpenses: totalExpenses,
         savingsGoal: _savingsGoal,
       );
+      _isCalculating = false;
     });
   }
 
@@ -171,8 +184,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = context.watch<TransactionProvider>();
     final currentTransactionCount = provider.transactions.length;
 
-    // Recalculate status if transaction count changed
-    if (currentTransactionCount != _previousTransactionCount) {
+    // Recalculate status if transaction count changed AND we're not already calculating
+    if (currentTransactionCount != _previousTransactionCount && !_isCalculating) {
       _previousTransactionCount = currentTransactionCount;
       // Recalculate status asynchronously without blocking UI
       Future.microtask(() => _calculateStatus());
