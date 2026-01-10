@@ -126,31 +126,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             elevation: 0,
             backgroundColor: Colors.white,
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
-                alignment: Alignment.bottomLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'History',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0A0A0A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${filtered.length} transaction${filtered.length == 1 ? '' : 's'}',
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 14,
-                        color: const Color(0xFF6B6B6B),
-                      ),
-                    ),
-                  ],
+              titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
+              title: Text(
+                'History',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0A0A0A),
                 ),
               ),
             ),
@@ -284,65 +266,81 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       ),
                     )
                   : SliverToBoxAdapter(
-                      child: RefreshIndicator(
-                        onRefresh: () => provider.refresh(),
-                        color: const Color(0xFF0A0A0A),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _groupTransactionsByDate(transactions).length,
-                          itemBuilder: (context, index) {
-                            final grouped = _groupTransactionsByDate(transactions);
-                            final dateKey = grouped.keys.elementAt(index);
-                            final transactionsForDate = grouped[dateKey]!;
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Transaction count
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                            child: Text(
+                              '${filtered.length} transaction${filtered.length == 1 ? '' : 's'}',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 13,
+                                color: const Color(0xFF6B6B6B),
+                              ),
+                            ),
+                          ),
+                          RefreshIndicator(
+                            onRefresh: () => provider.refresh(),
+                            color: const Color(0xFF0A0A0A),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _groupTransactionsByDate(transactions).length,
+                              itemBuilder: (context, index) {
+                                final grouped = _groupTransactionsByDate(transactions);
+                                final dateKey = grouped.keys.elementAt(index);
+                                final transactionsForDate = grouped[dateKey]!;
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Date Header
-                                Container(
-                                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 4,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF0A0A0A),
-                                          borderRadius: BorderRadius.circular(2),
-                                        ),
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Date Header
+                                    Container(
+                                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 4,
+                                            height: 24,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF0A0A0A),
+                                              borderRadius: BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            dateKey,
+                                            style: GoogleFonts.playfairDisplay(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF0A0A0A),
+                                              letterSpacing: -0.5,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        dateKey,
-                                        style: GoogleFonts.playfairDisplay(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF0A0A0A),
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                    ),
 
-                                // Timeline Cards
-                                ...transactionsForDate.asMap().entries.map((entry) {
-                                  final itemIndex = entry.key;
-                                  final transaction = entry.value;
-                                  final isLast = itemIndex == transactionsForDate.length - 1;
+                                    // Timeline Cards
+                                    ...transactionsForDate.asMap().entries.map((entry) {
+                                      final itemIndex = entry.key;
+                                      final transaction = entry.value;
+                                      final isLast = itemIndex == transactionsForDate.length - 1;
 
-                                  return _TimelineTransactionCard(
-                                    transaction: transaction,
-                                    isFirst: itemIndex == 0,
-                                    isLast: isLast,
-                                    onDelete: () => _deleteTransaction(transaction),
-                                  );
-                                }),
-                              ],
-                            );
-                          },
-                        ),
+                                      return _TimelineTransactionCard(
+                                        transaction: transaction,
+                                        isFirst: itemIndex == 0,
+                                        isLast: isLast,
+                                        onDelete: () => _deleteTransaction(transaction),
+                                      );
+                                    }),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
         ],

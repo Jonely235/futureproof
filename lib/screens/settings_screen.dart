@@ -355,31 +355,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   elevation: 0,
                   backgroundColor: Colors.white,
                   flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
-                      alignment: Alignment.bottomLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Settings',
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0A0A0A),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Manage your financial preferences',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 14,
-                              color: const Color(0xFF6B6B6B),
-                            ),
-                          ),
-                        ],
+                    titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
+                    title: Text(
+                      'Settings',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0A0A0A),
                       ),
                     ),
                   ),
