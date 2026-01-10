@@ -15,6 +15,7 @@ dependencies:
 
   # UI
   cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
 
   # Utilities
   intl: ^0.18.1
