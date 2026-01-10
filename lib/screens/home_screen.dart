@@ -31,6 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload transactions and recalculate status when returning to home screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<TransactionProvider>().loadTransactions();
+        _calculateStatus();
+      }
+    });
+  }
+
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();

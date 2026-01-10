@@ -31,6 +31,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload transactions when returning to this screen (e.g., after adding a transaction)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<TransactionProvider>().loadTransactions();
+      }
+    });
+  }
+
   Map<String, List<Transaction>> _groupTransactionsByDate(
       List<Transaction> transactions) {
     final Map<String, List<Transaction>> grouped = {};
