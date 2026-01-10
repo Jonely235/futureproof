@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/spending_analysis.dart';
 import '../services/analytics_service.dart';
 import '../widgets/pie_chart_widget.dart';
 import '../widgets/bar_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
+import '../widgets/velocity_chart_widget.dart';
 
 /// Analytics Dashboard Screen
 ///
@@ -73,110 +75,299 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadAnalytics,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _analysis == null || _quickStats == null
-              ? const Center(child: Text('Error loading analytics'))
-              : RefreshIndicator(
-                  onRefresh: _loadAnalytics,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Overview Cards
-                        _buildOverviewSection(),
-                        const SizedBox(height: 24),
-                        // Monthly Trend
-                        _buildTrendSection(),
-                        const SizedBox(height: 24),
-                        // Category Breakdown
-                        _buildCategorySection(),
-                        const SizedBox(height: 24),
-                        // Budget Comparisons
-                        if (_analysis!.budgetComparisons.isNotEmpty)
-                          _buildBudgetSection(),
-                        const SizedBox(height: 24),
-                        // Quick Insights
-                        if (_analysis!.insights.isNotEmpty)
-                          _buildInsightsSection(),
-                        const SizedBox(height: 32),
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Color(0xFF9E9E9E),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error loading analytics',
+                        style: GoogleFonts.spaceGrotesk(
+                          color: const Color(0xFF6B6B6B),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : CustomScrollView(
+                  slivers: [
+                    // App Bar
+                    SliverAppBar(
+                      expandedHeight: 140,
+                      floating: false,
+                      pinned: true,
+                      elevation: 0,
+                      backgroundColor: Colors.white,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Analytics',
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0A0A0A),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Financial intelligence at a glance',
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 14,
+                                  color: const Color(0xFF6B6B6B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Icons.refresh, color: Color(0xFF0A0A0A)),
+                          onPressed: _loadAnalytics,
+                          tooltip: 'Refresh',
+                        ),
                       ],
                     ),
-                  ),
+
+                    // Content
+                    SliverToBoxAdapter(
+                      child: RefreshIndicator(
+                        onRefresh: _loadAnalytics,
+                        color: const Color(0xFF0A0A0A),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Overview Cards
+                            _buildOverviewSection(),
+                            const SizedBox(height: 24),
+
+                            // Spend Velocity Chart
+                            if (_analysis!.monthlyTrends.length >= 2)
+                              _buildVelocitySection(),
+                            const SizedBox(height: 24),
+
+                            // Category Breakdown
+                            _buildCategorySection(),
+                            const SizedBox(height: 24),
+
+                            // Budget Comparisons
+                            if (_analysis!.budgetComparisons.isNotEmpty)
+                              _buildBudgetSection(),
+                            const SizedBox(height: 24),
+
+                            // Quick Insights
+                            if (_analysis!.insights.isNotEmpty)
+                              _buildInsightsSection(),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
     );
   }
 
   Widget _buildOverviewSection() {
-    return Padding(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A0A0A),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Financial Overview',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0A0A0A),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Stats Grid
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildModernStatCard(
+                      'Total Spending',
+                      '\$${_analysis!.totalSpending.toStringAsFixed(0)}',
+                      Icons.account_balance_wallet_outlined,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildModernStatCard(
+                      'Average/Month',
+                      '\$${_analysis!.averageMonthlySpending.toStringAsFixed(0)}',
+                      Icons.calendar_month_outlined,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildModernStatCard(
+                      'Savings',
+                      '\$${_quickStats!['savings'].toStringAsFixed(0)}',
+                      Icons.savings_outlined,
+                      isPositive: _quickStats!['isOnTrack'] ?? false,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildModernStatCard(
+                      'Savings Rate',
+                      '${_quickStats!['savingsRate'].toStringAsFixed(1)}%',
+                      Icons.percent_outlined,
+                      isPositive: _quickStats!['savingsRate'] >= 20,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVelocitySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A0A0A),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Spend Velocity',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0A0A0A),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: VelocityChartWidget(
+            data: _analysis!.monthlyTrends.take(6).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernStatCard(
+    String title,
+    String value,
+    IconData icon, {
+    bool isPositive = true,
+  }) {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE0E0E0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0A0A0A).withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Financial Overview',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Total Spending',
-                  '\$${_analysis!.totalSpending.toStringAsFixed(0)}',
-                  Icons.account_balance_wallet,
-                  Colors.blue,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFF0A0A0A),
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildStatCard(
-                  'Average/Month',
-                  '\$${_analysis!.averageMonthlySpending.toStringAsFixed(0)}',
-                  Icons.calendar_month,
-                  Colors.purple,
+                child: Text(
+                  title,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF6B6B6B),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Savings',
-                  '\$${_quickStats!['savings'].toStringAsFixed(0)}',
-                  Icons.savings,
-                  (_quickStats!['isOnTrack'] ?? false)
-                      ? Colors.green
-                      : Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Savings Rate',
-                  '${_quickStats!['savingsRate'].toStringAsFixed(1)}%',
-                  Icons.percent,
-                  (_quickStats!['savingsRate'] >= 20) ? Colors.green : Colors.orange,
-                ),
-              ),
-            ],
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: isPositive
+                  ? const Color(0xFF0A0A0A)
+                  : const Color(0xFFD4483A),
+            ),
           ),
         ],
       ),

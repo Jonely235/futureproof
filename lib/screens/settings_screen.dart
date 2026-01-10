@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/analytics_service.dart';
 
 /// Settings Screen
@@ -341,247 +342,327 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+          : CustomScrollView(
+              slivers: [
+                // App Bar
+                SliverAppBar(
+                  expandedHeight: 140,
+                  floating: false,
+                  pinned: true,
+                  elevation: 0,
+                  backgroundColor: Colors.white,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
+                      alignment: Alignment.bottomLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Settings',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0A0A0A),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Manage your financial preferences',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 14,
+                              color: const Color(0xFF6B6B6B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Content
+                SliverToBoxAdapter(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24),
+
+                        // Financial Goals Section
+                        _buildSectionHeader('Financial Goals'),
+                        _buildSettingsSection([
+                          _buildSettingCard(
+                            icon: Icons.account_balance_wallet_outlined,
+                            title: 'Monthly Income',
+                            subtitle: 'Your total monthly household income',
+                            child: TextField(
+                              controller: _incomeController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Income',
+                                prefixText: '\$',
+                                border: InputBorder.none,
+                                filled: true,
+                              ),
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildSettingCard(
+                            icon: Icons.savings_outlined,
+                            title: 'Savings Goal',
+                            subtitle: 'How much you want to save each month',
+                            child: TextField(
+                              controller: _savingsController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Goal',
+                                prefixText: '\$',
+                                border: InputBorder.none,
+                                filled: true,
+                              ),
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ]),
+
+                        const SizedBox(height: 32),
+
+                        // Budget Recommendations Section
+                        _buildSectionHeader('AI Recommendations'),
+                        _buildSettingsSection([
+                          _buildBudgetRecommendations(),
+                        ]),
+
+                        const SizedBox(height: 32),
+
+                        // App Info Section
+                        _buildSectionHeader('About'),
+                        _buildSettingsSection([
+                          _buildInfoRow('Version', '1.0.0'),
+                          _buildInfoRow('Build', 'MVP Complete'),
+                          _buildInfoRow('Status', '🎉 Ready'),
+                        ]),
+
+                        const SizedBox(height: 32),
+
+                        // Action Buttons
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _isSaving ? null : _saveSettings,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0A0A0A),
+                                    foregroundColor: const Color(0xFFFFFFFF),
+                                    disabledBackgroundColor: const Color(0xFFE0E0E0),
+                                    padding: const EdgeInsets.symmetric(vertical: 18),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: _isSaving
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(Color(0xFF0A0A0A)),
+                                          ),
+                                        )
+                                      : Text(
+                                          'Save Settings',
+                                          style: GoogleFonts.spaceGrotesk(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: _resetToDefaults,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFFD4483A),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    side: const BorderSide(color: Color(0xFFD4483A)),
+                                  ),
+                                  child: Text(
+                                    'Reset to Defaults',
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: Text(
+        title,
+        style: GoogleFonts.playfairDisplay(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF0A0A0A),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection(List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE0E0E0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0A0A0A).withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: const Color(0xFF0A0A0A),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Financial Goals Section
-                  const SizedBox(height: 16),
                   Text(
-                    'Financial Goals',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    title,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0A0A0A),
+                    ),
                   ),
-                  const SizedBox(height: 8),
                   Text(
-                    'Configure your monthly income and savings goals',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Monthly Income Card
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.account_balance_wallet,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Monthly Income',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _incomeController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: 'Monthly Income',
-                              prefixText: '\$',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              helperText:
-                                  'Your total monthly household income',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Savings Goal Card
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.savings,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Savings Goal',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _savingsController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: 'Monthly Savings Goal',
-                              prefixText: '\$',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              helperText:
-                                  'How much you want to save each month',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // AI Budget Recommendations
-                  _buildBudgetRecommendations(),
-                  const SizedBox(height: 24),
-
-                  // Info Box
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.grey[700]),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'These settings are used to calculate your "Are We Okay?" status. Adjust them based on your actual financial situation.',
-                            style: TextStyle(
-                              color: Colors.grey[900],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Action Buttons
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _saveSettings,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.primary,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: _isSaving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text(
-                              'Save Settings',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: _resetToDefaults,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: Colors.red),
-                      ),
-                      child: const Text(
-                        'Reset to Defaults',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // About Section
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          'FutureProof',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Version 1.0.0',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '🎉 MVP Complete!',
-                          style: TextStyle(
-                            fontSize: 24,
-                          ),
-                        ),
-                      ],
+                    subtitle,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 12,
+                      color: const Color(0xFF6B6B6B),
                     ),
                   ),
                 ],
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAFAFA),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFE0E0E0),
+              width: 1,
+            ),
+          ),
+          child: child,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF0A0A0A),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
