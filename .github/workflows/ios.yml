@@ -103,3 +103,40 @@ jobs:
           echo "✅ iOS build successful!"
           echo "IPA file created: FutureProof.ipa"
           ls -lh FutureProof.ipa
+          echo "BUILD_VERSION=$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        if: success() && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ios-build-${{ env.BUILD_VERSION }}
+          name: FutureProof iOS Build ${{ env.BUILD_VERSION }}
+          body: |
+            ## 📱 FutureProof iOS Build
+
+            **Build Date:** ${{ env.BUILD_VERSION }}
+            **Commit:** ${{ github.sha }}
+
+            ### How to Install
+
+            1. **Download:** Click `FutureProof.ipa` below
+            2. **Install:** Use one of these methods:
+               - **SideStore** (Free): https://sidestore.io
+               - **AltStore** ($5/yr): https://altstore.io
+               - **Sideloadly** (Free): https://sideloadly.io
+
+            ### Installation Steps
+            - Download and install your chosen sideloading tool
+            - Connect your iPhone to your computer
+            - Open the tool and select this IPA file
+            - Follow the on-screen instructions
+
+            ⚠️ **Note:** Side-loaded apps expire in 7 days (free Apple ID) or 1 year (paid developer)
+
+            ---
+            Built with ❤️ by GitHub Actions
+          files: FutureProof.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
