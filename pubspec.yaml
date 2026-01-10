@@ -19,6 +19,7 @@ dependencies:
   # Utilities
   intl: ^0.18.1
   uuid: ^4.3.3
+  logging: ^1.2.0
 
   # Data Persistence (Phase 1: SQLite - MVP without Firebase)
   sqflite: ^2.3.0
