@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import '../models/transaction.dart' as model;
 
@@ -12,10 +14,19 @@ class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   static Database? _database;
 
+  // Web in-memory storage (for UI testing)
+  final List<model.Transaction> _webTransactions = [];
+  bool _webInitialized = false;
+
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
   Future<Database> get database async {
+    if (kIsWeb) {
+      // Web uses in-memory storage
+      _webInitialized = true;
+      throw UnimplementedError('Web platform uses in-memory storage');
+    }
     if (_database != null) return _database!;
     try {
       _database = await _initDatabase();
@@ -28,6 +39,13 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     try {
+      if (kIsWeb) {
+        print('📁 Using in-memory storage for web (UI testing only)');
+        _webInitialized = true;
+        // Return a mock database that won't actually be used
+        throw UnimplementedError('Web platform uses in-memory storage');
+      }
+
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, 'futureproof.db');
 
@@ -64,6 +82,13 @@ class DatabaseService {
   /// Throws [Exception] if operation fails.
   Future<String> addTransaction(model.Transaction transaction) async {
     try {
+      if (kIsWeb) {
+        // Web: use in-memory storage
+        _webTransactions.add(transaction);
+        print('✅ Added transaction ${transaction.id} to web memory');
+        return transaction.id;
+      }
+
       final db = await database;
 
       // Validate transaction has required fields
@@ -98,6 +123,14 @@ class DatabaseService {
   /// Returns empty list if no transactions exist or on error.
   Future<List<model.Transaction>> getAllTransactions() async {
     try {
+      if (kIsWeb) {
+        // Web: use in-memory storage
+        final transactions = List<model.Transaction>.from(_webTransactions);
+        transactions.sort((a, b) => b.date.compareTo(a.date));
+        print('📊 Retrieved ${transactions.length} transactions from web memory');
+        return transactions;
+      }
+
       final db = await database;
 
       final List<Map<String, dynamic>> maps = await db.query(
@@ -124,6 +157,15 @@ class DatabaseService {
     DateTime end,
   ) async {
     try {
+      if (kIsWeb) {
+        // Web: use in-memory storage
+        return _webTransactions
+            .where((t) => t.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                          t.date.isBefore(end.add(const Duration(days: 1))))
+            .toList()
+            ..sort((a, b) => b.date.compareTo(a.date));
+      }
+
       final db = await database;
 
       final List<Map<String, dynamic>> maps = await db.query(
@@ -143,6 +185,17 @@ class DatabaseService {
   /// Updates an existing transaction.
   Future<bool> updateTransaction(model.Transaction transaction) async {
     try {
+      if (kIsWeb) {
+        // Web: use in-memory storage
+        final index = _webTransactions.indexWhere((t) => t.id == transaction.id);
+        if (index >= 0) {
+          _webTransactions[index] = transaction;
+          print('✅ Updated transaction ${transaction.id} in web memory');
+          return true;
+        }
+        return false;
+      }
+
       final db = await database;
 
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -173,6 +226,13 @@ class DatabaseService {
   /// Deletes a transaction by ID.
   Future<bool> deleteTransaction(String id) async {
     try {
+      if (kIsWeb) {
+        // Web: use in-memory storage
+        _webTransactions.removeWhere((t) => t.id == id);
+        print('✅ Deleted transaction $id from web memory');
+        return true;
+      }
+
       final db = await database;
 
       final rowsAffected = await db.delete(
@@ -192,6 +252,13 @@ class DatabaseService {
   /// Deletes all transactions.
   Future<bool> deleteAllTransactions() async {
     try {
+      if (kIsWeb) {
+        // Web: use in-memory storage
+        _webTransactions.clear();
+        print('✅ Deleted all transactions from web memory');
+        return true;
+      }
+
       final db = await database;
 
       await db.delete('transactions');
@@ -226,6 +293,10 @@ class DatabaseService {
 
   /// Closes the database connection.
   Future<void> close() async {
+    if (kIsWeb) {
+      // Web: no-op for in-memory storage
+      return;
+    }
     final db = await database;
     await db.close();
   }
