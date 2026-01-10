@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
+import '../services/analytics_service.dart';
 
 /// Centralized state management for transactions.
 ///
@@ -18,6 +19,7 @@ import '../services/database_service.dart';
 /// ```
 class TransactionProvider extends ChangeNotifier {
   final DatabaseService _db = DatabaseService();
+  final AnalyticsService _analyticsService = AnalyticsService();
 
   // Private state
   List<Transaction> _transactions = [];
@@ -95,6 +97,8 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> addTransaction(Transaction transaction) async {
     try {
       await _db.addTransaction(transaction);
+      // Clear analytics cache
+      _analyticsService.refresh();
       await loadTransactions();
       return true;
     } catch (e) {
@@ -111,7 +115,11 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> updateTransaction(Transaction transaction) async {
     try {
       final success = await _db.updateTransaction(transaction);
-      if (success) await loadTransactions();
+      if (success) {
+        // Clear analytics cache
+        _analyticsService.refresh();
+        await loadTransactions();
+      }
       return success;
     } catch (e) {
       _error = 'Failed to update: $e';
@@ -127,7 +135,11 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> deleteTransaction(String id) async {
     try {
       final success = await _db.deleteTransaction(id);
-      if (success) await loadTransactions();
+      if (success) {
+        // Clear analytics cache
+        _analyticsService.refresh();
+        await loadTransactions();
+      }
       return success;
     } catch (e) {
       _error = 'Failed to delete: $e';

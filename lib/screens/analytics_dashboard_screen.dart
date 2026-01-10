@@ -51,6 +51,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
     });
 
     try {
+      // Clear cache to ensure fresh data
+      _analyticsService.refresh();
+
       final analysis = await _analyticsService.analyzeSpending();
       final quickStats = await _analyticsService.getQuickStats();
 

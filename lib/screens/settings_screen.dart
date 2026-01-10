@@ -18,6 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _incomeController = TextEditingController();
   final _savingsController = TextEditingController();
   bool _isLoading = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -76,25 +77,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
+    setState(() {
+      _isSaving = true;
+    });
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('monthly_income', income);
       await prefs.setDouble('savings_goal', savings);
 
-      HapticFeedback.lightImpact();
+      // Verify save by reading back
+      final savedIncome = await prefs.getDouble('monthly_income');
+      final savedSavings = await prefs.getDouble('savings_goal');
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Settings saved successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context, true);
+      if (savedIncome == income && savedSavings == savings) {
+        HapticFeedback.lightImpact();
+
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Settings saved successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        throw Exception('Settings verification failed');
       }
     } catch (e) {
       HapticFeedback.heavyImpact();
       if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving settings: $e'),
@@ -478,7 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _saveSettings,
+                      onPressed: _isSaving ? null : _saveSettings,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             Theme.of(context).colorScheme.primary,
@@ -490,13 +509,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         elevation: 2,
                       ),
-                      child: const Text(
-                        'Save Settings',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Save Settings',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
-import '../services/database_service.dart';
+import '../providers/transaction_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -82,11 +83,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         createdAt: DateTime.now(),
       );
 
-      // Save to local database
-      final dbService = DatabaseService();
-      await dbService.addTransaction(transaction);
+      // Save through provider to ensure auto-refresh
+      final provider = context.read<TransactionProvider>();
+      final success = await provider.addTransaction(transaction);
 
-      // Note: Cloud sync removed in MVP (Phase 1)
+      if (!success) {
+        throw Exception(provider.error ?? 'Failed to save transaction');
+      }
 
       // Haptic feedback on success
       HapticFeedback.lightImpact();

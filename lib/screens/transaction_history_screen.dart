@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
-import '../services/database_service.dart';
+import '../providers/transaction_provider.dart';
 import 'edit_transaction_screen.dart';
 
 /// Transaction History Screen
@@ -17,41 +18,21 @@ class TransactionHistoryScreen extends StatefulWidget {
 }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
-  List<Transaction> _transactions = [];
-  bool _isLoading = true;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    loadTransactions();
-  }
-
-  Future<void> loadTransactions() async {
-    setState(() {
-      _isLoading = true;
+    // Load transactions via provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TransactionProvider>().loadTransactions();
     });
-
-    try {
-      final dbService = DatabaseService();
-      final transactions = await dbService.getAllTransactions();
-
-      setState(() {
-        _transactions = transactions;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading transactions: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
-  Map<String, List<Transaction>> _groupTransactionsByDate() {
+  Map<String, List<Transaction>> _groupTransactionsByDate(List<Transaction> transactions) {
     final Map<String, List<Transaction>> grouped = {};
 
-    for (var transaction in _filteredTransactions) {
+    for (var transaction in _filteredTransactions(transactions)) {
       final dateKey = _getDateKey(transaction.date);
 
       if (!grouped.containsKey(dateKey)) {
@@ -78,12 +59,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     }
   }
 
-  List<Transaction> get _filteredTransactions {
+  List<Transaction> _filteredTransactions(List<Transaction> transactions) {
     if (_searchQuery.isEmpty) {
-      return _transactions;
+      return transactions;
     }
 
-    return _transactions.where((t) {
+    return transactions.where((t) {
       return t.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           t.note?.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
           t.amount.toString().contains(_searchQuery);
@@ -94,18 +75,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     try {
       HapticFeedback.mediumImpact();
 
-      // Delete from local database
-      final dbService = DatabaseService();
-      await dbService.deleteTransaction(transaction.id);
+      // Delete through provider
+      final provider = context.read<TransactionProvider>();
+      final success = await provider.deleteTransaction(transaction.id);
 
-      // Note: Cloud sync removed in MVP (Phase 1)
-
-      if (mounted) {
+      if (success && mounted) {
         HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Transaction deleted')),
         );
-        loadTransactions();
       }
     } catch (e) {
       if (mounted) {
@@ -118,14 +96,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<TransactionProvider>();
+    final transactions = provider.transactions;
+    final filtered = _filteredTransactions(transactions);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transaction History'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: _isLoading
+      body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _filteredTransactions.isEmpty
+          : filtered.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -159,7 +141,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ),
                 )
               : RefreshIndicator(
-                  onRefresh: loadTransactions,
+                  onRefresh: () => provider.refresh(),
                   child: Column(
                     children: [
                       // Search bar
@@ -194,11 +176,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       // Transaction list
                       Expanded(
                         child: ListView.builder(
-                          itemCount: _groupTransactionsByDate().length,
+                          itemCount: _groupTransactionsByDate(transactions).length,
                           itemBuilder: (context, index) {
-                            final grouped = _groupTransactionsByDate();
+                            final grouped = _groupTransactionsByDate(transactions);
                             final dateKey = grouped.keys.elementAt(index);
-                            final transactions = grouped[dateKey]!;
+                            final transactionsForDate = grouped[dateKey]!;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +198,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                   ),
                                 ),
                                 // Transactions for this date
-                                ...transactions.map((t) => _buildTransactionCard(t)),
+                                ...transactionsForDate.map((t) => _buildTransactionCard(t)),
                               ],
                             );
                           },
@@ -284,7 +266,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             );
             // Refresh if transaction was updated or deleted
             if (result == true || result == false) {
-              loadTransactions();
+              context.read<TransactionProvider>().refresh();
             }
           },
           leading: CircleAvatar(
