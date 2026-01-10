@@ -4,7 +4,7 @@
 
 ## Quick Start
 
-**All documentation is now consolidated in [tasks.md](tasks.md)**
+**All documentation is now consolidated in [IMPORTANT.md](IMPORTANT.md)**
 
 ## What is FutureProof?
 
@@ -23,7 +23,7 @@ A personal finance app designed for couples who want to stop fighting about mone
 
 **Current Status:** Phase 1-3 Complete | iOS Build Blocked
 
-See [tasks.md](tasks.md) for complete development status, setup instructions, and known issues.
+See [IMPORTANT.md](IMPORTANT.md) for complete development status, setup instructions, and known issues.
 
 ## Quick Commands
 
@@ -34,13 +34,14 @@ flutter pub get
 # Run on Chrome (for testing)
 flutter run -d chrome
 
-# Build iOS (requires fix - see tasks.md)
+# Build iOS (requires fix - see IMPORTANT.md)
 flutter build ios --release
 ```
 
 ## Documentation
 
-- **[tasks.md](tasks.md)** - Complete project documentation, setup guide, and development tasks
+- **[IMPORTANT.md](IMPORTANT.md)** - Complete project documentation and setup guide
+- **[tasks.plan](tasks.plan)** - Development tasks and roadmap with checkboxes
 
 ## License
 
