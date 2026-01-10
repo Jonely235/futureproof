@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../services/finance_calculator.dart';
@@ -166,7 +167,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FutureProof'),
+        title: Text(
+          'FutureProof',
+          style: GoogleFonts.playfairDisplay(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -176,159 +182,67 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const SizedBox(height: 24),
 
-              // Header
+              // Hero Section - Financial Health Status
+              _buildHeroSection(context),
+
+              const SizedBox(height: 32),
+
+              // Monthly Overview Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'FutureProof',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'MONTHLY OVERVIEW',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.1,
+                    color: const Color(0xFF6B6B6B),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
               // Quick Stats Cards
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        icon: Icons.account_balance_wallet,
-                        title: 'Income',
-                        value: '\$${_monthlyIncome.toStringAsFixed(0)}',
-                        color: Colors.grey[900]!,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        icon: Icons.shopping_cart,
-                        title: 'Expenses',
-                        value: '\$${provider.totalExpenses.toStringAsFixed(0)}',
-                        color: Colors.grey[700]!,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        icon: Icons.savings,
-                        title: 'Savings Goal',
-                        value: '\$${_savingsGoal.toStringAsFixed(0)}',
-                        color: Colors.grey[600]!,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        icon: Icons.show_chart,
-                        title: 'Remaining',
-                        value: _status != null
-                            ? '\$${_status!.remaining.toStringAsFixed(0)}'
-                            : '\$0',
-                        valueColor: _status?.color,
-                        color: Colors.grey[800]!,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // "Are We Okay?" Button Section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 4,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(2),
+                        Expanded(
+                          child: _buildModernStatCard(
+                            context,
+                            title: 'INCOME',
+                            value: '\$${_monthlyIncome.toStringAsFixed(0)}',
+                            trend: '+12%',
+                            trendUp: true,
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'Financial Check',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: _buildModernStatCard(
+                            context,
+                            title: 'EXPENSES',
+                            value: '\$${provider.totalExpenses.toStringAsFixed(0)}',
+                            trend: '+8%',
+                            trendUp: true,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    if (_isLoading)
-                      const Center(child: CircularProgressIndicator())
-                    else
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _onAreWeOkayPressed,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            elevation: 0,
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                _status?.emoji ?? '❓',
-                                style: const TextStyle(fontSize: 48),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Are We Okay?',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (_status != null) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  _status!.remaining >= 0
-                                      ? 'Tap to see details'
-                                      : 'Review your spending',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 12),
+                    _buildWideStatCard(
+                      context,
+                      title: 'REMAINING',
+                      value: _status != null
+                          ? '\$${_status!.remaining.toStringAsFixed(0)}'
+                          : '\$0',
+                      subtitle: '${_status != null && _status!.remaining >= 0 ? "On track" : "Review spending"}',
+                      percentage: _monthlyIncome > 0
+                          ? ((_status?.remaining ?? 0) / _monthlyIncome * 100).round()
+                          : 0,
+                    ),
                   ],
                 ),
               ),
@@ -338,53 +252,366 @@ class _HomeScreenState extends State<HomeScreen> {
               // Recent Transactions Preview
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Recent Transactions',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to transaction history
-                          },
-                          child: const Text('See all'),
-                        ),
-                      ],
+                    Text(
+                      'RECENT ACTIVITY',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.1,
+                        color: const Color(0xFF6B6B6B),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    if (provider.transactions.isEmpty)
-                      _buildEmptyTransactions(context)
-                    else
-                      ...provider.getRecentTransactions(3).map((t) =>
-                        _buildTransactionTile(context, t)),
+                    TextButton(
+                      onPressed: () {},
+                      child: Text(
+                        'View all',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              if (provider.transactions.isEmpty)
+                _buildEmptyState(context)
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: provider.getRecentTransactions(3).map((t) =>
+                      _buildTimelineItem(context, t)).toList(),
+                  ),
+                ),
 
               const SizedBox(height: 32),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeroSection(BuildContext context) {
+    final status = _status;
+    final isLoading = _isLoading;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Good Morning',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 14,
+              color: const Color(0xFF6B6B6B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Financial Health',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0A0A0A),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            width: 60,
+            height: 3,
+            decoration: BoxDecoration(
+              color: status?.color ?? Colors.grey,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 32),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator())
+          else
+            GestureDetector(
+              onTap: _onAreWeOkayPressed,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      status?.emoji ?? '✨',
+                      style: const TextStyle(fontSize: 64),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      status?.level == StatusLevel.good
+                          ? 'Strong'
+                          : status?.level == StatusLevel.caution
+                              ? 'Caution'
+                              : 'Review',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w600,
+                        color: status?.color ?? const Color(0xFF0A0A0A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      status?.message ?? 'Tap to check your status',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 16,
+                        color: const Color(0xFF6B6B6B),
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernStatCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required String trend,
+    required bool trendUp,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE0E0E0),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 24,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF0A0A0A),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                trendUp ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 14,
+                color: const Color(0xFF0A0A0A),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                trend,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF0A0A0A),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWideStatCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required String subtitle,
+    required int percentage,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE0E0E0),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.1,
+                  color: const Color(0xFF6B6B6B),
+                ),
+              ),
+              Text(
+                '$percentage%',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF0A0A0A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 32,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF0A0A0A),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 13,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: percentage / 100,
+              backgroundColor: const Color(0xFFE0E0E0),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                const Color(0xFFC9A962),
+              ),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem(BuildContext context, Transaction transaction) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: transaction.amount < 0
+                  ? const Color(0xFF0A0A0A)
+                  : const Color(0xFFC9A962),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction.category,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF0A0A0A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  transaction.formattedAmount,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: transaction.amount < 0
+                        ? const Color(0xFF0A0A0A)
+                        : const Color(0xFF6B6B6B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${transaction.date.month}/${transaction.date.day}',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 13,
+              color: const Color(0xFF9E9E9E),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.receipt_long,
+            size: 48,
+            color: Colors.grey[300],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No activity yet',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF404040),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add your first transaction to get started',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 14,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+        ],
       ),
     );
   }
