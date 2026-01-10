@@ -100,10 +100,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Settings saved successfully'),
-              backgroundColor: Colors.green,
+              backgroundColor: Color(0xFF0A0A0A),
+              behavior: SnackBarBehavior.floating,
             ),
           );
-          Navigator.pop(context, true);
+          // Don't navigate away automatically - let user decide when to leave
         }
       } else {
         throw Exception('Settings verification failed');

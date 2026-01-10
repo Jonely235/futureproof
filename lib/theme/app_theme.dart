@@ -131,28 +131,26 @@ class AppTheme {
   // ============================================
 
   /// Rich grayscale palette with depth and warmth
-  static const class _Colors {
-    // Primary blacks
-    static const black = Color(0xFF0A0A0A);      // Near-black for primary
-    static const charcoal = Color(0xFF1A1A1A);    // Slightly softer
-    static const slate = Color(0xFF2D2D2D);       // For backgrounds
+  // Primary blacks
+  static const _black = Color(0xFF0A0A0A);      // Near-black for primary
+  static const _charcoal = Color(0xFF1A1A1A);    // Slightly softer
+  static const _slate = Color(0xFF2D2D2D);       // For backgrounds
 
-    // Grays with warmth
-    static const gray900 = Color(0xFF404040);
-    static const gray700 = Color(0xFF6B6B6B);
-    static const gray500 = Color(0xFF9E9E9E);
-    static const gray300 = Color(0xFFD4D4D4);
-    static const gray100 = Color(0xFFF5F5F5);
+  // Grays with warmth
+  static const _gray900 = Color(0xFF404040);
+  static const _gray700 = Color(0xFF6B6B6B);
+  static const _gray500 = Color(0xFF9E9E9E);
+  static const _gray300 = Color(0xFFD4D4D4);
+  static const _gray100 = Color(0xFFF5F5F5);
 
-    // Pure whites with depth
-    static const white = Color(0xFFFFFFFF);
-    static const offWhite = Color(0xFFFAFAFA);
-    static const paper = Color(0xFFF0F0F0);
+  // Pure whites with depth
+  static const _white = Color(0xFFFFFFFF);
+  static const _offWhite = Color(0xFFFAFAFA);
+  static const _paper = Color(0xFFF0F0F0);
 
-    // Accents (sparingly)
-    static const gold = Color(0xFFC9A962);        // For wealth/success
-    static const crimson = Color(0xFFD4483A);      // For alerts only
-  }
+  // Accents (sparingly)
+  static const _gold = Color(0xFFC9A962);        // For wealth/success
+  static const _crimson = Color(0xFFD4483A);      // For alerts only
 
   // ============================================
   // LIGHT THEME
