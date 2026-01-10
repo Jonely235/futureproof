@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../config/finance_config.dart';
 
 class FinanceStatus {
   final String message;
@@ -16,11 +17,11 @@ class FinanceStatus {
   Color get color {
     switch (level) {
       case StatusLevel.good:
-        return const Color(0xFF4CAF50); // Green
+        return const Color(0xFF4CAF50);
       case StatusLevel.caution:
-        return const Color(0xFFFF9800); // Orange
+        return const Color(0xFFFF9800);
       case StatusLevel.danger:
-        return const Color(0xFFF44336); // Red
+        return const Color(0xFFF44336);
     }
   }
 
@@ -39,35 +40,44 @@ class FinanceStatus {
 enum StatusLevel { good, caution, danger }
 
 class FinanceCalculator {
-  /// Calculate financial status based on income, expenses, and savings goal
   static FinanceStatus calculateStatus({
     required double monthlyIncome,
     required double monthlyExpenses,
     required double savingsGoal,
     List<String>? insights,
   }) {
+    final config = FinanceConfig.instance;
     final remaining = monthlyIncome - monthlyExpenses - savingsGoal;
-    final buffer = monthlyIncome * 0.1; // 10% buffer
+    final buffer = config.calculateBuffer(monthlyIncome);
+    final formatter = NumberFormat.currency(symbol: '\$');
 
     String message;
     StatusLevel level;
 
     if (remaining >= buffer) {
-      // Doing great!
       level = StatusLevel.good;
-      message = _generateGoodMessage(remaining, monthlyIncome);
+      message = _chooseRandom([
+        "You're doing great! You have ${formatter.format(remaining)} left. Maybe treat yourselves to something nice?",
+        "On track and then some! ${formatter.format(remaining)} remaining. You're crushing it!",
+        "Excellent! ${formatter.format(remaining)} left this month. Consider putting extra toward savings.",
+      ]);
     } else if (remaining > 0) {
-      // On track but not much cushion
       level = StatusLevel.good;
-      message = _generateOnTrackMessage(remaining);
+      message = "You're on track! ${formatter.format(remaining)} left for flexible spending.";
     } else if (remaining > -buffer) {
-      // Slightly over, but recoverable
       level = StatusLevel.caution;
-      message = _generateCautionMessage(remaining.abs());
+      message = _chooseRandom([
+        "You're ${formatter.format(remaining.abs())} over this month. Consider reviewing dining expenses this weekend.",
+        "Slightly over budget by ${formatter.format(remaining.abs())}. Hold off on non-essential spending until next month.",
+        "${formatter.format(remaining.abs())} over. Look for subscriptions or recurring expenses you can pause.",
+      ]);
     } else {
-      // Significantly over budget
       level = StatusLevel.danger;
-      message = _generateDangerMessage(remaining.abs());
+      message = _chooseRandom([
+        "Over budget by ${formatter.format(remaining.abs())}. Review all spending this week and pause non-essentials.",
+        "${formatter.format(remaining.abs())} over. Focus on groceries instead of dining out until next month.",
+        "Budget alert: ${formatter.format(remaining.abs())} over. Time for a spending freeze until next income.",
+      ]);
     }
 
     return FinanceStatus(
@@ -77,62 +87,22 @@ class FinanceCalculator {
     );
   }
 
-  static String _generateGoodMessage(double remaining, double income) {
-    final formatter = NumberFormat.currency(symbol: '\$');
-
-    final messages = [
-      "You're doing great! You have ${formatter.format(remaining)} left. Maybe treat yourselves to something nice?",
-      "On track and then some! ${formatter.format(remaining)} remaining. You're crushing it!",
-      "Excellent! ${formatter.format(remaining)} left this month. Consider putting extra toward savings.",
-    ];
-
+  static String _chooseRandom(List<String> messages) {
     return messages[Random().nextInt(messages.length)];
   }
 
-  static String _generateOnTrackMessage(double remaining) {
-    final formatter = NumberFormat.currency(symbol: '\$');
-    return "You're on track! ${formatter.format(remaining)} left for flexible spending.";
-  }
-
-  static String _generateCautionMessage(double deficit) {
-    final formatter = NumberFormat.currency(symbol: '\$');
-
-    final messages = [
-      "You're ${formatter.format(deficit)} over this month. Consider reviewing dining expenses this weekend.",
-      "Slightly over budget by ${formatter.format(deficit)}. Hold off on non-essential spending until next month.",
-      "${formatter.format(deficit)} over. Look for subscriptions or recurring expenses you can pause.",
-    ];
-
-    return messages[Random().nextInt(messages.length)];
-  }
-
-  static String _generateDangerMessage(double deficit) {
-    final formatter = NumberFormat.currency(symbol: '\$');
-
-    final messages = [
-      "Over budget by ${formatter.format(deficit)}. Review all spending this week and pause non-essentials.",
-      "${formatter.format(deficit)} over. Focus on groceries instead of dining out until next month.",
-      "Budget alert: ${formatter.format(deficit)} over. Time for a spending freeze until next income.",
-    ];
-
-    return messages[Random().nextInt(messages.length)];
-  }
-
-  /// Calculate total expenses for a list of transactions
   static double calculateTotalExpenses(List transactions) {
     return transactions
         .where((t) => t.amount < 0)
         .fold(0.0, (sum, t) => sum + t.amount.abs());
   }
 
-  /// Calculate total income for a list of transactions
   static double calculateTotalIncome(List transactions) {
     return transactions
         .where((t) => t.amount > 0)
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
-  /// Group transactions by category
   static Map<String, double> groupByCategory(List transactions) {
     final Map<String, double> categoryTotals = {};
 
@@ -146,7 +116,6 @@ class FinanceCalculator {
     return categoryTotals;
   }
 
-  /// Get highest spending category
   static String getHighestSpendingCategory(List transactions) {
     final categoryTotals = groupByCategory(transactions);
 

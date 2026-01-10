@@ -19,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   FinanceStatus? _status;
   bool _isLoading = false;
-  bool _isLoadingTransactions = true;
 
   @override
   void initState() {
@@ -47,12 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadTransactions() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoadingTransactions = true;
-    });
-
     try {
       final dbService = DatabaseService();
       final transactions = await dbService.getAllTransactions();
@@ -61,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _transactions = transactions;
-        _isLoadingTransactions = false;
       });
 
       _calculateStatus();
@@ -71,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _transactions = [];
-          _isLoadingTransactions = false;
         });
       }
     }
