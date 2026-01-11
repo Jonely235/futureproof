@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/spending_analysis.dart';
 import '../services/analytics_service.dart';
+import '../utils/app_logger.dart';
 import '../widgets/pie_chart_widget.dart';
 import '../widgets/bar_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
@@ -65,7 +66,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading analytics: $e');
+      AppLogger.analyticsUI.severe('Error loading analytics: $e');
       setState(() {
         _isLoading = false;
       });
@@ -658,7 +659,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading insights: $e');
+      AppLogger.analyticsUI.severe('Error loading insights: $e');
       setState(() {
         _isLoading = false;
       });
