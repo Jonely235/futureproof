@@ -1,8 +1,32 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:futureproof/models/transaction.dart';
+import 'package:futureproof/models/app_error.dart';
+import 'package:futureproof/models/transaction.dart' as model;
+import 'package:futureproof/services/database_service.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import '../helper/test_helper.dart';
 
 void main() {
+  // Initialize test database for all tests
+  setUpAll(() {
+    initializeTestDatabase();
+  });
+
   group('Database Service Integration', () {
+    late DatabaseService databaseService;
+
+    setUp(() async {
+      databaseService = DatabaseService();
+    });
+
+    tearDown(() async {
+      // Clean up database after each test
+      try {
+        await databaseService.deleteAllTransactions();
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    });
+
     // Note: Full database tests require platform-specific setup
     // These tests validate data transformations and serialization
 
@@ -11,7 +35,7 @@ void main() {
         final date = DateTime(2024, 1, 10);
         final createdAt = DateTime(2024, 1, 9);
 
-        final transaction = Transaction(
+        final transaction = model.Transaction(
           id: 'test-123',
           amount: -123.45,
           category: 'groceries',
@@ -55,7 +79,7 @@ void main() {
           'createdAt': createdAt.millisecondsSinceEpoch,
         };
 
-        final transaction = Transaction.fromSqliteMap(sqliteMap);
+        final transaction = model.Transaction.fromSqliteMap(sqliteMap);
 
         expect(transaction.id, 'test-123');
         expect(transaction.amount, -123.45);
@@ -78,7 +102,7 @@ void main() {
           'householdId': '',
         };
 
-        final transaction = Transaction.fromSqliteMap(sqliteMap);
+        final transaction = model.Transaction.fromSqliteMap(sqliteMap);
 
         expect(transaction.id, 'test-123');
         expect(transaction.amount, -50.0);
@@ -89,7 +113,7 @@ void main() {
       });
 
       test('should round-trip transaction through SQLite format', () {
-        final original = Transaction(
+        final original = model.Transaction(
           id: 'round-trip-test',
           amount: -250.0,
           category: 'housing',
@@ -111,7 +135,7 @@ void main() {
         };
 
         // Deserialize back
-        final restored = Transaction.fromSqliteMap(sqliteMap);
+        final restored = model.Transaction.fromSqliteMap(sqliteMap);
 
         // Verify all fields match
         expect(restored.id, original.id);
@@ -129,7 +153,7 @@ void main() {
         final date = DateTime(2024, 1, 10);
         final createdAt = DateTime(2024, 1, 9);
 
-        final transaction = Transaction(
+        final transaction = model.Transaction(
           id: 'test-123',
           amount: -123.45,
           category: 'groceries',
@@ -162,7 +186,7 @@ void main() {
           'created_at': createdAt,
         };
 
-        final transaction = Transaction.fromMap(firestoreMap, 'test-id');
+        final transaction = model.Transaction.fromMap(firestoreMap, 'test-id');
 
         expect(transaction.id, 'test-id');
         expect(transaction.amount, 123.45);
@@ -174,7 +198,7 @@ void main() {
       });
 
       test('should round-trip transaction through Firestore format', () {
-        final original = Transaction(
+        final original = model.Transaction(
           id: 'round-trip-test',
           amount: 3000.0,
           category: 'income',
@@ -188,7 +212,7 @@ void main() {
         final firestoreMap = original.toMap();
 
         // Deserialize back (simulating Firestore read)
-        final restored = Transaction.fromMap(firestoreMap, original.id);
+        final restored = model.Transaction.fromMap(firestoreMap, original.id);
 
         // Verify all fields match
         expect(restored.id, original.id);
@@ -213,7 +237,7 @@ void main() {
         ];
 
         for (final amount in amounts) {
-          final transaction = Transaction(
+          final transaction = model.Transaction(
             id: 'test-$amount',
             amount: amount,
             category: amount >= 0 ? 'income' : 'groceries',
@@ -227,7 +251,7 @@ void main() {
             'date': transaction.date.millisecondsSinceEpoch,
           };
 
-          final restored = Transaction.fromSqliteMap(sqliteMap);
+          final restored = model.Transaction.fromSqliteMap(sqliteMap);
 
           expect(restored.amount, closeTo(amount, 0.001),
             reason: 'Amount $amount should round-trip correctly');
@@ -242,7 +266,7 @@ void main() {
         ];
 
         for (final date in dates) {
-          final transaction = Transaction(
+          final transaction = model.Transaction(
             id: 'test-${date.millisecondsSinceEpoch}',
             amount: -100.0,
             category: 'groceries',
@@ -256,7 +280,7 @@ void main() {
             'date': transaction.date.millisecondsSinceEpoch,
           };
 
-          final restored = Transaction.fromSqliteMap(sqliteMap);
+          final restored = model.Transaction.fromSqliteMap(sqliteMap);
 
           expect(restored.date, date,
             reason: 'DateTime $date should round-trip correctly');
@@ -268,7 +292,7 @@ void main() {
       test('should handle very long notes', () {
         final longNote = 'x' * 500; // Max allowed length
 
-        final transaction = Transaction(
+        final transaction = model.Transaction(
           id: 'test',
           amount: -50.0,
           category: 'groceries',
@@ -289,7 +313,7 @@ void main() {
         ];
 
         for (final note in specialNotes) {
-          final transaction = Transaction(
+          final transaction = model.Transaction(
             id: 'test',
             amount: -50.0,
             category: 'groceries',
@@ -315,7 +339,7 @@ void main() {
         ];
 
         for (final category in categories) {
-          final transaction = Transaction(
+          final transaction = model.Transaction(
             id: 'test-$category',
             amount: -100.0,
             category: category,
@@ -324,6 +348,374 @@ void main() {
 
           expect(transaction.category, category);
         }
+      });
+    });
+
+    group('Database CRUD Operations', () {
+      test('should add transaction to database', () async {
+        final transaction = model.Transaction(
+          id: 'test-add-1',
+          amount: -100.50,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+          note: 'Test transaction',
+        );
+
+        final resultId = await databaseService.addTransaction(transaction);
+        expect(resultId, equals('test-add-1'));
+
+        final transactions = await databaseService.getAllTransactions();
+        expect(transactions, hasLength(1));
+        expect(transactions.first.id, equals('test-add-1'));
+        expect(transactions.first.amount, equals(-100.50));
+        expect(transactions.first.category, equals('groceries'));
+      });
+
+      test('should add multiple transactions', () async {
+        final transactions = [
+          model.Transaction(
+            id: 'test-multi-1',
+            amount: -50.0,
+            category: 'dining',
+            date: DateTime(2024, 1, 10),
+          ),
+          model.Transaction(
+            id: 'test-multi-2',
+            amount: -75.0,
+            category: 'transport',
+            date: DateTime(2024, 1, 11),
+          ),
+          model.Transaction(
+            id: 'test-multi-3',
+            amount: 3000.0,
+            category: 'income',
+            date: DateTime(2024, 1, 12),
+          ),
+        ];
+
+        for (final tx in transactions) {
+          await databaseService.addTransaction(tx);
+        }
+
+        final retrieved = await databaseService.getAllTransactions();
+        expect(retrieved, hasLength(3));
+      });
+
+      test('should update existing transaction', () async {
+        final original = model.Transaction(
+          id: 'test-update-1',
+          amount: -100.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+          note: 'Original note',
+        );
+
+        await databaseService.addTransaction(original);
+
+        final updated = model.Transaction(
+          id: 'test-update-1',
+          amount: -150.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+          note: 'Updated note',
+        );
+
+        final result = await databaseService.updateTransaction(updated);
+        expect(result, isTrue);
+
+        final transactions = await databaseService.getAllTransactions();
+        expect(transactions, hasLength(1));
+        expect(transactions.first.amount, equals(-150.0));
+        expect(transactions.first.note, equals('Updated note'));
+      });
+
+      test('should return false when updating non-existent transaction', () async {
+        final nonExistent = model.Transaction(
+          id: 'does-not-exist',
+          amount: -100.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+        );
+
+        final result = await databaseService.updateTransaction(nonExistent);
+        expect(result, isFalse);
+      });
+
+      test('should delete transaction by ID', () async {
+        final transaction = model.Transaction(
+          id: 'test-delete-1',
+          amount: -100.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+        );
+
+        await databaseService.addTransaction(transaction);
+
+        final result = await databaseService.deleteTransaction('test-delete-1');
+        expect(result, isTrue);
+
+        final transactions = await databaseService.getAllTransactions();
+        expect(transactions, isEmpty);
+      });
+
+      test('should return false when deleting non-existent transaction', () async {
+        final result = await databaseService.deleteTransaction('does-not-exist');
+        expect(result, isFalse);
+      });
+
+      test('should delete all transactions', () async {
+        final transactions = [
+          model.Transaction(
+            id: 'test-clear-1',
+            amount: -50.0,
+            category: 'dining',
+            date: DateTime(2024, 1, 10),
+          ),
+          model.Transaction(
+            id: 'test-clear-2',
+            amount: -75.0,
+            category: 'transport',
+            date: DateTime(2024, 1, 11),
+          ),
+        ];
+
+        for (final tx in transactions) {
+          await databaseService.addTransaction(tx);
+        }
+
+        expect(await databaseService.getAllTransactions(), hasLength(2));
+
+        final result = await databaseService.deleteAllTransactions();
+        expect(result, isTrue);
+
+        expect(await databaseService.getAllTransactions(), isEmpty);
+      });
+    });
+
+    group('Database Query Operations', () {
+      test('should retrieve all transactions sorted by date descending', () async {
+        final transactions = [
+          model.Transaction(
+            id: 'test-sort-1',
+            amount: -100.0,
+            category: 'groceries',
+            date: DateTime(2024, 1, 10),
+          ),
+          model.Transaction(
+            id: 'test-sort-2',
+            amount: -200.0,
+            category: 'housing',
+            date: DateTime(2024, 1, 15),
+          ),
+          model.Transaction(
+            id: 'test-sort-3',
+            amount: -50.0,
+            category: 'dining',
+            date: DateTime(2024, 1, 12),
+          ),
+        ];
+
+        for (final tx in transactions) {
+          await databaseService.addTransaction(tx);
+        }
+
+        final retrieved = await databaseService.getAllTransactions();
+        expect(retrieved, hasLength(3));
+
+        // Verify descending order (newest first)
+        expect(retrieved[0].id, equals('test-sort-2')); // Jan 15
+        expect(retrieved[1].id, equals('test-sort-3')); // Jan 12
+        expect(retrieved[2].id, equals('test-sort-1')); // Jan 10
+      });
+
+      test('should query transactions by date range', () async {
+        final transactions = [
+          model.Transaction(
+            id: 'test-range-1',
+            amount: -100.0,
+            category: 'groceries',
+            date: DateTime(2024, 1, 5),
+          ),
+          model.Transaction(
+            id: 'test-range-2',
+            amount: -200.0,
+            category: 'housing',
+            date: DateTime(2024, 1, 10),
+          ),
+          model.Transaction(
+            id: 'test-range-3',
+            amount: -150.0,
+            category: 'dining',
+            date: DateTime(2024, 1, 15),
+          ),
+          model.Transaction(
+            id: 'test-range-4',
+            amount: -50.0,
+            category: 'transport',
+            date: DateTime(2024, 1, 20),
+          ),
+        ];
+
+        for (final tx in transactions) {
+          await databaseService.addTransaction(tx);
+        }
+
+        final start = DateTime(2024, 1, 8);
+        final end = DateTime(2024, 1, 18);
+
+        final retrieved = await databaseService.getTransactionsByDateRange(start, end);
+        expect(retrieved, hasLength(2));
+
+        final ids = retrieved.map((t) => t.id).toSet();
+        expect(ids, contains('test-range-2'));
+        expect(ids, contains('test-range-3'));
+        expect(ids, isNot(contains('test-range-1')));
+        expect(ids, isNot(contains('test-range-4')));
+      });
+
+      test('should return empty list for date range with no transactions', () async {
+        final transaction = model.Transaction(
+          id: 'test-empty-range',
+          amount: -100.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 10),
+        );
+
+        await databaseService.addTransaction(transaction);
+
+        final start = DateTime(2024, 2, 1);
+        final end = DateTime(2024, 2, 28);
+
+        final retrieved = await databaseService.getTransactionsByDateRange(start, end);
+        expect(retrieved, isEmpty);
+      });
+
+      test('should calculate total for month', () async {
+        final transactions = [
+          model.Transaction(
+            id: 'test-total-1',
+            amount: -100.0,
+            category: 'groceries',
+            date: DateTime(2024, 1, 5),
+          ),
+          model.Transaction(
+            id: 'test-total-2',
+            amount: -200.0,
+            category: 'housing',
+            date: DateTime(2024, 1, 15),
+          ),
+          model.Transaction(
+            id: 'test-total-3',
+            amount: 3000.0,
+            category: 'income',
+            date: DateTime(2024, 1, 1),
+          ),
+          model.Transaction(
+            id: 'test-total-4',
+            amount: -50.0,
+            category: 'dining',
+            date: DateTime(2024, 2, 10),
+          ),
+        ];
+
+        for (final tx in transactions) {
+          await databaseService.addTransaction(tx);
+        }
+
+        final januaryTotal = await databaseService.getTotalForMonth(2024, 1);
+        expect(januaryTotal, equals(300.0)); // 100 + 200 (absolute value of expenses)
+
+        final februaryTotal = await databaseService.getTotalForMonth(2024, 2);
+        expect(februaryTotal, equals(50.0));
+      });
+
+      test('should return empty list when getting all transactions from empty database', () async {
+        final transactions = await databaseService.getAllTransactions();
+        expect(transactions, isEmpty);
+      });
+    });
+
+    group('Database Error Handling', () {
+      test('should reject transaction with empty ID', () async {
+        // Transaction model itself validates ID and throws AssertionError
+        expect(
+          () => model.Transaction(
+            id: '',
+            amount: -100.0,
+            category: 'groceries',
+            date: DateTime(2024, 1, 15),
+          ),
+          throwsAssertionError,
+        );
+      });
+
+      test('should handle duplicate transaction IDs with replace', () async {
+        final original = model.Transaction(
+          id: 'test-duplicate',
+          amount: -100.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+          note: 'Original',
+        );
+
+        await databaseService.addTransaction(original);
+
+        final duplicate = model.Transaction(
+          id: 'test-duplicate',
+          amount: -200.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15),
+          note: 'Duplicate',
+        );
+
+        // Should replace due to ConflictAlgorithm.replace
+        await databaseService.addTransaction(duplicate);
+
+        final transactions = await databaseService.getAllTransactions();
+        expect(transactions, hasLength(1));
+        expect(transactions.first.amount, equals(-200.0));
+        expect(transactions.first.note, equals('Duplicate'));
+      });
+
+      test('should preserve data integrity through CRUD operations', () async {
+        final original = model.Transaction(
+          id: 'test-integrity',
+          amount: -123.45,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15, 14, 30),
+          note: 'Test integrity 🛒',
+        );
+
+        // Add
+        await databaseService.addTransaction(original);
+
+        // Retrieve
+        var transactions = await databaseService.getAllTransactions();
+        expect(transactions, hasLength(1));
+        expect(transactions.first.amount, equals(-123.45));
+        expect(transactions.first.note, equals('Test integrity 🛒'));
+
+        // Update
+        final updated = model.Transaction(
+          id: 'test-integrity',
+          amount: -250.0,
+          category: 'groceries',
+          date: DateTime(2024, 1, 15, 14, 30),
+          note: 'Updated integrity',
+        );
+        await databaseService.updateTransaction(updated);
+
+        // Verify update
+        transactions = await databaseService.getAllTransactions();
+        expect(transactions.first.amount, equals(-250.0));
+        expect(transactions.first.note, equals('Updated integrity'));
+
+        // Delete
+        await databaseService.deleteTransaction('test-integrity');
+
+        // Verify deletion
+        transactions = await databaseService.getAllTransactions();
+        expect(transactions, isEmpty);
       });
     });
   });
