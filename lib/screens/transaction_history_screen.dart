@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../config/app_colors.dart';
 import 'edit_transaction_screen.dart';
 
 /// Transaction History Screen - Timeline View
@@ -102,7 +103,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            backgroundColor: const Color(0xFF0A0A0A),
+            backgroundColor: const AppColors.black,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -112,7 +113,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: const Color(0xFFD4483A),
+            backgroundColor: const AppColors.danger,
           ),
         );
       }
@@ -126,7 +127,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     final filtered = _filteredTransactions(transactions);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const AppColors.offWhite,
       body: CustomScrollView(
         slivers: [
           // App Bar with Search
@@ -143,7 +144,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                 ),
               ),
             ),
@@ -155,17 +156,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search transactions...',
                     hintStyle: GoogleFonts.spaceGrotesk(
-                      color: const Color(0xFF9E9E9E),
+                      color: const AppColors.gray500,
                     ),
                     prefixIcon: const Icon(
                       Icons.search,
-                      color: Color(0xFF6B6B6B),
+                      color: AppColors.gray700,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(
                               Icons.clear,
-                              color: Color(0xFF6B6B6B),
+                              color: AppColors.gray700,
                             ),
                             onPressed: () {
                               setState(() {
@@ -179,7 +180,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
+                    fillColor: const AppColors.gray100,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -187,7 +188,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ),
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 15,
-                    color: const Color(0xFF0A0A0A),
+                    color: const AppColors.black,
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -211,14 +212,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: const Color(0xFFE0E0E0),
+                              color: const AppColors.border,
                               width: 2,
                             ),
                           ),
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF0A0A0A),
+                              AppColors.black,
                             ),
                           ),
                         ),
@@ -226,7 +227,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         Text(
                           'Loading transactions...',
                           style: GoogleFonts.spaceGrotesk(
-                            color: const Color(0xFF6B6B6B),
+                            color: const AppColors.gray700,
                           ),
                         ),
                       ],
@@ -243,12 +244,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: const Color(0xFFF5F5F5),
+                                color: const AppColors.gray100,
                               ),
                               child: const Icon(
                                 Icons.receipt_long,
                                 size: 48,
-                                color: Color(0xFF9E9E9E),
+                                color: AppColors.gray500,
                               ),
                             ),
                             const SizedBox(height: 24),
@@ -259,7 +260,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0A0A0A),
+                                color: const AppColors.black,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -269,7 +270,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                   : 'Try a different search term',
                               style: GoogleFonts.spaceGrotesk(
                                 fontSize: 14,
-                                color: const Color(0xFF6B6B6B),
+                                color: const AppColors.gray700,
                               ),
                             ),
                           ],
@@ -287,13 +288,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               '${filtered.length} transaction${filtered.length == 1 ? '' : 's'}',
                               style: GoogleFonts.spaceGrotesk(
                                 fontSize: 13,
-                                color: const Color(0xFF6B6B6B),
+                                color: const AppColors.gray700,
                               ),
                             ),
                           ),
                           RefreshIndicator(
                             onRefresh: () => provider.refresh(),
-                            color: const Color(0xFF0A0A0A),
+                            color: const AppColors.black,
                             child: ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -315,7 +316,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                             width: 4,
                                             height: 24,
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF0A0A0A),
+                                              color: const AppColors.black,
                                               borderRadius: BorderRadius.circular(2),
                                             ),
                                           ),
@@ -325,7 +326,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                             style: GoogleFonts.playfairDisplay(
                                               fontSize: 20,
                                               fontWeight: FontWeight.w600,
-                                              color: const Color(0xFF0A0A0A),
+                                              color: const AppColors.black,
                                               letterSpacing: -0.5,
                                             ),
                                           ),
@@ -385,7 +386,7 @@ class _TimelineTransactionCard extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
         decoration: const BoxDecoration(
-          color: Color(0xFFD4483A),
+          color: AppColors.danger,
           borderRadius: BorderRadius.horizontal(right: Radius.circular(16)),
         ),
         child: const Icon(
@@ -430,7 +431,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                     'Delete',
                     style: GoogleFonts.spaceGrotesk(
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFD4483A),
+                      color: const AppColors.danger,
                     ),
                   ),
                 ),
@@ -473,7 +474,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                       Expanded(
                         child: Container(
                           width: 2,
-                          color: const Color(0xFFE0E0E0),
+                          color: const AppColors.border,
                         ),
                       ),
                     Container(
@@ -482,8 +483,8 @@ class _TimelineTransactionCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isExpense
-                            ? const Color(0xFF0A0A0A)
-                            : const Color(0xFF4CAF50),
+                            ? const AppColors.black
+                            : const AppColors.success,
                         border: Border.all(
                           color: Colors.white,
                           width: 2,
@@ -494,7 +495,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                       Expanded(
                         child: Container(
                           width: 2,
-                          color: const Color(0xFFE0E0E0),
+                          color: const AppColors.border,
                         ),
                       ),
                   ],
@@ -509,12 +510,12 @@ class _TimelineTransactionCard extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFE0E0E0),
+                      color: const AppColors.border,
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF0A0A0A).withOpacity(0.03),
+                        color: const AppColors.black.withOpacity(0.03),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -527,7 +528,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
+                          color: const AppColors.gray100,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -550,7 +551,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                               style: GoogleFonts.spaceGrotesk(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0A0A0A),
+                                color: const AppColors.black,
                               ),
                             ),
                             if (transaction.note?.isNotEmpty ?? false) ...[
@@ -559,7 +560,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                                 transaction.note!,
                                 style: GoogleFonts.spaceGrotesk(
                                   fontSize: 13,
-                                  color: const Color(0xFF6B6B6B),
+                                  color: const AppColors.gray700,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -579,8 +580,8 @@ class _TimelineTransactionCard extends StatelessWidget {
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: isExpense
-                                  ? const Color(0xFF0A0A0A)
-                                  : const Color(0xFF4CAF50),
+                                  ? const AppColors.black
+                                  : const AppColors.success,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -588,7 +589,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                             '${transaction.date.hour}:${transaction.date.minute.toString().padLeft(2, '0')}',
                             style: GoogleFonts.spaceGrotesk(
                               fontSize: 12,
-                              color: const Color(0xFF9E9E9E),
+                              color: const AppColors.gray500,
                             ),
                           ),
                         ],
