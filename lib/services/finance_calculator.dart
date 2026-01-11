@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../config/finance_config.dart';
+import '../config/app_colors.dart';
 
 class FinanceStatus {
   final String message;
@@ -16,11 +17,11 @@ class FinanceStatus {
   Color get color {
     switch (level) {
       case StatusLevel.good:
-        return const Color(0xFF4CAF50);
+        return AppColors.success;
       case StatusLevel.caution:
-        return const Color(0xFFFF9800);
+        return AppColors.gold;
       case StatusLevel.danger:
-        return const Color(0xFFF44336);
+        return AppColors.danger;
     }
   }
 

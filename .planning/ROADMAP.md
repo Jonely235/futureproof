@@ -79,8 +79,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 05-01: Add AnalyticsService tests
-- [ ] 05-02: Add BackupService tests
+- [x] 05-01: Add AnalyticsService tests
+- [x] 05-02: Add BackupService tests
 - [ ] 05-03: Expand DatabaseService tests
 - [ ] 05-04: Add FinanceCalculator tests
 
