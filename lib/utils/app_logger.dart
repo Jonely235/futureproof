@@ -12,6 +12,9 @@ class AppLogger {
   static final _services = Logger('Services');
   static final _general = Logger('General');
   static final _backup = Logger('Backup');
+  static final _settings = Logger('Settings');
+  static final _home = Logger('Home');
+  static final _analyticsUI = Logger('AnalyticsUI');
 
   /// Get UI logger for screen/widget related logs
   static Logger get ui => _ui;
@@ -30,6 +33,15 @@ class AppLogger {
 
   /// Get Backup logger for data export/import operations
   static Logger get backup => _backup;
+
+  /// Get Settings logger for settings screen operations
+  static Logger get settings => _settings;
+
+  /// Get Home logger for home screen operations
+  static Logger get home => _home;
+
+  /// Get AnalyticsUI logger for analytics dashboard operations
+  static Logger get analyticsUI => _analyticsUI;
 
   /// Log an informational message.
   ///
