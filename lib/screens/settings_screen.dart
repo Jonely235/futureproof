@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/app_error.dart';
 import '../services/backup_service.dart';
-import '../utils/app_logger.dart';
-import '../utils/error_display.dart';
 import '../config/app_colors.dart';
 import '../widgets/smart_insights_widget.dart';
 import '../widgets/theme_picker_widget.dart';
+import '../widgets/financial_goals_form_widget.dart';
 
 /// Settings Screen
 ///
@@ -22,375 +19,93 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _incomeController = TextEditingController();
-  final _savingsController = TextEditingController();
-  bool _isLoading = true;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final monthlyIncome = prefs.getDouble('monthly_income') ?? 5000.0;
-      final savingsGoal = prefs.getDouble('savings_goal') ?? 1000.0;
-
-      setState(() {
-        _incomeController.text = monthlyIncome.toStringAsFixed(0);
-        _savingsController.text = savingsGoal.toStringAsFixed(0);
-        _isLoading = false;
-      });
-    } catch (e) {
-      AppLogger.settings.severe('Error loading settings: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _saveSettings() async {
-    HapticFeedback.mediumImpact();
-
-    final income = double.tryParse(_incomeController.text);
-    final savings = double.tryParse(_savingsController.text);
-
-    if (income == null || income <= 0) {
-      HapticFeedback.heavyImpact();
-      ErrorDisplay.showErrorSnackBar(
-        context,
-        AppError(
-          type: AppErrorType.validation,
-          message: 'Please enter a valid monthly income',
-        ),
-      );
-      return;
-    }
-
-    if (savings == null || savings < 0) {
-      HapticFeedback.heavyImpact();
-      ErrorDisplay.showErrorSnackBar(
-        context,
-        AppError(
-          type: AppErrorType.validation,
-          message: 'Please enter a valid savings goal',
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSaving = true;
-    });
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble('monthly_income', income);
-      await prefs.setDouble('savings_goal', savings);
-
-      // Verify save by reading back
-      final savedIncome = prefs.getDouble('monthly_income');
-      final savedSavings = prefs.getDouble('savings_goal');
-
-      if (savedIncome == income && savedSavings == savings) {
-        HapticFeedback.lightImpact();
-
-        if (mounted) {
-          setState(() {
-            _isSaving = false;
-          });
-          ErrorDisplay.showSuccessSnackBar(
-            context,
-            'Settings saved successfully',
-          );
-          // Don't navigate away automatically - let user decide when to leave
-        }
-      } else {
-        throw Exception('Settings verification failed');
-      }
-    } catch (e, st) {
-      HapticFeedback.heavyImpact();
-      if (mounted) {
-        final error = e is AppError
-            ? e
-            : AppError.fromException(
-                e,
-                type: AppErrorType.validation,
-                stackTrace: st,
-              );
-        AppLogger.settings.severe('Error saving settings', error);
-        setState(() {
-          _isSaving = false;
-        });
-        ErrorDisplay.showErrorSnackBar(context, error);
-      }
-    }
-  }
-
-  Future<void> _resetToDefaults() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset to Defaults?'),
-        content: const Text(
-            'This will reset all settings to default values. Continue?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Reset',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      HapticFeedback.mediumImpact();
-
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('monthly_income');
-        await prefs.remove('savings_goal');
-
-        HapticFeedback.lightImpact();
-        await _loadSettings();
-
-        if (mounted) {
-          ErrorDisplay.showSuccessSnackBar(
-            context,
-            'Settings reset to defaults',
-          );
-        }
-      } catch (e, st) {
-        HapticFeedback.heavyImpact();
-        if (mounted) {
-          final error = e is AppError
-              ? e
-              : AppError.fromException(
-                  e,
-                  type: AppErrorType.validation,
-                  stackTrace: st,
-                );
-          AppLogger.settings.severe('Error resetting settings', error);
-          ErrorDisplay.showErrorSnackBar(context, error);
-        }
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _incomeController.dispose();
-    _savingsController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.offWhite,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
-              slivers: [
-                // App Bar
-                SliverAppBar(
-                  expandedHeight: 140,
-                  floating: false,
-                  pinned: true,
-                  elevation: 0,
-                  backgroundColor: Colors.white,
-                  flexibleSpace: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
-                    title: Text(
-                      'Settings',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                      ),
-                    ),
-                  ),
+      body: CustomScrollView(
+        slivers: [
+          // App Bar
+          SliverAppBar(
+            expandedHeight: 140,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.white,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
+              title: Text(
+                'Settings',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.black,
                 ),
-
-                // Content
-                SliverToBoxAdapter(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 24),
-
-                        // Financial Goals Section
-                        _buildSectionHeader('Financial Goals'),
-                        _buildSettingsSection([
-                          _buildSettingCard(
-                            icon: Icons.account_balance_wallet_outlined,
-                            title: 'Monthly Income',
-                            subtitle: 'Your total monthly household income',
-                            child: TextField(
-                              controller: _incomeController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Income',
-                                prefixText: '\$',
-                                border: InputBorder.none,
-                                filled: true,
-                              ),
-                              style: GoogleFonts.jetBrainsMono(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildSettingCard(
-                            icon: Icons.savings_outlined,
-                            title: 'Savings Goal',
-                            subtitle: 'How much you want to save each month',
-                            child: TextField(
-                              controller: _savingsController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Goal',
-                                prefixText: '\$',
-                                border: InputBorder.none,
-                                filled: true,
-                              ),
-                              style: GoogleFonts.jetBrainsMono(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ]),
-
-                        const SizedBox(height: 32),
-
-                        // Smart Insights Section
-                        _buildSectionHeader('Smart Insights'),
-                        _buildSettingsSection([
-                          const SmartInsightsWidget(),
-                        ]),
-
-                        const SizedBox(height: 32),
-
-                        // Theme Section
-                        _buildSectionHeader('Appearance'),
-                        _buildSettingsSection([
-                          ThemePickerWidget(
-                            onThemeChanged: (theme) {
-                              // Trigger rebuild to show updated selection
-                              setState(() {});
-                            },
-                          ),
-                        ]),
-
-                        const SizedBox(height: 32),
-
-                        // Backup & Export Section
-                        _buildSectionHeader('Backup & Export'),
-                        _buildSettingsSection([
-                          _buildBackupSection(),
-                        ]),
-
-                        const SizedBox(height: 32),
-
-                        // App Info Section
-                        _buildSectionHeader('About'),
-                        _buildSettingsSection([
-                          _buildInfoRow('Version', '1.0.0'),
-                          _buildInfoRow('Build', 'MVP Complete'),
-                          _buildInfoRow('Status', '🎉 Ready'),
-                        ]),
-
-                        const SizedBox(height: 32),
-
-                        // Action Buttons
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _isSaving ? null : _saveSettings,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.black,
-                                    foregroundColor: AppColors.white,
-                                    disabledBackgroundColor: AppColors.border,
-                                    padding: const EdgeInsets.symmetric(vertical: 18),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  child: _isSaving
-                                      ? const SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(AppColors.black),
-                                          ),
-                                        )
-                                      : Text(
-                                          'Save Settings',
-                                          style: GoogleFonts.spaceGrotesk(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: _resetToDefaults,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.danger,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    side: const BorderSide(color: AppColors.danger),
-                                  ),
-                                  child: Text(
-                                    'Reset to Defaults',
-                                    style: GoogleFonts.spaceGrotesk(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
+          ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+
+                  // Financial Goals Section
+                  _buildSectionHeader('Financial Goals'),
+                  _buildSettingsSection([
+                    const FinancialGoalsFormWidget(),
+                  ]),
+
+                  const SizedBox(height: 32),
+
+                  // Smart Insights Section
+                  _buildSectionHeader('Smart Insights'),
+                  _buildSettingsSection([
+                    const SmartInsightsWidget(),
+                  ]),
+
+                  const SizedBox(height: 32),
+
+                  // Theme Section
+                  _buildSectionHeader('Appearance'),
+                  _buildSettingsSection([
+                    ThemePickerWidget(
+                      onThemeChanged: (theme) {
+                        // Trigger rebuild to show updated selection
+                        setState(() {});
+                      },
+                    ),
+                  ]),
+
+                  const SizedBox(height: 32),
+
+                  // Backup & Export Section
+                  _buildSectionHeader('Backup & Export'),
+                  _buildSettingsSection([
+                    _buildBackupSection(),
+                  ]),
+
+                  const SizedBox(height: 32),
+
+                  // App Info Section
+                  _buildSectionHeader('About'),
+                  _buildSettingsSection([
+                    _buildInfoRow('Version', '1.0.0'),
+                    _buildInfoRow('Build', 'MVP Complete'),
+                    _buildInfoRow('Status', '🎉 Ready'),
+                  ]),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -433,71 +148,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: children,
         ),
       ),
-    );
-  }
-
-  Widget _buildSettingCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Widget child,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.gray100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.black,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 12,
-                      color: AppColors.gray700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.offWhite,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1,
-            ),
-          ),
-          child: child,
-        ),
-      ],
     );
   }
 
@@ -643,7 +293,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _exportData(BuildContext context, BackupService backupService) async {
+  Future<void> _exportData(
+      BuildContext context, BackupService backupService) async {
     HapticFeedback.lightImpact();
 
     try {
@@ -728,7 +379,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _importData(BuildContext context, BackupService backupService) async {
+  Future<void> _importData(
+      BuildContext context, BackupService backupService) async {
     HapticFeedback.lightImpact();
 
     // Show text input dialog
@@ -789,8 +441,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      // Reload settings to reflect any changes
-                      _loadSettings();
                     },
                     child: const Text('OK'),
                   ),

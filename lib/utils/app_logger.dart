@@ -16,6 +16,7 @@ class AppLogger {
   static final _home = Logger('Home');
   static final _analyticsUI = Logger('AnalyticsUI');
   static final _provider = Logger('Provider');
+  static final _widgets = Logger('Widgets');
 
   /// Get UI logger for screen/widget related logs
   static Logger get ui => _ui;
@@ -47,6 +48,9 @@ class AppLogger {
   /// Get Provider logger for state management operations
   static Logger get provider => _provider;
 
+  /// Get Widgets logger for widget-related logs
+  static Logger get widgets => _widgets;
+
   /// Log an informational message.
   ///
   /// Use for normal operations and expected application flow.
@@ -59,7 +63,8 @@ class AppLogger {
   ///
   /// Use for recoverable issues and unexpected but non-fatal situations.
   /// Example: Missing data that can be defaulted, API retries, fallback behavior
-  static void logWarning(Logger logger, String message, [Object? error, StackTrace? stackTrace]) {
+  static void logWarning(Logger logger, String message,
+      [Object? error, StackTrace? stackTrace]) {
     logger.warning(message, error, stackTrace);
   }
 
@@ -67,7 +72,8 @@ class AppLogger {
   ///
   /// Use for errors that impact functionality or require attention.
   /// Example: Failed operations, exceptions, data corruption
-  static void logError(Logger logger, String message, [Object? error, StackTrace? stackTrace]) {
+  static void logError(Logger logger, String message,
+      [Object? error, StackTrace? stackTrace]) {
     logger.severe(message, error, stackTrace);
   }
 
