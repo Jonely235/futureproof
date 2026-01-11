@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../config/app_colors.dart';
+import '../config/app_strings.dart';
 import 'package:uuid/uuid.dart';
 
 /// Add Expense Screen - Number-First Experience
@@ -25,20 +26,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _noteController = TextEditingController();
   final _focusNode = FocusNode();
 
-  String _selectedCategory = 'Groceries';
+  String _selectedCategory = AppStrings.groceries;
   bool _isExpense = true;
   bool _isSaving = false;
 
   final List<Map<String, String>> _categories = [
-    {'name': 'Groceries', 'emoji': '🛒', 'color': '4CAF50'},
-    {'name': 'Dining Out', 'emoji': '🍽️', 'color': 'FF9800'},
-    {'name': 'Transport', 'emoji': '🚗', 'color': '2196F3'},
-    {'name': 'Entertainment', 'emoji': '🎭', 'color': '9C27B0'},
-    {'name': 'Health', 'emoji': '💊', 'color': 'F44336'},
-    {'name': 'Shopping', 'emoji': '🛍️', 'color': 'E91E63'},
-    {'name': 'Subscriptions', 'emoji': '📱', 'color': '00BCD4'},
-    {'name': 'Housing', 'emoji': '🏠', 'color': '795548'},
-    {'name': 'Other', 'emoji': '💸', 'color': '9E9E9E'},
+    {'name': AppStrings.groceries, 'emoji': AppStrings.groceriesEmoji, 'color': '4CAF50'},
+    {'name': AppStrings.diningOut, 'emoji': AppStrings.diningOutEmoji, 'color': 'FF9800'},
+    {'name': AppStrings.transport, 'emoji': AppStrings.transportEmoji, 'color': '2196F3'},
+    {'name': AppStrings.entertainment, 'emoji': AppStrings.entertainmentEmoji, 'color': '9C27B0'},
+    {'name': AppStrings.health, 'emoji': AppStrings.healthEmoji, 'color': 'F44336'},
+    {'name': AppStrings.shopping, 'emoji': AppStrings.shoppingEmoji, 'color': 'E91E63'},
+    {'name': AppStrings.subscriptions, 'emoji': AppStrings.subscriptionsEmoji, 'color': '00BCD4'},
+    {'name': AppStrings.housing, 'emoji': AppStrings.housingEmoji, 'color': '795548'},
+    {'name': AppStrings.other, 'emoji': AppStrings.otherEmoji, 'color': '9E9E9E'},
   ];
 
   @override

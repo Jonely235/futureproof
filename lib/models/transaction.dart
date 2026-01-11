@@ -1,3 +1,5 @@
+import '../config/app_strings.dart';
+
 class Transaction {
   // Validation constants
   static const double _minAmount = -1000000.0;
@@ -96,17 +98,17 @@ class Transaction {
   String get categoryEmoji {
     final categoryLower = category.toLowerCase();
     const emojiMap = {
-      'housing': '🏠',
-      'groceries': '🛒',
-      'dining': '🍽️',
-      'transport': '🚗',
-      'entertainment': '🎭',
-      'health': '💊',
-      'shopping': '🛍️',
-      'subscriptions': '📱',
+      'housing': AppStrings.housingEmoji,
+      'groceries': AppStrings.groceriesEmoji,
+      'dining': AppStrings.diningOutEmoji,
+      'transport': AppStrings.transportEmoji,
+      'entertainment': AppStrings.entertainmentEmoji,
+      'health': AppStrings.healthEmoji,
+      'shopping': AppStrings.shoppingEmoji,
+      'subscriptions': AppStrings.subscriptionsEmoji,
       'income': '💰',
     };
-    return emojiMap[categoryLower] ?? '💸';
+    return emojiMap[categoryLower] ?? AppStrings.defaultTransactionEmoji;
   }
 
   /// Convert transaction to JSON for export/import
