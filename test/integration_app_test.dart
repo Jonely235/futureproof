@@ -2,12 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:futureproof/main.dart' as app;
 import 'package:futureproof/widgets/main_navigation.dart';
+import 'helper/test_helper.dart';
 
 void main() {
+  setUpAll(() async {
+    initializeTestDatabase();
+  });
+
   group('FutureProof App Integration Tests', () {
-    testWidgets('App launches successfully', (tester) async {
+    Future<void> launchApp(WidgetTester tester) async {
+      // In tests, we might want to skip the async part of main or await it if we change main
+      // For now, let's call app.main() and wait properly
       app.main();
-      await tester.pumpAndSettle();
+      // Pump several times to handle the async initialization in main()
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+    }
+
+    testWidgets('App launches successfully', (tester) async {
+      await launchApp(tester);
 
       // Verify app title is present
       expect(find.text('FutureProof'), findsOneWidget);
@@ -17,7 +31,7 @@ void main() {
     });
 
     testWidgets('Home screen displays expected UI elements', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       // Check for app title
@@ -34,7 +48,7 @@ void main() {
     });
 
     testWidgets('Can access financial status dialog', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       // Tap the "Are We Okay?" button
@@ -50,7 +64,7 @@ void main() {
     });
 
     testWidgets('All bottom navigation tabs are accessible', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       final tabs = ['Home', 'History', 'Analytics', 'Settings'];
@@ -65,7 +79,7 @@ void main() {
     });
 
     testWidgets('Can navigate between tabs', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       // Should start on Home tab
@@ -100,7 +114,7 @@ void main() {
     });
 
     testWidgets('App handles back navigation correctly', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       // Start on home
@@ -122,7 +136,7 @@ void main() {
     });
 
     testWidgets('Can access add expense from history', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       // Navigate to history
@@ -143,7 +157,7 @@ void main() {
     });
 
     testWidgets('Settings screen is accessible', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Settings'));
@@ -157,7 +171,7 @@ void main() {
     });
 
     testWidgets('App handles orientation changes gracefully', (tester) async {
-      app.main();
+      await launchApp(tester);
       await tester.pumpAndSettle();
 
       // Verify initial state
