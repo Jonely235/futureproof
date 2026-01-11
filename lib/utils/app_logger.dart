@@ -11,6 +11,7 @@ class AppLogger {
   static final _analytics = Logger('Analytics');
   static final _services = Logger('Services');
   static final _general = Logger('General');
+  static final _backup = Logger('Backup');
 
   /// Get UI logger for screen/widget related logs
   static Logger get ui => _ui;
@@ -26,6 +27,9 @@ class AppLogger {
 
   /// Get General logger for uncategorized logs
   static Logger get general => _general;
+
+  /// Get Backup logger for data export/import operations
+  static Logger get backup => _backup;
 
   /// Log an informational message.
   ///
