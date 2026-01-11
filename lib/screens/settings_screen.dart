@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import '../services/analytics_service.dart';
 import '../services/backup_service.dart';
-import '../theme/theme_manager.dart';
 import '../utils/app_logger.dart';
+import '../widgets/theme_picker_widget.dart';
 
 /// Settings Screen
 ///
@@ -649,7 +648,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Theme Section
                         _buildSectionHeader('Appearance'),
                         _buildSettingsSection([
-                          _buildThemePicker(),
+                          ThemePickerWidget(
+                            onThemeChanged: (theme) {
+                              // Trigger rebuild to show updated selection
+                              setState(() {});
+                            },
+                          ),
                         ]),
 
                         const SizedBox(height: 32),
@@ -877,107 +881,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildThemePicker() {
-    return Consumer<ThemeManager>(
-      builder: (context, themeManager, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Choose a theme',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 13,
-                color: const Color(0xFF6B6B6B),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...ThemeManager.availableThemes.map((theme) {
-              final isSelected = themeManager.currentTheme == theme;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: GestureDetector(
-                  onTap: () async {
-                    HapticFeedback.lightImpact();
-                    await themeManager.setTheme(theme);
-                    setState(() {}); // Rebuild to show selection
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.previewColor.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? theme.previewColor
-                            : theme.previewColor.withOpacity(0.2),
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: theme.previewColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: isSelected
-                              ? Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 24,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                theme.displayName,
-                                style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0A0A0A),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                theme.description,
-                                style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 12,
-                                  color: const Color(0xFF6B6B6B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(
-                            Icons.radio_button_checked,
-                            color: theme.previewColor,
-                            size: 24,
-                          )
-                        else
-                          Icon(
-                            Icons.radio_button_unchecked,
-                            color: const Color(0xFFBDBDBD),
-                            size: 24,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ],
-        );
-      },
     );
   }
 
