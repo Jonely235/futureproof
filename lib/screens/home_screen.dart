@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../services/finance_calculator.dart';
+import '../utils/app_logger.dart';
 import 'transaction_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _calculateStatus();
       }
     } catch (e) {
-      print('Error loading settings: $e');
+      AppLogger.home.severe('Error loading settings: $e');
     }
   }
 
@@ -280,6 +281,64 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? ((_status?.remaining ?? 0) / _monthlyIncome * 100).round()
                           : 0,
                     ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Monthly Breakdown & Motivation
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'MONTHLY INSIGHTS',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.1,
+                            color: const Color(0xFF6B6B6B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Motivational Stats Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildMotivationalCard(
+                            icon: Icons.local_fire_department,
+                            title: 'Under Budget Streak',
+                            value: '🔥 3 days',
+                            subtitle: 'Keep it going!',
+                            color: const Color(0xFFFF5722),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildMotivationalCard(
+                            icon: Icons.trending_up,
+                            title: 'Saved vs Last Month',
+                            value: '+\$200',
+                            subtitle: 'Great progress!',
+                            color: const Color(0xFF4CAF50),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Top Spending Categories
+                    if (provider.transactions.isNotEmpty)
+                      _buildCategoryBreakdown(provider.transactions),
                   ],
                 ),
               ),
@@ -780,6 +839,168 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMotivationalCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 11,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryBreakdown(List<Transaction> transactions) {
+    // Group expenses by category
+    final Map<String, double> categoryTotals = {};
+    for (final transaction in transactions) {
+      if (transaction.isExpense) {
+        categoryTotals[transaction.category] =
+            (categoryTotals[transaction.category] ?? 0) + transaction.amount.abs();
+      }
+    }
+
+    // Sort by amount and take top 3
+    final sortedCategories = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final topCategories = sortedCategories.take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE0E0E0),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Top Spending Categories',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...topCategories.asMap().entries.map((entry) {
+            final index = entry.key;
+            final category = entry.value;
+            return Padding(
+              padding: EdgeInsets.only(bottom: index < topCategories.length - 1 ? 16 : 0),
+              child: _buildCategoryItem(
+                category: category.key,
+                amount: category.value,
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryItem({
+    required String category,
+    required double amount,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              category,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF0A0A0A),
+              ),
+            ),
+            Text(
+              '\$${amount.toStringAsFixed(0)}',
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF0A0A0A),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 4,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE0E0E0),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: 0.6, // Visual representation
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A0A0A),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
