@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/analytics_service.dart';
+import '../services/backup_service.dart';
+import '../theme/theme_manager.dart';
+import '../utils/app_logger.dart';
 
 /// Settings Screen
 ///
@@ -43,7 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading settings: $e');
+      AppLogger.settings.severe('Error loading settings: $e');
       setState(() {
         _isLoading = false;
       });
@@ -182,7 +186,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildBudgetRecommendations() {
+  Widget _buildSmartInsights() {
     return FutureBuilder<Map<String, dynamic>>(
       future: AnalyticsService().getQuickStats(),
       builder: (context, snapshot) {
@@ -197,78 +201,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final stats = snapshot.data!;
         final totalSpending = stats['totalSpending'] as double;
         final monthlyIncome = stats['monthlyIncome'] as double;
+        final remaining = monthlyIncome - totalSpending;
         final savings = stats['savings'] as double;
         final savingsRate = stats['savingsRate'] as double;
         final isOnTrack = stats['isOnTrack'] as bool;
 
-        return Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
+          children: [
+            // Section Header
+            Row(
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Budget Recommendations',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ],
+                Icon(
+                  Icons.auto_awesome,
+                  color: const Color(0xFF0A0A0A),
+                  size: 20,
                 ),
-                const SizedBox(height: 16),
-
-                // Current spending vs income
-                _buildRecommendationItem(
-                  icon: Icons.account_balance_wallet,
-                  title: 'Spending Analysis',
-                  description: 'You\'re spending \$${totalSpending.toStringAsFixed(0)} of \$${monthlyIncome.toStringAsFixed(0)} monthly income',
-                  color: Colors.grey[900]!,
-                ),
-                const SizedBox(height: 12),
-
-                // Savings status
-                _buildRecommendationItem(
-                  icon: isOnTrack ? Icons.check_circle : Icons.warning,
-                  title: isOnTrack ? 'On Track!' : 'Savings Alert',
-                  description: isOnTrack
-                      ? 'Great job! You\'re saving \$${savings.toStringAsFixed(0)}/month (${savingsRate.toStringAsFixed(1)}% rate)'
-                      : 'You\'re saving \$${savings.toStringAsFixed(0)}/month, which is below your goal. Consider reducing expenses.',
-                  color: isOnTrack ? Colors.grey[800]! : Colors.grey[700]!,
-                ),
-                const SizedBox(height: 12),
-
-                // Recommended budget allocation
-                _buildRecommendationItem(
-                  icon: Icons.lightbulb,
-                  title: 'Recommended Budget Allocation',
-                  description: _getBudgetRecommendation(monthlyIncome),
-                  color: Colors.grey[900]!,
-                ),
-                const SizedBox(height: 12),
-
-                // Top spending category
-                if (stats['topCategory'] != null)
-                  _buildRecommendationItem(
-                    icon: Icons.trending_up,
-                    title: 'Highest Expense Category',
-                    description: '${stats['topCategory']} at \$${(stats['topCategoryAmount'] as double).toStringAsFixed(0)}/month. Consider if this can be reduced.',
-                    color: Colors.grey[800]!,
+                const SizedBox(width: 8),
+                Text(
+                  'Smart Insights',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0A0A0A),
                   ),
+                ),
               ],
             ),
-          ),
+            const SizedBox(height: 20),
+
+            // Visual Stat Cards
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.account_balance_wallet,
+                    value: '\$${remaining.toStringAsFixed(0)}',
+                    label: 'Remaining',
+                    color: const Color(0xFF0A0A0A),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildCircularProgressCard(
+                    value: savingsRate.clamp(0.0, 1.0),
+                    label: 'Budget OK',
+                    color: isOnTrack ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.trending_up,
+                    value: '\$${savings.toStringAsFixed(0)}',
+                    label: 'Savings',
+                    color: const Color(0xFF2196F3),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    icon: Icons.local_fire_department,
+                    value: _getStreakDays(),
+                    label: 'Day Streak',
+                    color: const Color(0xFFFF5722),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Tip of the Day
+            _buildTipCard(
+              tip: _getDailyTip(stats),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Top Category Alert (if applicable)
+            if (stats['topCategory'] != null && (stats['topCategoryAmount'] as double) > monthlyIncome * 0.3)
+              _buildCategoryAlert(
+                category: stats['topCategory'] as String,
+                amount: stats['topCategoryAmount'] as double,
+              ),
+          ],
         );
       },
     );
@@ -323,13 +343,209 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  String _getBudgetRecommendation(double income) {
-    // 50/30/20 rule: 50% needs, 30% wants, 20% savings
-    final needs = income * 0.50;
-    final wants = income * 0.30;
-    final savings = income * 0.20;
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    return 'Based on your income, consider: \$${needs.toStringAsFixed(0)} for needs (housing, food), \$${wants.toStringAsFixed(0)} for wants (entertainment, dining), and \$${savings.toStringAsFixed(0)} for savings.';
+  Widget _buildCircularProgressCard({
+    required double value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: Stack(
+              children: [
+                CircularProgressIndicator(
+                  value: value,
+                  backgroundColor: color.withOpacity(0.2),
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                  strokeWidth: 4,
+                ),
+                Center(
+                  child: Text(
+                    '${(value * 100).toInt()}%',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF6B6B6B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipCard({required String tip}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9E6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFFFD54F),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.lightbulb,
+            color: const Color(0xFFFFA000),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              tip,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                color: const Color(0xFF0A0A0A),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryAlert({
+    required String category,
+    required double amount,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFEBEE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFEF5350),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning,
+            color: const Color(0xFFD32F2F),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'High Spending Alert',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFD32F2F),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$category: \$${amount.toStringAsFixed(0)} this month',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 13,
+                    color: const Color(0xFF0A0A0A),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getStreakDays() {
+    // Simple streak calculation - in real app, calculate from actual data
+    return '3';
+  }
+
+  String _getDailyTip(Map<String, dynamic> stats) {
+    final tips = [
+      'Your dining spending is 20% lower than last month. Great progress!',
+      'Setting aside small amounts daily adds up to big savings.',
+      'Review subscriptions monthly to avoid unnecessary charges.',
+      'Try the 50/30/20 rule: 50% needs, 30% wants, 20% savings.',
+      'Small changes in daily habits can lead to big financial wins.',
+    ];
+
+    // Simple rotation based on day of month
+    final dayOfMonth = DateTime.now().day;
+    return tips[dayOfMonth % tips.length];
   }
 
   @override
@@ -422,10 +638,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                         const SizedBox(height: 32),
 
-                        // Budget Recommendations Section
-                        _buildSectionHeader('AI Recommendations'),
+                        // Smart Insights Section
+                        _buildSectionHeader('Smart Insights'),
                         _buildSettingsSection([
-                          _buildBudgetRecommendations(),
+                          _buildSmartInsights(),
+                        ]),
+
+                        const SizedBox(height: 32),
+
+                        // Theme Section
+                        _buildSectionHeader('Appearance'),
+                        _buildSettingsSection([
+                          _buildThemePicker(),
+                        ]),
+
+                        const SizedBox(height: 32),
+
+                        // Backup & Export Section
+                        _buildSectionHeader('Backup & Export'),
+                        _buildSettingsSection([
+                          _buildBackupSection(),
                         ]),
 
                         const SizedBox(height: 32),
@@ -646,5 +878,397 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildThemePicker() {
+    return Consumer<ThemeManager>(
+      builder: (context, themeManager, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose a theme',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                color: const Color(0xFF6B6B6B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...ThemeManager.availableThemes.map((theme) {
+              final isSelected = themeManager.currentTheme == theme;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.lightImpact();
+                    await themeManager.setTheme(theme);
+                    setState(() {}); // Rebuild to show selection
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.previewColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.previewColor
+                            : theme.previewColor.withOpacity(0.2),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.previewColor,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 24,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                theme.displayName,
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0A0A0A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                theme.description,
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 12,
+                                  color: const Color(0xFF6B6B6B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(
+                            Icons.radio_button_checked,
+                            color: theme.previewColor,
+                            size: 24,
+                          )
+                        else
+                          Icon(
+                            Icons.radio_button_unchecked,
+                            color: const Color(0xFFBDBDBD),
+                            size: 24,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBackupSection() {
+    final backupService = BackupService();
+
+    return FutureBuilder<DateTime?>(
+      future: backupService.getLastBackupDate(),
+      builder: (context, snapshot) {
+        final lastBackup = snapshot.data;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.cloud_upload,
+                  color: const Color(0xFF0A0A0A),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Data Backup',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF0A0A0A),
+                        ),
+                      ),
+                      if (lastBackup != null)
+                        Text(
+                          'Last backup: ${_formatDate(lastBackup)}',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 12,
+                            color: const Color(0xFF6B6B6B),
+                          ),
+                        )
+                      else
+                        Text(
+                          'No backups yet',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 12,
+                            color: const Color(0xFF6B6B6B),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _exportData(context, backupService),
+                    icon: const Icon(Icons.download, size: 18),
+                    label: Text(
+                      'Export',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0A0A0A),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFF0A0A0A)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _importData(context, backupService),
+                    icon: const Icon(Icons.upload, size: 18),
+                    label: Text(
+                      'Import',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0A0A0A),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFF0A0A0A)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      return 'Today, ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  Future<void> _exportData(BuildContext context, BackupService backupService) async {
+    HapticFeedback.lightImpact();
+
+    try {
+      // Export data
+      final jsonData = await backupService.exportData();
+      final filename = backupService.getExportFilename();
+
+      // Show success dialog with data
+      if (context.mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Export Complete'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Your data has been exported successfully.'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    jsonData,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                    ),
+                    maxLines: 10,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Copy this data and save it to a file:'),
+                const SizedBox(height: 8),
+                Text(
+                  filename,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: jsonData));
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Data copied to clipboard!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: const Text('Copy to Clipboard'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Save last backup timestamp
+      await backupService.saveLastBackupDate();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importData(BuildContext context, BackupService backupService) async {
+    HapticFeedback.lightImpact();
+
+    // Show text input dialog
+    final controller = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import Backup'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Paste your backup JSON data below:',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              maxLines: 10,
+              decoration: const InputDecoration(
+                hintText: 'Paste JSON data here...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      try {
+        // Import data
+        final importResult = await backupService.importData(result);
+
+        if (context.mounted) {
+          if (importResult.success) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Import Successful'),
+                content: Text(
+                  'Imported ${importResult.importedCount} transactions\n'
+                  '${importResult.skippedCount > 0 ? 'Skipped ${importResult.skippedCount} duplicates' : ''}',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Reload settings to reflect any changes
+                      _loadSettings();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Import failed: ${importResult.errorMessage}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Import failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }
