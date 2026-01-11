@@ -7,6 +7,8 @@ import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../services/finance_calculator.dart';
 import '../utils/app_logger.dart';
+import '../utils/error_display.dart';
+import '../config/app_colors.dart';
 import 'transaction_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -195,6 +197,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<TransactionProvider>();
     final currentTransactionCount = provider.transactions.length;
+
+    // Show error if provider has one
+    if (provider.error != null && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && provider.error != null) {
+          ErrorDisplay.showErrorSnackBar(context, provider.error!);
+          provider.clearError();
+        }
+      });
+    }
 
     // Always reload settings and recalculate if transaction count changed
     if (currentTransactionCount != _previousTransactionCount) {

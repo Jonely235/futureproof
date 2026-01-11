@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../models/transaction.dart';
+import '../models/app_error.dart';
 import '../services/database_service.dart';
 import '../services/analytics_service.dart';
+import '../utils/app_logger.dart';
 
 /// Centralized state management for transactions.
 ///
@@ -24,12 +26,12 @@ class TransactionProvider extends ChangeNotifier {
   // Private state
   List<Transaction> _transactions = [];
   bool _isLoading = false;
-  String? _error;
+  AppError? _error;
 
   // Public getters
   List<Transaction> get transactions => _transactions;
   bool get isLoading => _isLoading;
-  String? get error => _error;
+  AppError? get error => _error;
 
   /// Check if there are any transactions
   bool get hasTransactions => _transactions.isNotEmpty;
@@ -82,8 +84,15 @@ class TransactionProvider extends ChangeNotifier {
 
     try {
       _transactions = await _db.getAllTransactions();
-    } catch (e) {
-      _error = 'Failed to load transactions: $e';
+    } catch (e, st) {
+      _error = e is AppError
+          ? e
+          : AppError.fromException(
+              e,
+              type: AppErrorType.database,
+              stackTrace: st,
+            );
+      AppLogger.provider.severe('Failed to load transactions', _error);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -101,8 +110,15 @@ class TransactionProvider extends ChangeNotifier {
       _analyticsService.refresh();
       await loadTransactions();
       return true;
-    } catch (e) {
-      _error = 'Failed to add transaction: $e';
+    } catch (e, st) {
+      _error = e is AppError
+          ? e
+          : AppError.fromException(
+              e,
+              type: AppErrorType.database,
+              stackTrace: st,
+            );
+      AppLogger.provider.severe('Failed to add transaction', _error);
       notifyListeners();
       return false;
     }
@@ -121,8 +137,15 @@ class TransactionProvider extends ChangeNotifier {
         await loadTransactions();
       }
       return success;
-    } catch (e) {
-      _error = 'Failed to update: $e';
+    } catch (e, st) {
+      _error = e is AppError
+          ? e
+          : AppError.fromException(
+              e,
+              type: AppErrorType.database,
+              stackTrace: st,
+            );
+      AppLogger.provider.severe('Failed to update transaction', _error);
       notifyListeners();
       return false;
     }
@@ -141,8 +164,15 @@ class TransactionProvider extends ChangeNotifier {
         await loadTransactions();
       }
       return success;
-    } catch (e) {
-      _error = 'Failed to delete: $e';
+    } catch (e, st) {
+      _error = e is AppError
+          ? e
+          : AppError.fromException(
+              e,
+              type: AppErrorType.database,
+              stackTrace: st,
+            );
+      AppLogger.provider.severe('Failed to delete transaction', _error);
       notifyListeners();
       return false;
     }

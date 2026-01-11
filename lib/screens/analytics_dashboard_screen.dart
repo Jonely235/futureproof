@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/app_error.dart';
 import '../models/spending_analysis.dart';
 import '../services/analytics_service.dart';
 import '../utils/app_logger.dart';
+import '../utils/error_display.dart';
 import '../widgets/pie_chart_widget.dart';
 import '../widgets/bar_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
@@ -65,11 +67,21 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         _quickStats = quickStats;
         _isLoading = false;
       });
-    } catch (e) {
-      AppLogger.analyticsUI.severe('Error loading analytics: $e');
+    } catch (e, st) {
+      final error = e is AppError
+          ? e
+          : AppError.fromException(
+              e,
+              type: AppErrorType.unknown,
+              stackTrace: st,
+            );
+      AppLogger.analyticsUI.severe('Failed to load analytics', error);
       setState(() {
         _isLoading = false;
       });
+      if (mounted) {
+        ErrorDisplay.showErrorSnackBar(context, error);
+      }
     }
   }
 
@@ -658,11 +670,21 @@ class _InsightsScreenState extends State<InsightsScreen> {
         _insights = insights;
         _isLoading = false;
       });
-    } catch (e) {
-      AppLogger.analyticsUI.severe('Error loading insights: $e');
+    } catch (e, st) {
+      final error = e is AppError
+          ? e
+          : AppError.fromException(
+              e,
+              type: AppErrorType.unknown,
+              stackTrace: st,
+            );
+      AppLogger.analyticsUI.severe('Failed to load insights', error);
       setState(() {
         _isLoading = false;
       });
+      if (mounted) {
+        ErrorDisplay.showErrorSnackBar(context, error);
+      }
     }
   }
 

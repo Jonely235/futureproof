@@ -15,6 +15,7 @@ class AppLogger {
   static final _settings = Logger('Settings');
   static final _home = Logger('Home');
   static final _analyticsUI = Logger('AnalyticsUI');
+  static final _provider = Logger('Provider');
 
   /// Get UI logger for screen/widget related logs
   static Logger get ui => _ui;
@@ -42,6 +43,9 @@ class AppLogger {
 
   /// Get AnalyticsUI logger for analytics dashboard operations
   static Logger get analyticsUI => _analyticsUI;
+
+  /// Get Provider logger for state management operations
+  static Logger get provider => _provider;
 
   /// Log an informational message.
   ///

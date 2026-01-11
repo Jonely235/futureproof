@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/app_error.dart';
 import '../services/analytics_service.dart';
 import '../services/backup_service.dart';
 import '../utils/app_logger.dart';
+import '../utils/error_display.dart';
 import '../widgets/theme_picker_widget.dart';
 
 /// Settings Screen
@@ -61,10 +63,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (income == null || income <= 0) {
       HapticFeedback.heavyImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid monthly income'),
-          backgroundColor: Colors.red,
+      ErrorDisplay.showErrorSnackBar(
+        context,
+        AppError(
+          type: AppErrorType.validation,
+          message: 'Please enter a valid monthly income',
         ),
       );
       return;
@@ -72,10 +75,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (savings == null || savings < 0) {
       HapticFeedback.heavyImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid savings goal'),
-          backgroundColor: Colors.red,
+      ErrorDisplay.showErrorSnackBar(
+        context,
+        AppError(
+          type: AppErrorType.validation,
+          message: 'Please enter a valid savings goal',
         ),
       );
       return;
@@ -101,30 +105,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           setState(() {
             _isSaving = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Settings saved successfully'),
-              backgroundColor: Color(0xFF0A0A0A),
-              behavior: SnackBarBehavior.floating,
-            ),
+          ErrorDisplay.showSuccessSnackBar(
+            context,
+            'Settings saved successfully',
           );
           // Don't navigate away automatically - let user decide when to leave
         }
       } else {
         throw Exception('Settings verification failed');
       }
-    } catch (e) {
+    } catch (e, st) {
       HapticFeedback.heavyImpact();
       if (mounted) {
+        final error = e is AppError
+            ? e
+            : AppError.fromException(
+                e,
+                type: AppErrorType.validation,
+                stackTrace: st,
+              );
+        AppLogger.settings.severe('Error saving settings', error);
         setState(() {
           _isSaving = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving settings: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ErrorDisplay.showErrorSnackBar(context, error);
       }
     }
   }
@@ -164,22 +168,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _loadSettings();
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Settings reset to defaults'),
-              backgroundColor: Colors.orange,
-            ),
+          ErrorDisplay.showSuccessSnackBar(
+            context,
+            'Settings reset to defaults',
           );
         }
-      } catch (e) {
+      } catch (e, st) {
         HapticFeedback.heavyImpact();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error resetting: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          final error = e is AppError
+              ? e
+              : AppError.fromException(
+                  e,
+                  type: AppErrorType.validation,
+                  stackTrace: st,
+                );
+          AppLogger.settings.severe('Error resetting settings', error);
+          ErrorDisplay.showErrorSnackBar(context, error);
         }
       }
     }
