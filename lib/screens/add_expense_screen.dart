@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../config/app_colors.dart';
 import 'package:uuid/uuid.dart';
 
 /// Add Expense Screen - Number-First Experience
@@ -64,7 +65,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid amount'),
-          backgroundColor: Color(0xFFD4483A),
+          backgroundColor: AppColors.danger,
         ),
       );
       return;
@@ -125,7 +126,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ),
               ],
             ),
-            backgroundColor: const Color(0xFF0A0A0A),
+            backgroundColor: AppColors.black,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -138,7 +139,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: const Color(0xFFD4483A),
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -176,18 +177,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.offWhite,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Color(0xFF0A0A0A)),
+          icon: const Icon(Icons.close, color: AppColors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Add ${_isExpense ? "Expense" : "Income"}',
           style: GoogleFonts.playfairDisplay(
-            color: const Color(0xFF0A0A0A),
+            color: AppColors.black,
             fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
@@ -205,8 +206,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               _isExpense ? 'Income' : 'Expense',
               style: GoogleFonts.spaceGrotesk(
                 color: _isExpense
-                    ? const Color(0xFF4CAF50)
-                    : const Color(0xFFD4483A),
+                    ? AppColors.success
+                    : AppColors.danger,
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
@@ -235,7 +236,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             '\$',
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 48,
-                              color: const Color(0xFF0A0A0A),
+                              color: AppColors.black,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -250,14 +251,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             style: GoogleFonts.jetBrainsMono(
                               fontSize: 64,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF0A0A0A),
+                              color: AppColors.black,
                               letterSpacing: -2,
                             ),
                             textAlign: TextAlign.center,
                             decoration: const InputDecoration(
                               hintText: '0.00',
                               hintStyle: TextStyle(
-                                color: Color(0xFFD4D4D4),
+                                color: AppColors.gray300,
                                 fontSize: 64,
                                 fontWeight: FontWeight.w300,
                               ),
@@ -289,12 +290,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFFE0E0E0),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0A0A0A).withOpacity(0.03),
+                              color: AppColors.shadow,
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -313,13 +314,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               style: GoogleFonts.spaceGrotesk(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF0A0A0A),
+                                color: AppColors.black,
                               ),
                             ),
                             const SizedBox(width: 12),
                             const Icon(
                               Icons.keyboard_arrow_down,
-                              color: Color(0xFF6B6B6B),
+                              color: AppColors.gray700,
                             ),
                           ],
                         ),
@@ -334,7 +335,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       decoration: InputDecoration(
                         hintText: 'Add a note (optional)',
                         hintStyle: GoogleFonts.spaceGrotesk(
-                          color: const Color(0xFF9E9E9E),
+                          color: AppColors.gray500,
                           fontSize: 15,
                         ),
                         filled: true,
@@ -348,7 +349,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       maxLines: 2,
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 15,
-                        color: const Color(0xFF0A0A0A),
+                        color: AppColors.black,
                       ),
                     ),
 
@@ -365,7 +366,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0A0A0A).withOpacity(0.05),
+                    color: AppColors.shadow,
                     blurRadius: 20,
                     offset: const Offset(0, -4),
                   ),
@@ -376,9 +377,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveExpense,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0A0A0A),
-                    foregroundColor: const Color(0xFFFFFFFF),
-                    disabledBackgroundColor: const Color(0xFFE0E0E0),
+                    backgroundColor: AppColors.black,
+                    foregroundColor: AppColors.white,
+                    disabledBackgroundColor: AppColors.border,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -392,7 +393,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(Color(0xFF0A0A0A)),
+                                AlwaysStoppedAnimation<Color>(AppColors.black),
                           ),
                         )
                       : Text(
@@ -441,7 +442,7 @@ class _CategoryBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE0E0E0),
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -456,7 +457,7 @@ class _CategoryBottomSheet extends StatelessWidget {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0A0A0A),
+                    color: AppColors.black,
                   ),
                 ),
                 const Spacer(),
@@ -493,10 +494,10 @@ class _CategoryBottomSheet extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? color.withOpacity(0.15)
-                        : const Color(0xFFFAFAFA),
+                        : AppColors.offWhite,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? color : const Color(0xFFE0E0E0),
+                      color: isSelected ? color : AppColors.border,
                       width: isSelected ? 2 : 1,
                     ),
                   ),
@@ -513,7 +514,7 @@ class _CategoryBottomSheet extends StatelessWidget {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF0A0A0A),
+                          color: AppColors.black,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
