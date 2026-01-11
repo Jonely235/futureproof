@@ -108,4 +108,17 @@ class Transaction {
     };
     return emojiMap[categoryLower] ?? '💸';
   }
+
+  /// Convert transaction to JSON for export/import
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'amount': amount,
+      'category': category,
+      'note': note,
+      'date': date.toIso8601String(),
+      'householdId': householdId,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }

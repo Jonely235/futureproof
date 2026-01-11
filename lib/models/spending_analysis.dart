@@ -199,7 +199,7 @@ class SpendingAnalysis {
       insights.add(Insight(
         title: 'Top Expense Category',
         description: 'Your highest expense is $highestCat at '
-            '${highestAmt.toStringAsFixed(0)} ($percentage.toStringAsFixed(0)}% of total spending).',
+            '\$${highestAmt.toStringAsFixed(0)} (\$${percentage.toStringAsFixed(0)}% of total spending).',
         type: InsightType.info,
         icon: '💰',
         value: percentage,

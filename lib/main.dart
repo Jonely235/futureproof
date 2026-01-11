@@ -18,12 +18,18 @@ void main() async {
   Logger.root.onRecord.listen((record) {
     final emoji = _getEmojiForLevel(record.level);
     final timestamp = record.time.toIso8601String().substring(11, 23);
-    Logger.log(
-      record.level,
-      '$emoji ${record.level.name} [$timestamp] ${record.loggerName}: ${record.message}',
-      record.error,
-      record.stackTrace,
-    );
+    final message = '$emoji ${record.level.name} [$timestamp] ${record.loggerName}: ${record.message}';
+
+    if (record.error != null) {
+      print('$message\n  Error: ${record.error}');
+      if (record.stackTrace != null) {
+        print('  Stack: ${record.stackTrace}');
+      }
+    } else if (record.stackTrace != null) {
+      print('$message\n  Stack: ${record.stackTrace}');
+    } else {
+      print(message);
+    }
   });
 
   // Initialize theme manager

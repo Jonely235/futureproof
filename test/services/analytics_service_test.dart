@@ -3,9 +3,14 @@ import 'package:futureproof/models/transaction.dart';
 import 'package:futureproof/models/spending_analysis.dart';
 import 'package:futureproof/services/analytics_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../helper/test_helper.dart';
 
 void main() {
   late AnalyticsService analyticsService;
+
+  setUpAll(() {
+    initializeTestDatabase();
+  });
 
   setUp(() {
     analyticsService = AnalyticsService();
