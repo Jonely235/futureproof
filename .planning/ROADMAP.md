@@ -47,7 +47,7 @@ Plans:
 Plans:
 - [x] 02-01: Create constants files for colors and strings
 - [x] 02-02: Extract hardcoded values from screens
-- [ ] 02-03: Extract hardcoded values from services
+- [x] 02-03: Extract hardcoded values from services
 
 ### Phase 3: Error Handling
 **Goal**: Standardize error handling across services and UI
@@ -68,7 +68,7 @@ Plans:
 
 Plans:
 - [x] 04-01: Extract theme picker widget
-- [ ] 04-02: Extract smart insights widget
+- [x] 04-02: Extract smart insights widget
 - [ ] 04-03: Extract settings form widget
 - [ ] 04-04: Extract backup section widget
 
@@ -125,9 +125,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Logging Foundation | 3/3 | Complete | 2026-01-11 |
-| 2. Constants & Config | 2/3 | In progress | - |
+| 2. Constants & Config | 3/3 | Complete | 2026-01-11 |
 | 3. Error Handling | 0/3 | Not started | - |
-| 4. Settings Screen Refactor | 1/4 | In progress | 2026-01-11 |
+| 4. Settings Screen Refactor | 2/4 | In progress | 2026-01-11 |
 | 5. Service Tests | 2/4 | In progress | 2026-01-11 |
 | 6. Provider & Widget Tests | 0/3 | Not started | - |
 | 7. Code Organization | 0/3 | Not started | - |
