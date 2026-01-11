@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import '../models/app_error.dart';
 import 'app_logger.dart';
+import 'error_tracker.dart';
 
 /// Centralized error display utility for consistent UI error messaging.
 ///
@@ -22,7 +23,6 @@ class ErrorDisplay {
       case AppErrorType.backup:
         return Icons.backup;
       case AppErrorType.unknown:
-      default:
         return Icons.warning;
     }
   }
@@ -49,6 +49,9 @@ class ErrorDisplay {
       error.originalError,
       error.stackTrace,
     );
+
+    // Track error in ErrorTracker
+    ErrorTracker().trackError(error, 'UI: SnackBar', stackTrace: error.stackTrace);
 
     if (!context.mounted) return;
 
@@ -120,14 +123,22 @@ class ErrorDisplay {
   /// ```
   static Future<void> showErrorDialog(
     BuildContext context,
-    AppError error,
-  ) async {
+    AppError error, {
+    String? errorContext,
+  }) async {
     // Log critical error
     final logger = _getLoggerForErrorType(error.type);
     logger.severe(
       'Showing critical error dialog: ${error.message}',
       error.originalError,
       error.stackTrace,
+    );
+
+    // Track error in ErrorTracker with context
+    ErrorTracker().trackError(
+      error,
+      errorContext ?? 'UI: Dialog',
+      stackTrace: error.stackTrace,
     );
 
     if (!context.mounted) return;
@@ -175,6 +186,37 @@ class ErrorDisplay {
         ],
       ),
     );
+  }
+
+  /// Tracks an error without displaying any UI.
+  ///
+  /// Use for background errors that should be tracked but not shown to users.
+  /// Logs the error and adds it to ErrorTracker history.
+  ///
+  /// Example:
+  /// ```dart
+  /// try {
+  ///   await backgroundOperation();
+  /// } catch (e, st) {
+  ///   final error = AppError.fromException(e, stackTrace: st);
+  ///   ErrorDisplay.trackOnlyError(context, error, 'BackgroundService.sync');
+  /// }
+  /// ```
+  static void trackOnlyError(
+    BuildContext context,
+    AppError error,
+    String context_,
+  ) {
+    // Log error
+    final logger = _getLoggerForErrorType(error.type);
+    logger.severe(
+      'Background error tracked: ${error.message}',
+      error.originalError,
+      error.stackTrace,
+    );
+
+    // Track in ErrorTracker (no UI display)
+    ErrorTracker().trackError(error, context_, stackTrace: error.stackTrace);
   }
 
   /// Returns appropriate logger for error type.

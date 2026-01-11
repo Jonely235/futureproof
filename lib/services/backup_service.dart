@@ -5,6 +5,7 @@ import '../models/transaction.dart';
 import '../models/app_error.dart';
 import 'database_service.dart';
 import '../utils/app_logger.dart';
+import '../utils/error_tracker.dart';
 
 /// Service for exporting and importing app data
 class BackupService {
@@ -29,14 +30,19 @@ class BackupService {
       return jsonString;
     } catch (e, st) {
       AppLogger.backup.severe('Failed to export data', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'BackupService.exportData', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.backup,
         message: 'Failed to export data',
         technicalDetails: 'Export operation failed',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'BackupService.exportData', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -65,7 +71,7 @@ class BackupService {
 
       // Validate structure
       if (!jsonData.containsKey('transactions')) {
-        throw AppError(
+        throw const AppError(
           type: AppErrorType.validation,
           message: 'Invalid backup file',
           technicalDetails: 'Missing transactions field in backup data',
@@ -120,7 +126,7 @@ class BackupService {
         importedCount: importedCount,
         skippedCount: skippedCount,
       );
-    } catch (e, st) {
+    } catch (e) {
       AppLogger.backup.severe('Failed to import data', e);
       if (e is AppError) rethrow;
       return ImportResult(
@@ -155,16 +161,20 @@ class BackupService {
           settings['selected_theme'] as int,
         );
       }
-    } catch (e, st) {
+    } catch (e) {
       AppLogger.backup.severe('Failed to import settings', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'BackupService._importSettings');
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.backup,
         message: 'Failed to import settings',
         technicalDetails: 'Settings import failed',
         originalError: e,
-        stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'BackupService._importSettings');
+      throw appError;
     }
   }
 

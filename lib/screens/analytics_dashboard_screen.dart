@@ -89,7 +89,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const AppColors.offWhite,
+      backgroundColor: AppColors.offWhite,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _analysis == null || _quickStats == null
@@ -106,7 +106,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       Text(
                         'Error loading analytics',
                         style: GoogleFonts.spaceGrotesk(
-                          color: const AppColors.gray700,
+                          color: AppColors.gray700,
                         ),
                       ),
                     ],
@@ -128,7 +128,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
-                            color: const AppColors.black,
+                            color: AppColors.black,
                           ),
                         ),
                       ),
@@ -145,7 +145,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                     SliverToBoxAdapter(
                       child: RefreshIndicator(
                         onRefresh: _loadAnalytics,
-                        color: const AppColors.black,
+                        color: AppColors.black,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -193,7 +193,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 width: 4,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: const AppColors.black,
+                  color: AppColors.black,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -203,7 +203,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: const AppColors.black,
+                  color: AppColors.black,
                 ),
               ),
             ],
@@ -275,7 +275,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 width: 4,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: const AppColors.black,
+                  color: AppColors.black,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -285,7 +285,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: const AppColors.black,
+                  color: AppColors.black,
                 ),
               ),
             ],
@@ -313,12 +313,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const AppColors.border,
+          color: AppColors.border,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const AppColors.black.withOpacity(0.03),
+            color: AppColors.black.withOpacity(0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -332,12 +332,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const AppColors.gray100,
+                  color: AppColors.gray100,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   icon,
-                  color: const AppColors.black,
+                  color: AppColors.black,
                   size: 20,
                 ),
               ),
@@ -348,7 +348,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: const AppColors.gray700,
+                    color: AppColors.gray700,
                   ),
                 ),
               ),
@@ -361,8 +361,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               fontSize: 22,
               fontWeight: FontWeight.w600,
               color: isPositive
-                  ? const AppColors.black
-                  : const AppColors.danger,
+                  ? AppColors.black
+                  : AppColors.danger,
             ),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import '../models/transaction.dart' as model;
 import '../models/app_error.dart';
 import '../utils/app_logger.dart';
+import '../utils/error_tracker.dart';
 
 class DatabaseService {
   static final _instance = DatabaseService._internal();
@@ -20,7 +21,7 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_isWeb) {
-      throw AppError(
+      throw const AppError(
         type: AppErrorType.database,
         message: 'Database not available on web platform',
         technicalDetails: 'Web platform uses in-memory storage only',
@@ -45,7 +46,7 @@ class DatabaseService {
   Future<Database> _initDatabase() async {
     if (_isWeb) {
       _log.info('Using in-memory storage for web (UI testing only)');
-      throw AppError(
+      throw const AppError(
         type: AppErrorType.database,
         message: 'Database not available on web platform',
         technicalDetails: 'Web platform uses in-memory storage only',
@@ -87,7 +88,7 @@ class DatabaseService {
       }
 
       if (transaction.id.isEmpty) {
-        throw AppError(
+        throw const AppError(
           type: AppErrorType.validation,
           message: 'Transaction ID cannot be empty',
           technicalDetails: 'Transaction ID validation failed',
@@ -111,14 +112,19 @@ class DatabaseService {
       return transaction.id;
     } catch (e, st) {
       AppLogger.database.severe('❌ Error adding transaction', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.addTransaction', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not save transaction to database',
         technicalDetails: 'Transaction ID: ${transaction.id}',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.addTransaction', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -144,14 +150,19 @@ class DatabaseService {
       return maps.map((map) => _transactionFromMap(map)).toList();
     } catch (e, st) {
       AppLogger.database.severe('❌ Error getting transactions', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.getAllTransactions', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not retrieve transactions from database',
         technicalDetails: 'Query failed: getAllTransactions',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.getAllTransactions', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -179,14 +190,19 @@ class DatabaseService {
       return maps.map((map) => _transactionFromMap(map)).toList();
     } catch (e, st) {
       AppLogger.database.severe('❌ Error getting transactions by date range', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.getTransactionsByDateRange', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not retrieve transactions for date range',
         technicalDetails: 'Range: $start to $end',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.getTransactionsByDateRange', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -224,14 +240,19 @@ class DatabaseService {
       return rowsAffected > 0;
     } catch (e, st) {
       AppLogger.database.severe('❌ Error updating transaction', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.updateTransaction', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not update transaction in database',
         technicalDetails: 'Transaction ID: ${transaction.id}',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.updateTransaction', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -254,14 +275,19 @@ class DatabaseService {
       return rowsAffected > 0;
     } catch (e, st) {
       AppLogger.database.severe('❌ Error deleting transaction', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.deleteTransaction', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not delete transaction from database',
         technicalDetails: 'Transaction ID: $id',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.deleteTransaction', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -279,13 +305,18 @@ class DatabaseService {
       return true;
     } catch (e, st) {
       AppLogger.database.severe('❌ Error deleting all transactions', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.deleteAllTransactions', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not delete all transactions from database',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.deleteAllTransactions', stackTrace: st);
+      throw appError;
     }
   }
 
@@ -303,14 +334,19 @@ class DatabaseService {
       return total.abs();
     } catch (e, st) {
       AppLogger.database.severe('❌ Error getting total for month', e);
-      if (e is AppError) rethrow;
-      throw AppError(
+      if (e is AppError) {
+        ErrorTracker().trackError(e, 'DatabaseService.getTotalForMonth', stackTrace: st);
+        rethrow;
+      }
+      final appError = AppError(
         type: AppErrorType.database,
         message: 'Could not calculate total for month',
         technicalDetails: 'Month: $year-$month',
         originalError: e,
         stackTrace: st,
       );
+      ErrorTracker().trackError(appError, 'DatabaseService.getTotalForMonth', stackTrace: st);
+      throw appError;
     }
   }
 
