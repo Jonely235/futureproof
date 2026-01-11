@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:logging/logging.dart';
 import '../models/transaction.dart' as model;
+import '../utils/app_logger.dart';
 
 class DatabaseService {
   static final _instance = DatabaseService._internal();
@@ -39,7 +40,7 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'futureproof.db');
 
-    print('📁 Database path: $path');
+    AppLogger.database.info('📁 Database path: $path');
 
     return await openDatabase(
       path,
@@ -66,7 +67,7 @@ class DatabaseService {
     try {
       if (_isWeb) {
         _webTransactions.add(transaction);
-        print('✅ Added transaction ${transaction.id} to web memory');
+        AppLogger.database.info('✅ Added transaction ${transaction.id} to web memory');
         return transaction.id;
       }
 
@@ -87,10 +88,10 @@ class DatabaseService {
       };
 
       await db.insert('transactions', data, conflictAlgorithm: ConflictAlgorithm.replace);
-      print('✅ Added transaction ${transaction.id} to SQLite');
+      AppLogger.database.info('✅ Added transaction ${transaction.id} to SQLite');
       return transaction.id;
     } catch (e) {
-      print('❌ Error adding transaction: $e');
+      AppLogger.database.severe('❌ Error adding transaction', e);
       rethrow;
     }
   }
@@ -100,7 +101,7 @@ class DatabaseService {
       if (_isWeb) {
         final transactions = List<model.Transaction>.from(_webTransactions);
         transactions.sort((a, b) => b.date.compareTo(a.date));
-        print('📊 Retrieved ${transactions.length} transactions from web memory');
+        AppLogger.database.info('📊 Retrieved ${transactions.length} transactions from web memory');
         return transactions;
       }
 
@@ -110,13 +111,13 @@ class DatabaseService {
         orderBy: 'date DESC',
       );
 
-      print('📊 Retrieved ${maps.length} transactions from SQLite');
+      AppLogger.database.info('📊 Retrieved ${maps.length} transactions from SQLite');
 
       if (maps.isEmpty) return [];
 
       return maps.map((map) => _transactionFromMap(map)).toList();
     } catch (e) {
-      print('❌ Error getting transactions: $e');
+      AppLogger.database.severe('❌ Error getting transactions', e);
       return [];
     }
   }
@@ -144,7 +145,7 @@ class DatabaseService {
 
       return maps.map((map) => _transactionFromMap(map)).toList();
     } catch (e) {
-      print('❌ Error getting transactions by date range: $e');
+      AppLogger.database.severe('❌ Error getting transactions by date range', e);
       return [];
     }
   }
@@ -155,7 +156,7 @@ class DatabaseService {
         final index = _webTransactions.indexWhere((t) => t.id == transaction.id);
         if (index >= 0) {
           _webTransactions[index] = transaction;
-          print('✅ Updated transaction ${transaction.id} in web memory');
+          AppLogger.database.info('✅ Updated transaction ${transaction.id} in web memory');
           return true;
         }
         return false;
@@ -179,10 +180,10 @@ class DatabaseService {
         whereArgs: [transaction.id],
       );
 
-      print('✅ Updated transaction ${transaction.id}');
+      AppLogger.database.info('✅ Updated transaction ${transaction.id}');
       return rowsAffected > 0;
     } catch (e) {
-      print('❌ Error updating transaction: $e');
+      AppLogger.database.severe('❌ Error updating transaction', e);
       return false;
     }
   }
@@ -191,7 +192,7 @@ class DatabaseService {
     try {
       if (_isWeb) {
         _webTransactions.removeWhere((t) => t.id == id);
-        print('✅ Deleted transaction $id from web memory');
+        AppLogger.database.info('✅ Deleted transaction $id from web memory');
         return true;
       }
 
@@ -202,10 +203,10 @@ class DatabaseService {
         whereArgs: [id],
       );
 
-      print('✅ Deleted transaction $id');
+      AppLogger.database.info('✅ Deleted transaction $id');
       return rowsAffected > 0;
     } catch (e) {
-      print('❌ Error deleting transaction: $e');
+      AppLogger.database.severe('❌ Error deleting transaction', e);
       return false;
     }
   }
@@ -214,16 +215,16 @@ class DatabaseService {
     try {
       if (_isWeb) {
         _webTransactions.clear();
-        print('✅ Deleted all transactions from web memory');
+        AppLogger.database.info('✅ Deleted all transactions from web memory');
         return true;
       }
 
       final db = await database;
       await db.delete('transactions');
-      print('✅ Deleted all transactions');
+      AppLogger.database.info('✅ Deleted all transactions');
       return true;
     } catch (e) {
-      print('❌ Error deleting all transactions: $e');
+      AppLogger.database.severe('❌ Error deleting all transactions', e);
       return false;
     }
   }
@@ -241,7 +242,7 @@ class DatabaseService {
 
       return total.abs();
     } catch (e) {
-      print('❌ Error getting total for month: $e');
+      AppLogger.database.severe('❌ Error getting total for month', e);
       return 0.0;
     }
   }
