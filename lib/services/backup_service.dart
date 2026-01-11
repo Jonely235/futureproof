@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
+import '../models/app_error.dart';
 import 'database_service.dart';
 import '../utils/app_logger.dart';
 
@@ -27,9 +27,16 @@ class BackupService {
       final jsonString = const JsonEncoder.withIndent('  ').convert(backupData);
       AppLogger.backup.info('✅ Exported ${transactions.length} transactions at ${backupData['exportDate']}');
       return jsonString;
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.backup.severe('Failed to export data', e);
-      rethrow;
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.backup,
+        message: 'Failed to export data',
+        technicalDetails: 'Export operation failed',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -44,6 +51,7 @@ class BackupService {
       };
     } catch (e) {
       AppLogger.backup.severe('Failed to export settings', e);
+      // Graceful degradation - return empty map for non-critical settings
       return {};
     }
   }
@@ -57,7 +65,11 @@ class BackupService {
 
       // Validate structure
       if (!jsonData.containsKey('transactions')) {
-        throw const FormatException('Invalid backup file: missing transactions');
+        throw AppError(
+          type: AppErrorType.validation,
+          message: 'Invalid backup file',
+          technicalDetails: 'Missing transactions field in backup data',
+        );
       }
 
       final transactionsList = jsonData['transactions'] as List;
@@ -88,7 +100,9 @@ class BackupService {
           } else {
             skippedCount++;
           }
-        } catch (e) {
+        } catch (e, st) {
+          // Log warning for individual transaction failures but continue
+          AppLogger.backup.warning('Skipping invalid transaction during import', e, st);
           skippedCount++;
           continue;
         }
@@ -106,8 +120,9 @@ class BackupService {
         importedCount: importedCount,
         skippedCount: skippedCount,
       );
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.backup.severe('Failed to import data', e);
+      if (e is AppError) rethrow;
       return ImportResult(
         success: false,
         errorMessage: e.toString(),
@@ -140,8 +155,16 @@ class BackupService {
           settings['selected_theme'] as int,
         );
       }
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.backup.severe('Failed to import settings', e);
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.backup,
+        message: 'Failed to import settings',
+        technicalDetails: 'Settings import failed',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 

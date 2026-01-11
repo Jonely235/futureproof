@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:logging/logging.dart';
 import '../models/transaction.dart' as model;
+import '../models/app_error.dart';
 import '../utils/app_logger.dart';
 
 class DatabaseService {
@@ -19,22 +20,36 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_isWeb) {
-      throw UnimplementedError('Web platform uses in-memory storage');
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Database not available on web platform',
+        technicalDetails: 'Web platform uses in-memory storage only',
+      );
     }
     if (_database != null) return _database!;
     try {
       _database = await _initDatabase();
       return _database!;
-    } catch (e) {
+    } catch (e, st) {
       _log.severe('Error initializing database', e);
-      rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not initialize database',
+        technicalDetails: 'Database initialization failed',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
   Future<Database> _initDatabase() async {
     if (_isWeb) {
       _log.info('Using in-memory storage for web (UI testing only)');
-      throw UnimplementedError('Web platform uses in-memory storage');
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Database not available on web platform',
+        technicalDetails: 'Web platform uses in-memory storage only',
+      );
     }
 
     final dbPath = await getDatabasesPath();
@@ -72,7 +87,11 @@ class DatabaseService {
       }
 
       if (transaction.id.isEmpty) {
-        throw ArgumentError('Transaction ID cannot be empty');
+        throw AppError(
+          type: AppErrorType.validation,
+          message: 'Transaction ID cannot be empty',
+          technicalDetails: 'Transaction ID validation failed',
+        );
       }
 
       final db = await database;
@@ -90,9 +109,16 @@ class DatabaseService {
       await db.insert('transactions', data, conflictAlgorithm: ConflictAlgorithm.replace);
       AppLogger.database.info('✅ Added transaction ${transaction.id} to SQLite');
       return transaction.id;
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error adding transaction', e);
-      rethrow;
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not save transaction to database',
+        technicalDetails: 'Transaction ID: ${transaction.id}',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -116,9 +142,16 @@ class DatabaseService {
       if (maps.isEmpty) return [];
 
       return maps.map((map) => _transactionFromMap(map)).toList();
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error getting transactions', e);
-      return [];
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not retrieve transactions from database',
+        technicalDetails: 'Query failed: getAllTransactions',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -144,9 +177,16 @@ class DatabaseService {
       );
 
       return maps.map((map) => _transactionFromMap(map)).toList();
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error getting transactions by date range', e);
-      return [];
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not retrieve transactions for date range',
+        technicalDetails: 'Range: $start to $end',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -182,9 +222,16 @@ class DatabaseService {
 
       AppLogger.database.info('✅ Updated transaction ${transaction.id}');
       return rowsAffected > 0;
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error updating transaction', e);
-      return false;
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not update transaction in database',
+        technicalDetails: 'Transaction ID: ${transaction.id}',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -205,9 +252,16 @@ class DatabaseService {
 
       AppLogger.database.info('✅ Deleted transaction $id');
       return rowsAffected > 0;
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error deleting transaction', e);
-      return false;
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not delete transaction from database',
+        technicalDetails: 'Transaction ID: $id',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -223,9 +277,15 @@ class DatabaseService {
       await db.delete('transactions');
       AppLogger.database.info('✅ Deleted all transactions');
       return true;
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error deleting all transactions', e);
-      return false;
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not delete all transactions from database',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -241,9 +301,16 @@ class DatabaseService {
           .fold<double>(0.0, (sum, t) => sum + t.amount);
 
       return total.abs();
-    } catch (e) {
+    } catch (e, st) {
       AppLogger.database.severe('❌ Error getting total for month', e);
-      return 0.0;
+      if (e is AppError) rethrow;
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not calculate total for month',
+        technicalDetails: 'Month: $year-$month',
+        originalError: e,
+        stackTrace: st,
+      );
     }
   }
 
