@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/app_error.dart';
-import '../services/analytics_service.dart';
 import '../services/backup_service.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
 import '../config/app_colors.dart';
+import '../widgets/smart_insights_widget.dart';
 import '../widgets/theme_picker_widget.dart';
 
 /// Settings Screen
@@ -96,8 +96,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await prefs.setDouble('savings_goal', savings);
 
       // Verify save by reading back
-      final savedIncome = await prefs.getDouble('monthly_income');
-      final savedSavings = await prefs.getDouble('savings_goal');
+      final savedIncome = prefs.getDouble('monthly_income');
+      final savedSavings = prefs.getDouble('savings_goal');
 
       if (savedIncome == income && savedSavings == savings) {
         HapticFeedback.lightImpact();
@@ -191,368 +191,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildSmartInsights() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: AnalyticsService().getQuickStats(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const SizedBox.shrink();
-        }
-
-        final stats = snapshot.data!;
-        final totalSpending = stats['totalSpending'] as double;
-        final monthlyIncome = stats['monthlyIncome'] as double;
-        final remaining = monthlyIncome - totalSpending;
-        final savings = stats['savings'] as double;
-        final savingsRate = stats['savingsRate'] as double;
-        final isOnTrack = stats['isOnTrack'] as bool;
-
-        return Column(
-          children: [
-            // Section Header
-            Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome,
-                  color: const AppColors.black,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Smart Insights',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: const AppColors.black,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Visual Stat Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.account_balance_wallet,
-                    value: '\$${remaining.toStringAsFixed(0)}',
-                    label: 'Remaining',
-                    color: const AppColors.black,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildCircularProgressCard(
-                    value: savingsRate.clamp(0.0, 1.0),
-                    label: 'Budget OK',
-                    color: isOnTrack ? const AppColors.success : const AppColors.gold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.trending_up,
-                    value: '\$${savings.toStringAsFixed(0)}',
-                    label: 'Savings',
-                    color: AppColors.slate,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.local_fire_department,
-                    value: _getStreakDays(),
-                    label: 'Day Streak',
-                    color: const AppColors.gold,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Tip of the Day
-            _buildTipCard(
-              tip: _getDailyTip(stats),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Top Category Alert (if applicable)
-            if (stats['topCategory'] != null && (stats['topCategoryAmount'] as double) > monthlyIncome * 0.3)
-              _buildCategoryAlert(
-                category: stats['topCategory'] as String,
-                amount: stats['topCategoryAmount'] as double,
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildRecommendationItem({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: const AppColors.gray700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCircularProgressCard({
-    required double value,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: Stack(
-              children: [
-                CircularProgressIndicator(
-                  value: value,
-                  backgroundColor: color.withOpacity(0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                  strokeWidth: 4,
-                ),
-                Center(
-                  child: Text(
-                    '${(value * 100).toInt()}%',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: const AppColors.gray700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTipCard({required String tip}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const AppColors.gray100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const AppColors.gold,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.lightbulb,
-            color: const AppColors.gold,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              tip,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 13,
-                color: const AppColors.black,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryAlert({
-    required String category,
-    required double amount,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const AppColors.gray100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const AppColors.danger,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.warning,
-            color: const AppColors.danger,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'High Spending Alert',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: const AppColors.danger,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$category: \$${amount.toStringAsFixed(0)} this month',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 13,
-                    color: const AppColors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getStreakDays() {
-    // Simple streak calculation - in real app, calculate from actual data
-    return '3';
-  }
-
-  String _getDailyTip(Map<String, dynamic> stats) {
-    final tips = [
-      'Your dining spending is 20% lower than last month. Great progress!',
-      'Setting aside small amounts daily adds up to big savings.',
-      'Review subscriptions monthly to avoid unnecessary charges.',
-      'Try the 50/30/20 rule: 50% needs, 30% wants, 20% savings.',
-      'Small changes in daily habits can lead to big financial wins.',
-    ];
-
-    // Simple rotation based on day of month
-    final dayOfMonth = DateTime.now().day;
-    return tips[dayOfMonth % tips.length];
-  }
-
   @override
   void dispose() {
     _incomeController.dispose();
@@ -563,7 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const AppColors.offWhite,
+      backgroundColor: AppColors.offWhite,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
@@ -582,7 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
-                        color: const AppColors.black,
+                        color: AppColors.black,
                       ),
                     ),
                   ),
@@ -646,7 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Smart Insights Section
                         _buildSectionHeader('Smart Insights'),
                         _buildSettingsSection([
-                          _buildSmartInsights(),
+                          const SmartInsightsWidget(),
                         ]),
 
                         const SizedBox(height: 32),
@@ -692,9 +330,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: ElevatedButton(
                                   onPressed: _isSaving ? null : _saveSettings,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const AppColors.black,
-                                    foregroundColor: const AppColors.white,
-                                    disabledBackgroundColor: const AppColors.border,
+                                    backgroundColor: AppColors.black,
+                                    foregroundColor: AppColors.white,
+                                    disabledBackgroundColor: AppColors.border,
                                     padding: const EdgeInsets.symmetric(vertical: 18),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
@@ -726,7 +364,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: OutlinedButton(
                                   onPressed: _resetToDefaults,
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: const AppColors.danger,
+                                    foregroundColor: AppColors.danger,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
@@ -764,7 +402,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: GoogleFonts.playfairDisplay(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: const AppColors.black,
+          color: AppColors.black,
         ),
       ),
     );
@@ -777,12 +415,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const AppColors.border,
+          color: AppColors.border,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const AppColors.black.withOpacity(0.03),
+            color: AppColors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -812,12 +450,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const AppColors.gray100,
+                color: AppColors.gray100,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: const AppColors.black,
+                color: AppColors.black,
                 size: 20,
               ),
             ),
@@ -831,14 +469,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: const AppColors.black,
+                      color: AppColors.black,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 12,
-                      color: const AppColors.gray700,
+                      color: AppColors.gray700,
                     ),
                   ),
                 ],
@@ -850,10 +488,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const AppColors.offWhite,
+            color: AppColors.offWhite,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const AppColors.border,
+              color: AppColors.border,
               width: 1,
             ),
           ),
@@ -874,7 +512,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: GoogleFonts.spaceGrotesk(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const AppColors.gray700,
+              color: AppColors.gray700,
             ),
           ),
           Text(
@@ -882,7 +520,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: GoogleFonts.jetBrainsMono(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const AppColors.black,
+              color: AppColors.black,
             ),
           ),
         ],
@@ -905,7 +543,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(
                   Icons.cloud_upload,
-                  color: const AppColors.black,
+                  color: AppColors.black,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -918,7 +556,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: const AppColors.black,
+                          color: AppColors.black,
                         ),
                       ),
                       if (lastBackup != null)
@@ -926,7 +564,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'Last backup: ${_formatDate(lastBackup)}',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 12,
-                            color: const AppColors.gray700,
+                            color: AppColors.gray700,
                           ),
                         )
                       else
@@ -934,7 +572,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'No backups yet',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 12,
-                            color: const AppColors.gray700,
+                            color: AppColors.gray700,
                           ),
                         ),
                     ],
@@ -957,7 +595,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const AppColors.black,
+                      foregroundColor: AppColors.black,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       side: const BorderSide(color: AppColors.black),
                     ),
@@ -976,7 +614,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const AppColors.black,
+                      foregroundColor: AppColors.black,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       side: const BorderSide(color: AppColors.black),
                     ),
@@ -1028,7 +666,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const AppColors.gray100,
+                    color: AppColors.gray100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
