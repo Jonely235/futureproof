@@ -7,6 +7,7 @@ import '../services/analytics_service.dart';
 import '../services/backup_service.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
+import '../config/app_colors.dart';
 import '../widgets/theme_picker_widget.dart';
 
 /// Settings Screen
@@ -217,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(
                   Icons.auto_awesome,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -226,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0A0A0A),
+                    color: const AppColors.black,
                   ),
                 ),
               ],
@@ -241,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.account_balance_wallet,
                     value: '\$${remaining.toStringAsFixed(0)}',
                     label: 'Remaining',
-                    color: const Color(0xFF0A0A0A),
+                    color: const AppColors.black,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -249,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: _buildCircularProgressCard(
                     value: savingsRate.clamp(0.0, 1.0),
                     label: 'Budget OK',
-                    color: isOnTrack ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                    color: isOnTrack ? const AppColors.success : const AppColors.gold,
                   ),
                 ),
               ],
@@ -262,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.trending_up,
                     value: '\$${savings.toStringAsFixed(0)}',
                     label: 'Savings',
-                    color: const Color(0xFF2196F3),
+                    color: AppColors.slate,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -271,7 +272,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.local_fire_department,
                     value: _getStreakDays(),
                     label: 'Day Streak',
-                    color: const Color(0xFFFF5722),
+                    color: const AppColors.gold,
                   ),
                 ),
               ],
@@ -386,7 +387,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: GoogleFonts.spaceGrotesk(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
         ],
@@ -441,7 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: GoogleFonts.spaceGrotesk(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
         ],
@@ -453,10 +454,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9E6),
+        color: const AppColors.gray100,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFFFD54F),
+          color: const AppColors.gold,
           width: 1,
         ),
       ),
@@ -464,7 +465,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Icon(
             Icons.lightbulb,
-            color: const Color(0xFFFFA000),
+            color: const AppColors.gold,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -473,7 +474,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               tip,
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 13,
-                color: const Color(0xFF0A0A0A),
+                color: const AppColors.black,
                 height: 1.4,
               ),
             ),
@@ -490,10 +491,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEE),
+        color: const AppColors.gray100,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFEF5350),
+          color: const AppColors.danger,
           width: 1,
         ),
       ),
@@ -501,7 +502,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Icon(
             Icons.warning,
-            color: const Color(0xFFD32F2F),
+            color: const AppColors.danger,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -514,7 +515,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFD32F2F),
+                    color: const AppColors.danger,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -522,7 +523,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   '$category: \$${amount.toStringAsFixed(0)} this month',
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 13,
-                    color: const Color(0xFF0A0A0A),
+                    color: const AppColors.black,
                   ),
                 ),
               ],
@@ -562,7 +563,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const AppColors.offWhite,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
@@ -581,7 +582,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0A0A0A),
+                        color: const AppColors.black,
                       ),
                     ),
                   ),
@@ -691,9 +692,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: ElevatedButton(
                                   onPressed: _isSaving ? null : _saveSettings,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0A0A0A),
-                                    foregroundColor: const Color(0xFFFFFFFF),
-                                    disabledBackgroundColor: const Color(0xFFE0E0E0),
+                                    backgroundColor: const AppColors.black,
+                                    foregroundColor: const AppColors.white,
+                                    disabledBackgroundColor: const AppColors.border,
                                     padding: const EdgeInsets.symmetric(vertical: 18),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
@@ -707,7 +708,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
                                             valueColor:
-                                                AlwaysStoppedAnimation<Color>(Color(0xFF0A0A0A)),
+                                                AlwaysStoppedAnimation<Color>(AppColors.black),
                                           ),
                                         )
                                       : Text(
@@ -725,12 +726,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: OutlinedButton(
                                   onPressed: _resetToDefaults,
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFFD4483A),
+                                    foregroundColor: const AppColors.danger,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    side: const BorderSide(color: Color(0xFFD4483A)),
+                                    side: const BorderSide(color: AppColors.danger),
                                   ),
                                   child: Text(
                                     'Reset to Defaults',
@@ -763,7 +764,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: GoogleFonts.playfairDisplay(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF0A0A0A),
+          color: const AppColors.black,
         ),
       ),
     );
@@ -776,12 +777,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE0E0E0),
+          color: const AppColors.border,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A0A0A).withOpacity(0.03),
+            color: const AppColors.black.withOpacity(0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -811,12 +812,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: const AppColors.gray100,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF0A0A0A),
+                color: const AppColors.black,
                 size: 20,
               ),
             ),
@@ -830,14 +831,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0A0A0A),
+                      color: const AppColors.black,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 12,
-                      color: const Color(0xFF6B6B6B),
+                      color: const AppColors.gray700,
                     ),
                   ),
                 ],
@@ -849,10 +850,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFFFAFAFA),
+            color: const AppColors.offWhite,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFFE0E0E0),
+              color: const AppColors.border,
               width: 1,
             ),
           ),
@@ -873,7 +874,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: GoogleFonts.spaceGrotesk(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
           Text(
@@ -881,7 +882,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: GoogleFonts.jetBrainsMono(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF0A0A0A),
+              color: const AppColors.black,
             ),
           ),
         ],
@@ -904,7 +905,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Icon(
                   Icons.cloud_upload,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -917,7 +918,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0A0A0A),
+                          color: const AppColors.black,
                         ),
                       ),
                       if (lastBackup != null)
@@ -925,7 +926,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'Last backup: ${_formatDate(lastBackup)}',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 12,
-                            color: const Color(0xFF6B6B6B),
+                            color: const AppColors.gray700,
                           ),
                         )
                       else
@@ -933,7 +934,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'No backups yet',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 12,
-                            color: const Color(0xFF6B6B6B),
+                            color: const AppColors.gray700,
                           ),
                         ),
                     ],
@@ -956,9 +957,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF0A0A0A),
+                      foregroundColor: const AppColors.black,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Color(0xFF0A0A0A)),
+                      side: const BorderSide(color: AppColors.black),
                     ),
                   ),
                 ),
@@ -975,9 +976,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF0A0A0A),
+                      foregroundColor: const AppColors.black,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Color(0xFF0A0A0A)),
+                      side: const BorderSide(color: AppColors.black),
                     ),
                   ),
                 ),
@@ -1027,7 +1028,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
+                    color: const AppColors.gray100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

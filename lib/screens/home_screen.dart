@@ -246,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.1,
-                    color: const Color(0xFF6B6B6B),
+                    color: const AppColors.gray700,
                   ),
                 ),
               ),
@@ -314,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.1,
-                            color: const Color(0xFF6B6B6B),
+                            color: const AppColors.gray700,
                           ),
                         ),
                       ],
@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: 'Under Budget Streak',
                             value: '🔥 3 days',
                             subtitle: 'Keep it going!',
-                            color: const Color(0xFFFF5722),
+                            color: AppColors.gold,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -340,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: 'Saved vs Last Month',
                             value: '+\$200',
                             subtitle: 'Great progress!',
-                            color: const Color(0xFF4CAF50),
+                            color: const AppColors.success,
                           ),
                         ),
                       ],
@@ -369,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.1,
-                        color: const Color(0xFF6B6B6B),
+                        color: const AppColors.gray700,
                       ),
                     ),
                     TextButton(
@@ -428,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'Good Morning',
             style: GoogleFonts.spaceGrotesk(
               fontSize: 14,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -438,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.playfairDisplay(
               fontSize: 32,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF0A0A0A),
+              color: const AppColors.black,
             ),
           ),
           const SizedBox(height: 2),
@@ -460,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
+                  color: const AppColors.gray100,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
@@ -479,7 +479,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 36,
                         fontWeight: FontWeight.w600,
-                        color: status?.color ?? const Color(0xFF0A0A0A),
+                        color: status?.color ?? const AppColors.black,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -487,7 +487,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       status?.message ?? 'Tap to check your status',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 16,
-                        color: const Color(0xFF6B6B6B),
+                        color: const AppColors.gray700,
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,
@@ -511,10 +511,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: const AppColors.gray100,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE0E0E0),
+          color: const AppColors.border,
           width: 1,
         ),
       ),
@@ -527,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
           const SizedBox(height: 12),
@@ -536,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.jetBrainsMono(
               fontSize: 24,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF0A0A0A),
+              color: const AppColors.black,
             ),
           ),
           const SizedBox(height: 8),
@@ -545,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(
                 trendUp ? Icons.arrow_upward : Icons.arrow_downward,
                 size: 14,
-                color: const Color(0xFF0A0A0A),
+                color: const AppColors.black,
               ),
               const SizedBox(width: 4),
               Text(
@@ -553,7 +553,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                 ),
               ),
             ],
@@ -573,10 +573,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: const AppColors.gray100,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE0E0E0),
+          color: const AppColors.border,
           width: 1,
         ),
       ),
@@ -592,7 +592,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.1,
-                  color: const Color(0xFF6B6B6B),
+                  color: const AppColors.gray700,
                 ),
               ),
               Text(
@@ -600,7 +600,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                 ),
               ),
             ],
@@ -611,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.jetBrainsMono(
               fontSize: 32,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF0A0A0A),
+              color: const AppColors.black,
             ),
           ),
           const SizedBox(height: 8),
@@ -619,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle,
             style: GoogleFonts.spaceGrotesk(
               fontSize: 13,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
           const SizedBox(height: 16),
@@ -627,9 +627,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percentage / 100,
-              backgroundColor: const Color(0xFFE0E0E0),
+              backgroundColor: const AppColors.border,
               valueColor: AlwaysStoppedAnimation<Color>(
-                const Color(0xFFC9A962),
+                const AppColors.gold,
               ),
               minHeight: 6,
             ),
@@ -651,8 +651,8 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 8,
             decoration: BoxDecoration(
               color: transaction.amount < 0
-                  ? const Color(0xFF0A0A0A)
-                  : const Color(0xFFC9A962),
+                  ? const AppColors.black
+                  : const AppColors.gold,
               shape: BoxShape.circle,
             ),
           ),
@@ -666,7 +666,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF0A0A0A),
+                    color: const AppColors.black,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -676,8 +676,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: transaction.amount < 0
-                        ? const Color(0xFF0A0A0A)
-                        : const Color(0xFF6B6B6B),
+                        ? const AppColors.black
+                        : const AppColors.gray700,
                   ),
                 ),
               ],
@@ -687,7 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
             '${transaction.date.month}/${transaction.date.day}',
             style: GoogleFonts.spaceGrotesk(
               fontSize: 13,
-              color: const Color(0xFF9E9E9E),
+              color: const AppColors.gray500,
             ),
           ),
         ],
@@ -700,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(48),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: const AppColors.gray100,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -716,7 +716,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.playfairDisplay(
               fontSize: 20,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF404040),
+              color: const AppColors.gray900,
             ),
           ),
           const SizedBox(height: 8),
@@ -724,7 +724,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'Add your first transaction to get started',
             style: GoogleFonts.spaceGrotesk(
               fontSize: 14,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
         ],
@@ -886,7 +886,7 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 10,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
           const SizedBox(height: 4),
@@ -903,7 +903,7 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle,
             style: GoogleFonts.spaceGrotesk(
               fontSize: 11,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
         ],
@@ -930,10 +930,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: const AppColors.gray100,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE0E0E0),
+          color: const AppColors.border,
           width: 1,
         ),
       ),
@@ -946,7 +946,7 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 12,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
-              color: const Color(0xFF6B6B6B),
+              color: const AppColors.gray700,
             ),
           ),
           const SizedBox(height: 16),
@@ -981,7 +981,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF0A0A0A),
+                color: const AppColors.black,
               ),
             ),
             Text(
@@ -989,7 +989,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF0A0A0A),
+                color: const AppColors.black,
               ),
             ),
           ],
@@ -998,7 +998,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           height: 4,
           decoration: BoxDecoration(
-            color: const Color(0xFFE0E0E0),
+            color: const AppColors.border,
             borderRadius: BorderRadius.circular(2),
           ),
           child: FractionallySizedBox(
@@ -1006,7 +1006,7 @@ class _HomeScreenState extends State<HomeScreen> {
             widthFactor: 0.6, // Visual representation
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF0A0A0A),
+                color: const AppColors.black,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

@@ -5,6 +5,7 @@ import '../models/spending_analysis.dart';
 import '../services/analytics_service.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
+import '../config/app_colors.dart';
 import '../widgets/pie_chart_widget.dart';
 import '../widgets/bar_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
@@ -88,7 +89,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const AppColors.offWhite,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _analysis == null || _quickStats == null
@@ -99,13 +100,13 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       const Icon(
                         Icons.error_outline,
                         size: 64,
-                        color: Color(0xFF9E9E9E),
+                        color: AppColors.gray500,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Error loading analytics',
                         style: GoogleFonts.spaceGrotesk(
-                          color: const Color(0xFF6B6B6B),
+                          color: const AppColors.gray700,
                         ),
                       ),
                     ],
@@ -127,13 +128,13 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                           style: GoogleFonts.playfairDisplay(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0A0A0A),
+                            color: const AppColors.black,
                           ),
                         ),
                       ),
                       actions: [
                         IconButton(
-                          icon: const Icon(Icons.refresh, color: Color(0xFF0A0A0A)),
+                          icon: const Icon(Icons.refresh, color: AppColors.black),
                           onPressed: _loadAnalytics,
                           tooltip: 'Refresh',
                         ),
@@ -144,7 +145,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                     SliverToBoxAdapter(
                       child: RefreshIndicator(
                         onRefresh: _loadAnalytics,
-                        color: const Color(0xFF0A0A0A),
+                        color: const AppColors.black,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -192,7 +193,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 width: 4,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -202,7 +203,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                 ),
               ),
             ],
@@ -274,7 +275,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 width: 4,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -284,7 +285,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                 ),
               ),
             ],
@@ -312,12 +313,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE0E0E0),
+          color: const AppColors.border,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A0A0A).withOpacity(0.03),
+            color: const AppColors.black.withOpacity(0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -331,12 +332,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
+                  color: const AppColors.gray100,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFF0A0A0A),
+                  color: const AppColors.black,
                   size: 20,
                 ),
               ),
@@ -347,7 +348,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF6B6B6B),
+                    color: const AppColors.gray700,
                   ),
                 ),
               ),
@@ -360,8 +361,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               fontSize: 22,
               fontWeight: FontWeight.w600,
               color: isPositive
-                  ? const Color(0xFF0A0A0A)
-                  : const Color(0xFFD4483A),
+                  ? const AppColors.black
+                  : const AppColors.danger,
             ),
           ),
         ],
