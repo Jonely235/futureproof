@@ -45,7 +45,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 02-01: Create constants files for colors and strings
+- [x] 02-01: Create constants files for colors and strings
 - [ ] 02-02: Extract hardcoded values from screens
 - [ ] 02-03: Extract hardcoded values from services
 
@@ -125,7 +125,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Logging Foundation | 3/3 | Complete | 2026-01-11 |
-| 2. Constants & Config | 0/3 | Not started | - |
+| 2. Constants & Config | 1/3 | In progress | - |
 | 3. Error Handling | 0/3 | Not started | - |
 | 4. Settings Screen Refactor | 0/4 | Not started | - |
 | 5. Service Tests | 0/4 | Not started | - |
