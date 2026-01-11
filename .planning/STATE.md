@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-11)
 
 **Core value:** Make FutureProof's codebase maintainable, testable, and production-ready through refactoring, testing, and code cleanup
-**Current focus:** Phase 4 — Settings Screen Refactor
+**Current focus:** Phase 5 — Service Tests
 
 ## Current Position
 
-Phase: 4 of 8 (Settings Screen Refactor)
-Plan: 02 of 04 (Smart Insights Extraction)
-Status: Plan 02 complete, ready for Plan 03
-Last activity: 2026-01-11 — Phase 4 Plan 2 (Smart Insights Extraction) completed
+Phase: 5 of 8 (Service Tests)
+Plan: 03 of 04 (DatabaseService Tests)
+Status: Plan 03 complete, ready for Plan 04
+Last activity: 2026-01-11 — Phase 5 Plan 3 (DatabaseService Tests) completed
 
 Progress: ████████░░ 53% (9/17 plans complete)
 
@@ -28,14 +28,14 @@ Progress: ████████░░ 53% (9/17 plans complete)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 3/3 | — | ~15 min |
-| 2 | 3/3 | — | ~8 min |
+| 2 | 0/3 | — | 0 min |
 | 3 | 0/3 | — | 0 min |
 | 4 | 2/4 | — | ~16 min |
-| 5 | 1/4 | — | ~18 min (TDD) |
+| 5 | 3/4 | — | ~15 min (TDD) |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (Theme Picker), 04-02 (Smart Insights), 05-01 (AnalyticsService TDD), 05-02 (BackupService TDD)
-- Trend: Multi-phase execution, widget extraction + TDD test infrastructure
+- Last 5 plans: 04-02 (Smart Insights), 05-01 (AnalyticsService TDD), 05-02 (BackupService TDD), 05-03 (DatabaseService TDD)
+- Trend: TDD test infrastructure maturing, service layer coverage expanding
 
 *Updated after each plan completion*
 
@@ -55,6 +55,8 @@ Recent decisions affecting current work:
 - [Phase 5-01]: Prioritize core functionality coverage over edge case error handling (71.67% vs 80% target)
 - [Phase 5-02]: Use SharedPreferences.setMockInitialValues for consistent test isolation
 - [Phase 5-02]: Parse JSON directly in tests to validate export structure
+- [Phase 5-03]: Use import alias `as model` to avoid sqflite Transaction naming conflict
+- [Phase 5-03]: Append CRUD tests to existing file (preserving serialization tests)
 
 ### Deferred Issues
 
@@ -67,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-11 21:08
-Stopped at: Completed 04-02-PLAN.md (Smart Insights Extraction)
+Stopped at: Completed 05-03-PLAN.md (DatabaseService Tests - TDD)
 Resume file: None
