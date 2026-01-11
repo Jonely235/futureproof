@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. Constants & Config | 0/3 | Not started | - |
 | 3. Error Handling | 0/3 | Not started | - |
 | 4. Settings Screen Refactor | 1/4 | In progress | 2026-01-11 |
-| 5. Service Tests | 0/4 | Not started | - |
+| 5. Service Tests | 1/4 | In progress | 2026-01-11 |
 | 6. Provider & Widget Tests | 0/3 | Not started | - |
 | 7. Code Organization | 0/3 | Not started | - |
 | 8. Final Verification | 0/3 | Not started | - |
