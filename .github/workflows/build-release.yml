@@ -10,6 +10,8 @@ jobs:
   build-ios:
     name: Build iOS IPA
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -18,23 +20,91 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.5'
+          flutter-version: '3.27.0'
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
-        run: |
-          flutter pub get
+      - name: Flutter version
+        run: flutter --version
 
-      - name: Build iOS IPA
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Prepare iOS platform
         run: |
-          flutter build ipa --release
+          # Force complete iOS platform regeneration
+          rm -rf ios
+          flutter create --platforms=ios . --project-name futureproof
+          # Fix bundle ID to avoid conflicts
+          cd ios
+          sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+          cd ..
+
+      - name: Disable code signing
+        run: |
+          cd ios
+          # Remove all DEVELOPMENT_TEAM entries
+          sed -i.bak '/DEVELOPMENT_TEAM/d' Runner.xcodeproj/project.pbxproj || true
+          # Set CODE_SIGN_IDENTITY to "-" for ad-hoc signing
+          sed -i.bak "s/CODE_SIGN_IDENTITY = \"Apple Development\";/CODE_SIGN_IDENTITY = \"-\";/" Runner.xcodeproj/project.pbxproj || true
+          sed -i.bak "s/CODE_SIGN_IDENTITY = \"iPhone Developer\";/CODE_SIGN_IDENTITY = \"-\";/" Runner.xcodeproj/project.pbxproj || true
+          # Change CODE_SIGN_STYLE to Manual
+          sed -i.bak 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' Runner.xcodeproj/project.pbxproj || true
+          # Set CODE_SIGN_IDENTITY at project level
+          sed -i.bak 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/' Runner.xcodeproj/project.pbxproj || true
+          echo "Configured ad-hoc code signing"
+          cd ..
+
+      - name: Install CocoaPods dependencies (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 5
+          retry_wait_seconds: 30
+          warning_on_retry: true
+          command: |
+            cd ios
+            rm -rf Pods Podfile.lock
+            pod install --repo-update
+            cd ..
+
+      - name: Build iOS app for device (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 45
+          max_attempts: 3
+          retry_wait_seconds: 60
+          warning_on_retry: true
+          command: |
+            cd ios
+            xcodebuild -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration Release \
+              -sdk iphoneos \
+              -destination generic/platform=iOS \
+              CODE_SIGN_IDENTITY="-" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              archive \
+              -archivePath build/Runner.xcarchive \
+              ONLY_ACTIVE_ARCH=NO
+            echo "Build completed successfully"
+            cd ..
+
+      - name: Create IPA from archive
+        run: |
+          mkdir -p Payload
+          cp -R ios/build/Runner.xcarchive/Products/Applications/Runner.app Payload/
+          zip -r FutureProof.ipa Payload/
+          ls -lh FutureProof.ipa
 
       - name: Upload iOS IPA to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/ios/archive/*.ipa
-          generate_release_notes: false
+          files: FutureProof.ipa
+          generate_release_notes: true
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -55,21 +125,30 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.5'
+          flutter-version: '3.27.0'
           channel: 'stable'
           cache: true
 
       - name: Install dependencies
-        run: |
-          flutter pub get
+        run: flutter pub get
 
-      - name: Build Android APK
-        run: |
-          flutter build apk --release
+      - name: Build Android APK (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 30
+          warning_on_retry: true
+          command: flutter build apk --release
 
-      - name: Build Android App Bundle
-        run: |
-          flutter build appbundle --release
+      - name: Build Android App Bundle (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 30
+          warning_on_retry: true
+          command: flutter build appbundle --release
 
       - name: Upload Android artifacts to Release
         uses: softprops/action-gh-release@v1

@@ -2,7 +2,8 @@ name: Build iOS
 
 on:
   push:
-    branches: [main, master]
+    tags:
+      - 'v*'
   pull_request:
     branches: [main, master]
   workflow_dispatch:  # Allow manual trigger
@@ -55,31 +56,43 @@ jobs:
           echo "Configured ad-hoc code signing"
           cd ..
 
-      - name: Install CocoaPods dependencies
-        run: |
-          cd ios
-          rm -rf Pods Podfile.lock
-          pod install --repo-update
-          cd ..
+      - name: Install CocoaPods dependencies (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 5
+          retry_wait_seconds: 30
+          warning_on_retry: true
+          command: |
+            cd ios
+            rm -rf Pods Podfile.lock
+            pod install --repo-update
+            cd ..
 
-      - name: Build iOS app for device (ad-hoc signing)
-        run: |
-          # Build for iOS device using xcodebuild directly
-          # This bypasses Flutter's code signing checks
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination generic/platform=iOS \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            archive \
-            -archivePath build/Runner.xcarchive \
-            ONLY_ACTIVE_ARCH=NO
-          echo "Build completed successfully"
-          cd ..
+      - name: Build iOS app for device (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 45
+          max_attempts: 3
+          retry_wait_seconds: 60
+          warning_on_retry: true
+          command: |
+            # Build for iOS device using xcodebuild directly
+            # This bypasses Flutter's code signing checks
+            cd ios
+            xcodebuild -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration Release \
+              -sdk iphoneos \
+              -destination generic/platform=iOS \
+              CODE_SIGN_IDENTITY="-" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              archive \
+              -archivePath build/Runner.xcarchive \
+              ONLY_ACTIVE_ARCH=NO
+            echo "Build completed successfully"
+            cd ..
 
       - name: Create IPA from archive
         run: |
@@ -97,44 +110,31 @@ jobs:
           path: FutureProof.ipa
           retention-days: 30
 
-      - name: Get build info
-        if: success()
-        run: |
-          echo "✅ iOS build successful!"
-          echo "IPA file created: FutureProof.ipa"
-          ls -lh FutureProof.ipa
-          echo "BUILD_VERSION=$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
-
       - name: Create GitHub Release
-        if: success() && github.ref == 'refs/heads/main'
+        if: success() && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ios-build-${{ env.BUILD_VERSION }}
-          name: FutureProof iOS Build ${{ env.BUILD_VERSION }}
           body: |
-            ## 📱 FutureProof iOS Build
+            ## FutureProof iOS Release
 
-            **Build Date:** ${{ env.BUILD_VERSION }}
+            **Tag:** ${{ github.ref_name }}
             **Commit:** ${{ github.sha }}
 
-            ### How to Install
+            ### Installation Instructions
 
-            1. **Download:** Click `FutureProof.ipa` below
-            2. **Install:** Use one of these methods:
+            1. Download `FutureProof.ipa` below
+            2. Install using one of these sideloading tools:
                - **SideStore** (Free): https://sidestore.io
                - **AltStore** ($5/yr): https://altstore.io
                - **Sideloadly** (Free): https://sideloadly.io
 
-            ### Installation Steps
+            ### Steps to Sideload
             - Download and install your chosen sideloading tool
             - Connect your iPhone to your computer
             - Open the tool and select this IPA file
             - Follow the on-screen instructions
 
-            ⚠️ **Note:** Side-loaded apps expire in 7 days (free Apple ID) or 1 year (paid developer)
-
-            ---
-            Built with ❤️ by GitHub Actions
+            Note: Side-loaded apps expire in 7 days (free Apple ID) or 1 year (paid developer)
           files: FutureProof.ipa
           draft: false
           prerelease: false
