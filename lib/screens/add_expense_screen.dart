@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/transaction.dart';
-import '../providers/transaction_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+
 import '../config/app_colors.dart';
 import '../config/app_strings.dart';
-import 'package:uuid/uuid.dart';
+import '../models/transaction.dart';
+import '../providers/transaction_provider.dart';
 
 /// Add Expense Screen - Number-First Experience
 ///
@@ -31,15 +32,51 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool _isSaving = false;
 
   final List<Map<String, String>> _categories = [
-    {'name': AppStrings.groceries, 'emoji': AppStrings.groceriesEmoji, 'color': '4CAF50'},
-    {'name': AppStrings.diningOut, 'emoji': AppStrings.diningOutEmoji, 'color': 'FF9800'},
-    {'name': AppStrings.transport, 'emoji': AppStrings.transportEmoji, 'color': '2196F3'},
-    {'name': AppStrings.entertainment, 'emoji': AppStrings.entertainmentEmoji, 'color': '9C27B0'},
-    {'name': AppStrings.health, 'emoji': AppStrings.healthEmoji, 'color': 'F44336'},
-    {'name': AppStrings.shopping, 'emoji': AppStrings.shoppingEmoji, 'color': 'E91E63'},
-    {'name': AppStrings.subscriptions, 'emoji': AppStrings.subscriptionsEmoji, 'color': '00BCD4'},
-    {'name': AppStrings.housing, 'emoji': AppStrings.housingEmoji, 'color': '795548'},
-    {'name': AppStrings.other, 'emoji': AppStrings.otherEmoji, 'color': '9E9E9E'},
+    {
+      'name': AppStrings.groceries,
+      'emoji': AppStrings.groceriesEmoji,
+      'color': '4CAF50'
+    },
+    {
+      'name': AppStrings.diningOut,
+      'emoji': AppStrings.diningOutEmoji,
+      'color': 'FF9800'
+    },
+    {
+      'name': AppStrings.transport,
+      'emoji': AppStrings.transportEmoji,
+      'color': '2196F3'
+    },
+    {
+      'name': AppStrings.entertainment,
+      'emoji': AppStrings.entertainmentEmoji,
+      'color': '9C27B0'
+    },
+    {
+      'name': AppStrings.health,
+      'emoji': AppStrings.healthEmoji,
+      'color': 'F44336'
+    },
+    {
+      'name': AppStrings.shopping,
+      'emoji': AppStrings.shoppingEmoji,
+      'color': 'E91E63'
+    },
+    {
+      'name': AppStrings.subscriptions,
+      'emoji': AppStrings.subscriptionsEmoji,
+      'color': '00BCD4'
+    },
+    {
+      'name': AppStrings.housing,
+      'emoji': AppStrings.housingEmoji,
+      'color': '795548'
+    },
+    {
+      'name': AppStrings.other,
+      'emoji': AppStrings.otherEmoji,
+      'color': '9E9E9E'
+    },
   ];
 
   @override
@@ -206,9 +243,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             child: Text(
               _isExpense ? 'Income' : 'Expense',
               style: GoogleFonts.spaceGrotesk(
-                color: _isExpense
-                    ? AppColors.success
-                    : AppColors.danger,
+                color: _isExpense ? AppColors.success : AppColors.danger,
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
@@ -294,11 +329,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             color: AppColors.border,
                             width: 1.5,
                           ),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                               color: AppColors.shadow,
                               blurRadius: 12,
-                              offset: const Offset(0, 4),
+                              offset: Offset(0, 4),
                             ),
                           ],
                         ),
@@ -363,13 +398,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             // Save Button
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.shadow,
                     blurRadius: 20,
-                    offset: const Offset(0, -4),
+                    offset: Offset(0, -4),
                   ),
                 ],
               ),

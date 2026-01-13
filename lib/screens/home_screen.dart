@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/gamification_provider.dart';
+import '../providers/insight_provider.dart';
 import '../services/finance_calculator.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
@@ -36,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _hasInitialized = true;
       context.read<TransactionProvider>().loadTransactions();
+      // NEW: Load gamification data (streaks, achievements, insights)
+      context.read<GamificationProvider>().loadGamificationData();
+      context.read<InsightProvider>().generateInsights();
     });
   }
 
@@ -237,6 +242,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 32),
 
+              // NEW: Smart Insights Section (prominent placement)
+              _buildInsightsSection(context),
+
+              const SizedBox(height: 32),
+
               // Monthly Overview Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -325,23 +335,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildMotivationalCard(
-                            icon: Icons.local_fire_department,
-                            title: 'Under Budget Streak',
-                            value: '🔥 3 days',
-                            subtitle: 'Keep it going!',
-                            color: AppColors.gold,
-                          ),
+                          child: _buildStreakCard(context),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _buildMotivationalCard(
-                            icon: Icons.trending_up,
-                            title: 'Saved vs Last Month',
-                            value: '+\$200',
-                            subtitle: 'Great progress!',
-                            color: AppColors.success,
-                          ),
+                          child: _buildMoMCard(context),
                         ),
                       ],
                     ),
@@ -493,6 +491,154 @@ class _HomeScreenState extends State<HomeScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightsSection(BuildContext context) {
+    final insightProvider = context.watch<InsightProvider>();
+    final insights = insightProvider.insights;
+
+    // Show loading state
+    if (insightProvider.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Show error state
+    if (insightProvider.error != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.danger.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.danger.withOpacity(0.3)),
+          ),
+          child: Text(
+            'Unable to load insights',
+            style: GoogleFonts.spaceGrotesk(color: AppColors.danger),
+          ),
+        ),
+      );
+    }
+
+    // Show empty state
+    if (insights.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Show insights
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'SMART INSIGHTS',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+              color: AppColors.gray700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Display insights (limit to first 3 for prominence)
+        ...insights.take(3).map((insight) => _buildInsightCard(insight)),
+      ],
+    );
+  }
+
+  Widget _buildInsightCard(dynamic insight) {
+    // Determine color based on insight type
+    Color insightColor;
+    switch (insight.type.toString()) {
+      case 'InsightType.alert':
+        insightColor = AppColors.danger;
+        break;
+      case 'InsightType.warning':
+        insightColor = const Color(0xFFFF9800); // Orange
+        break;
+      case 'InsightType.success':
+      case 'InsightType.achievement':
+        insightColor = AppColors.success;
+        break;
+      default:
+        insightColor = AppColors.black;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: insightColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: insightColor.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: insightColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                insight.icon,
+                style: const TextStyle(fontSize: 20),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  insight.title,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  insight.message,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 12,
+                    color: AppColors.gray700,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (insight.actionText != null)
+            TextButton(
+              onPressed: () {
+                // Handle action (e.g., navigate to details)
+              },
+              child: Text(
+                insight.actionText,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: insightColor,
                 ),
               ),
             ),
@@ -909,6 +1055,71 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildStreakCard(BuildContext context) {
+    final gamificationProvider = context.watch<GamificationProvider>();
+    final streak = gamificationProvider.streak;
+
+    // Show loading or default state if streak is null
+    if (streak == null) {
+      return _buildMotivationalCard(
+        icon: Icons.local_fire_department,
+        title: 'Under Budget Streak',
+        value: '...',
+        subtitle: 'Loading...',
+        color: AppColors.gold,
+      );
+    }
+
+    // Get dynamic motivation message
+    final subtitle = _getStreakMotivation(streak);
+
+    return _buildMotivationalCard(
+      icon: Icons.local_fire_department,
+      title: 'Under Budget Streak',
+      value: '🔥 ${streak.currentStreak} day${streak.currentStreak == 1 ? '' : 's'}',
+      subtitle: subtitle,
+      color: AppColors.gold,
+    );
+  }
+
+  Widget _buildMoMCard(BuildContext context) {
+    final gamificationProvider = context.watch<GamificationProvider>();
+    final momComparison = gamificationProvider.monthOverMonthComparison;
+
+    // Show loading or default state if comparison is null
+    if (momComparison == null) {
+      return _buildMotivationalCard(
+        icon: Icons.trending_up,
+        title: 'Saved vs Last Month',
+        value: '...',
+        subtitle: 'Loading...',
+        color: AppColors.success,
+      );
+    }
+
+    // Dynamic color based on improvement
+    final color = momComparison.improved ? AppColors.success : AppColors.danger;
+    final icon = momComparison.improved ? Icons.trending_down : Icons.trending_up;
+
+    return _buildMotivationalCard(
+      icon: icon,
+      title: 'Saved vs Last Month',
+      value: momComparison.formattedDifference,
+      subtitle: momComparison.message,
+      color: color,
+    );
+  }
+
+  String _getStreakMotivation(dynamic streak) {
+    final days = streak.currentStreak;
+    if (days == 0) return 'Start your streak today!';
+    if (days < 3) return 'Keep going!';
+    if (days < 7) return 'Building momentum!';
+    if (days < 14) return 'Amazing progress!';
+    if (days < 30) return 'Unstoppable!';
+    return 'Legendary!';
   }
 
   Widget _buildCategoryBreakdown(List<Transaction> transactions) {

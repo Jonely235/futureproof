@@ -1,11 +1,13 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:intl/intl.dart';
-import '../models/transaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/app_error.dart';
-import 'database_service.dart';
+import '../models/transaction.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_tracker.dart';
+import 'database_service.dart';
 
 /// Service for exporting and importing app data
 class BackupService {
@@ -26,12 +28,14 @@ class BackupService {
 
       // Convert to JSON
       final jsonString = const JsonEncoder.withIndent('  ').convert(backupData);
-      AppLogger.backup.info('✅ Exported ${transactions.length} transactions at ${backupData['exportDate']}');
+      AppLogger.backup.info(
+          '✅ Exported ${transactions.length} transactions at ${backupData['exportDate']}');
       return jsonString;
     } catch (e, st) {
       AppLogger.backup.severe('Failed to export data', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'BackupService.exportData', stackTrace: st);
+        ErrorTracker()
+            .trackError(e, 'BackupService.exportData', stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -41,7 +45,8 @@ class BackupService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'BackupService.exportData', stackTrace: st);
+      ErrorTracker()
+          .trackError(appError, 'BackupService.exportData', stackTrace: st);
       throw appError;
     }
   }
@@ -108,7 +113,8 @@ class BackupService {
           }
         } catch (e, st) {
           // Log warning for individual transaction failures but continue
-          AppLogger.backup.warning('Skipping invalid transaction during import', e, st);
+          AppLogger.backup
+              .warning('Skipping invalid transaction during import', e, st);
           skippedCount++;
           continue;
         }
@@ -119,7 +125,8 @@ class BackupService {
         await _importSettings(jsonData['settings'] as Map<String, dynamic>);
       }
 
-      AppLogger.backup.info('✅ Imported $importedCount transactions, skipped $skippedCount');
+      AppLogger.backup.info(
+          '✅ Imported $importedCount transactions, skipped $skippedCount');
 
       return ImportResult(
         success: true,

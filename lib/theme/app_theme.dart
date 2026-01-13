@@ -14,15 +14,6 @@ class AppTheme {
   // TYPOGRAPHY
   // ============================================
 
-  /// Display font - elegant serif for headings
-  static const String _displayFont = 'Playfair Display';
-
-  /// Body font - modern geometric sans
-  static const String _bodyFont = 'Space Grotesk';
-
-  /// Mono font - for numbers and financial data
-  static const String _monoFont = 'JetBrains Mono';
-
   /// Custom text theme with distinctive font pairing
   static TextTheme get _textTheme {
     return TextTheme(
@@ -127,32 +118,6 @@ class AppTheme {
   }
 
   // ============================================
-  // COLOR PALETTE
-  // ============================================
-
-  /// Rich grayscale palette with depth and warmth
-  // Primary blacks
-  static const _black = Color(0xFF0A0A0A);      // Near-black for primary
-  static const _charcoal = Color(0xFF1A1A1A);    // Slightly softer
-  static const _slate = Color(0xFF2D2D2D);       // For backgrounds
-
-  // Grays with warmth
-  static const _gray900 = Color(0xFF404040);
-  static const _gray700 = Color(0xFF6B6B6B);
-  static const _gray500 = Color(0xFF9E9E9E);
-  static const _gray300 = Color(0xFFD4D4D4);
-  static const _gray100 = Color(0xFFF5F5F5);
-
-  // Pure whites with depth
-  static const _white = Color(0xFFFFFFFF);
-  static const _offWhite = Color(0xFFFAFAFA);
-  static const _paper = Color(0xFFF0F0F0);
-
-  // Accents (sparingly)
-  static const _gold = Color(0xFFC9A962);        // For wealth/success
-  static const _crimson = Color(0xFFD4483A);      // For alerts only
-
-  // ============================================
   // LIGHT THEME
   // ============================================
 
@@ -162,38 +127,31 @@ class AppTheme {
       brightness: Brightness.light,
 
       // Color scheme
-      colorScheme: ColorScheme.light(
-        primary: const Color(0xFF0A0A0A),
-        onPrimary: const Color(0xFFFFFFFF),
-        primaryContainer: const Color(0xFFF5F5F5),
-        onPrimaryContainer: const Color(0xFF0A0A0A),
-
-        secondary: const Color(0xFF6B6B6B),
-        onSecondary: const Color(0xFFFFFFFF),
-        secondaryContainer: const Color(0xFFE0E0E0),
-        onSecondaryContainer: const Color(0xFF1A1A1A),
-
-        tertiary: const Color(0xFF2D2D2D),
-        onTertiary: const Color(0xFFFFFFFF),
-
-        surface: const Color(0xFFFFFFFF),
-        onSurface: const Color(0xFF0A0A0A),
-        surfaceVariant: const Color(0xFFF5F5F5),
-        onSurfaceVariant: const Color(0xFF6B6B6B),
-
-        error: const Color(0xFFD4483A),
-        onError: const Color(0xFFFFFFFF),
-        errorContainer: const Color(0xFFFDADF2),
-
-        outline: const Color(0xFFBDBDBD),
-        outlineVariant: const Color(0xFFE0E0E0),
-
-        shadow: const Color(0xFF000000),
-        scrim: const Color(0xFF000000),
-
-        inverseSurface: const Color(0xFF1A1A1A),
-        onInverseSurface: const Color(0xFFFFFFFF),
-        inversePrimary: const Color(0xFFFFFFFF),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF0A0A0A),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFF5F5F5),
+        onPrimaryContainer: Color(0xFF0A0A0A),
+        secondary: Color(0xFF6B6B6B),
+        onSecondary: Color(0xFFFFFFFF),
+        secondaryContainer: Color(0xFFE0E0E0),
+        onSecondaryContainer: Color(0xFF1A1A1A),
+        tertiary: Color(0xFF2D2D2D),
+        onTertiary: Color(0xFFFFFFFF),
+        surface: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF0A0A0A),
+        surfaceContainerHighest: Color(0xFFF5F5F5),
+        onSurfaceVariant: Color(0xFF6B6B6B),
+        error: Color(0xFFD4483A),
+        onError: Color(0xFFFFFFFF),
+        errorContainer: Color(0xFFFDADF2),
+        outline: Color(0xFFBDBDBD),
+        outlineVariant: Color(0xFFE0E0E0),
+        shadow: Color(0xFF000000),
+        scrim: Color(0xFF000000),
+        inverseSurface: Color(0xFF1A1A1A),
+        onInverseSurface: Color(0xFFFFFFFF),
+        inversePrimary: Color(0xFFFFFFFF),
       ),
 
       // Typography
@@ -279,7 +237,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFF5F5F5),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

@@ -17,7 +17,6 @@ class AppLogger {
   static final _analyticsUI = Logger('AnalyticsUI');
   static final _provider = Logger('Provider');
   static final _widgets = Logger('Widgets');
-  static final _errorTracker = Logger('ErrorTracker');
 
   /// Get UI logger for screen/widget related logs
   static Logger get ui => _ui;

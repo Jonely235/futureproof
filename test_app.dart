@@ -12,10 +12,10 @@ class TestApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Test App')),
-        body: Center(
+        body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Text('If you can see this, iOS works!'),
               SizedBox(height: 20),
               Text('🎉'),

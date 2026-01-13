@@ -1,10 +1,12 @@
 import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:futureproof/models/transaction.dart';
 import 'package:futureproof/models/app_error.dart';
-import 'package:futureproof/services/database_service.dart';
+import 'package:futureproof/models/transaction.dart';
 import 'package:futureproof/services/backup_service.dart';
+import 'package:futureproof/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../helper/test_helper.dart';
 
 void main() {
@@ -225,11 +227,13 @@ void main() {
       expect(allTransactions.length, 2);
 
       // Verify existing transaction wasn't modified
-      final existingTx = allTransactions.firstWhere((t) => t.id == 'existing-1');
+      final existingTx =
+          allTransactions.firstWhere((t) => t.id == 'existing-1');
       expect(existingTx.amount, -100.0);
     });
 
-    test('should throw FormatException when transactions key missing', () async {
+    test('should throw FormatException when transactions key missing',
+        () async {
       SharedPreferences.setMockInitialValues({});
 
       final invalidJson = jsonEncode({
@@ -247,7 +251,7 @@ void main() {
     test('should return ImportResult with error for invalid JSON', () async {
       SharedPreferences.setMockInitialValues({});
 
-      final invalidJson = 'not valid json';
+      const invalidJson = 'not valid json';
 
       final result = await backupService.importData(invalidJson);
 
@@ -346,7 +350,8 @@ void main() {
       final filename = backupService.getExportFilename();
 
       // Should match pattern: futureproof_backup_YYYY-MM-DD_HH-mm.json
-      final regex = RegExp(r'^futureproof_backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.json$');
+      final regex =
+          RegExp(r'^futureproof_backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.json$');
       expect(regex.hasMatch(filename), true);
     });
 
@@ -428,7 +433,8 @@ void main() {
 
       expect(timestamp, isNotNull);
       final savedDate = DateTime.fromMillisecondsSinceEpoch(timestamp!);
-      expect(savedDate.isAfter(before.subtract(const Duration(seconds: 1))), true);
+      expect(
+          savedDate.isAfter(before.subtract(const Duration(seconds: 1))), true);
       expect(savedDate.isBefore(after.add(const Duration(seconds: 1))), true);
     });
   });

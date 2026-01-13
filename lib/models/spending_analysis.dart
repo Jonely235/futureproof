@@ -119,7 +119,10 @@ class SpendingAnalysis {
 
     for (final transaction in transactions) {
       final monthKey = _getMonthKey(transaction.date);
-      transactionsByMonth[monthKey] = [...(transactionsByMonth[monthKey] ?? []), transaction];
+      transactionsByMonth[monthKey] = [
+        ...(transactionsByMonth[monthKey] ?? []),
+        transaction
+      ];
     }
 
     transactionsByMonth.forEach((month, txs) {
@@ -130,7 +133,8 @@ class SpendingAnalysis {
     // Calculate average
     final average = monthlyTrends.isEmpty
         ? 0.0
-        : monthlyTrends.map((m) => m.amount).reduce((a, b) => a + b) / monthlyTrends.length;
+        : monthlyTrends.map((m) => m.amount).reduce((a, b) => a + b) /
+            monthlyTrends.length;
 
     // Detect anomalies (spending > 2x average)
     final anomalies = <model.Transaction>[];
@@ -170,25 +174,30 @@ class SpendingAnalysis {
 
     // Generate insights from analysis
     if (monthlyTrends.length >= 2) {
-      if (monthlyTrends.last.amount > monthlyTrends[monthlyTrends.length - 2].amount * 1.2) {
+      if (monthlyTrends.last.amount >
+          monthlyTrends[monthlyTrends.length - 2].amount * 1.2) {
         insights.add(Insight(
           title: 'Spending is Up',
-          description: 'You spent ${monthlyTrends.last.amount.toStringAsFixed(0)} this month, '
+          description:
+              'You spent ${monthlyTrends.last.amount.toStringAsFixed(0)} this month, '
               '${((monthlyTrends.last.amount - monthlyTrends[monthlyTrends.length - 2].amount) / monthlyTrends[monthlyTrends.length - 2].amount * 100).toStringAsFixed(0)}% more than last month.',
           type: InsightType.warning,
           icon: '📈',
-          recommendation: 'Review your expenses to see what\'s driving the increase.',
+          recommendation:
+              'Review your expenses to see what\'s driving the increase.',
         ));
       }
 
-      if (monthlyTrends.last.amount < monthlyTrends[monthlyTrends.length - 2].amount * 0.8) {
+      if (monthlyTrends.last.amount <
+          monthlyTrends[monthlyTrends.length - 2].amount * 0.8) {
         insights.add(Insight(
           title: 'Spending is Down',
           description: 'Great job! Your spending decreased by '
               '${((monthlyTrends[monthlyTrends.length - 2].amount - monthlyTrends.last.amount) / monthlyTrends[monthlyTrends.length - 2].amount * 100).toStringAsFixed(0)}% compared to last month.',
           type: InsightType.success,
           icon: '📉',
-          recommendation: 'Keep up the good work! Consider saving the extra money.',
+          recommendation:
+              'Keep up the good work! Consider saving the extra money.',
         ));
       }
     }
@@ -230,12 +239,14 @@ class SpendingAnalysis {
         if (spent > budget) {
           insights.add(Insight(
             title: 'Over Budget: $category',
-            description: 'You\'ve spent ${spent.toStringAsFixed(0)} on $category, '
+            description:
+                'You\'ve spent ${spent.toStringAsFixed(0)} on $category, '
                 'exceeding your budget of ${budget.toStringAsFixed(0)} by '
                 '${(spent - budget).toStringAsFixed(0)}.',
             type: InsightType.warning,
             icon: '⚠️',
-            recommendation: 'Try to reduce $category spending for the rest of the month.',
+            recommendation:
+                'Try to reduce $category spending for the rest of the month.',
           ));
         }
       });
@@ -263,7 +274,7 @@ class SpendingAnalysis {
 
 /// Monthly spending data
 class MonthlySpending {
-  final String month;  // YYYY-MM format
+  final String month; // YYYY-MM format
   final double amount;
 
   MonthlySpending({required this.month, required this.amount});
@@ -315,7 +326,6 @@ class Insight {
       case InsightType.error:
         return Colors.red;
       case InsightType.info:
-      default:
         return Colors.blue;
     }
   }

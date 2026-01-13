@@ -55,11 +55,12 @@ class BarChartWidget extends StatelessWidget {
     MonthlySpending monthly,
     double maxValue,
   ) {
-    final barHeight = maxValue > 0 ? (monthly.amount / maxValue) * (height - 60) : 0.0;
+    final barHeight =
+        maxValue > 0 ? (monthly.amount / maxValue) * (height - 60) : 0.0;
 
     // Format month label
     final parts = monthly.month.split('-');
-    final label = '${_getMonthAbbreviation(int.parse(parts[1]))}';
+    final label = _getMonthAbbreviation(int.parse(parts[1]));
 
     return Expanded(
       child: Column(

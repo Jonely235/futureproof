@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../config/finance_config.dart';
+
 import '../config/app_colors.dart';
+import '../config/finance_config.dart';
 
 class FinanceStatus {
   final String message;
@@ -56,16 +57,20 @@ class FinanceCalculator {
 
     if (remaining >= buffer) {
       level = StatusLevel.good;
-      message = "You're doing great! You have ${formatter.format(remaining)} remaining this month.";
+      message =
+          "You're doing great! You have ${formatter.format(remaining)} remaining this month.";
     } else if (remaining > 0) {
       level = StatusLevel.good;
-      message = "You're on track! ${formatter.format(remaining)} left for flexible spending.";
+      message =
+          "You're on track! ${formatter.format(remaining)} left for flexible spending.";
     } else if (remaining > -buffer) {
       level = StatusLevel.caution;
-      message = "You're ${formatter.format(remaining.abs())} over budget. Consider reviewing your spending.";
+      message =
+          "You're ${formatter.format(remaining.abs())} over budget. Consider reviewing your spending.";
     } else {
       level = StatusLevel.danger;
-      message = "Over budget by ${formatter.format(remaining.abs())}. Review all spending and pause non-essentials.";
+      message =
+          "Over budget by ${formatter.format(remaining.abs())}. Review all spending and pause non-essentials.";
     }
 
     return FinanceStatus(
@@ -93,7 +98,8 @@ class FinanceCalculator {
     for (var transaction in transactions) {
       if (transaction.isExpense) {
         categoryTotals[transaction.category] =
-            (categoryTotals[transaction.category] ?? 0) + transaction.amount.abs();
+            (categoryTotals[transaction.category] ?? 0) +
+                transaction.amount.abs();
       }
     }
 

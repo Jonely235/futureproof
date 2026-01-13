@@ -6,9 +6,9 @@ void main() {
     group('Creation', () {
       test('should create transaction with required fields', () {
         // Arrange
-        final id = 'test-123';
-        final amount = -50.0;
-        final category = 'groceries';
+        const id = 'test-123';
+        const amount = -50.0;
+        const category = 'groceries';
         final date = DateTime(2024, 1, 10);
 
         // Act
@@ -36,8 +36,10 @@ void main() {
         );
         final after = DateTime.now();
 
-        expect(t.createdAt.isAfter(before.subtract(const Duration(seconds: 1))), true);
-        expect(t.createdAt.isBefore(after.add(const Duration(seconds: 1))), true);
+        expect(t.createdAt.isAfter(before.subtract(const Duration(seconds: 1))),
+            true);
+        expect(
+            t.createdAt.isBefore(after.add(const Duration(seconds: 1))), true);
       });
 
       test('should accept custom createdAt', () {
@@ -173,7 +175,7 @@ void main() {
           );
 
           expect(t.categoryEmoji, expectedEmoji,
-            reason: '$category should have emoji $expectedEmoji');
+              reason: '$category should have emoji $expectedEmoji');
         });
       });
 
@@ -302,8 +304,8 @@ void main() {
       });
 
       test('should deserialize from Firestore map correctly', () {
-        final date = '2024-01-10T12:30:00.000Z';
-        final createdAt = '2024-01-10T10:00:00.000Z';
+        const date = '2024-01-10T12:30:00.000Z';
+        const createdAt = '2024-01-10T10:00:00.000Z';
 
         final map = {
           'amount': 123.45,
@@ -377,8 +379,10 @@ void main() {
         final t = Transaction.fromSqliteMap(map);
         final after = DateTime.now();
 
-        expect(t.createdAt.isAfter(before.subtract(const Duration(seconds: 1))), true);
-        expect(t.createdAt.isBefore(after.add(const Duration(seconds: 1))), true);
+        expect(t.createdAt.isAfter(before.subtract(const Duration(seconds: 1))),
+            true);
+        expect(
+            t.createdAt.isBefore(after.add(const Duration(seconds: 1))), true);
       });
     });
   });

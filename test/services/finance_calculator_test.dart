@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:futureproof/services/finance_calculator.dart';
 import 'package:futureproof/models/transaction.dart';
+import 'package:futureproof/services/finance_calculator.dart';
 
 void main() {
   group('FinanceCalculator', () {
@@ -90,7 +90,8 @@ void main() {
         expect(status.remaining, -5500.0);
       });
 
-      test('should generate "doing great" message when remaining >= buffer', () {
+      test('should generate "doing great" message when remaining >= buffer',
+          () {
         // Buffer for 5000 income = 500
         final status = FinanceCalculator.calculateStatus(
           monthlyIncome: 5000,
@@ -104,14 +105,9 @@ void main() {
         expect(status.message, contains("remaining this month"));
       });
 
-      test('should generate "on track" message when 0 < remaining < buffer', () {
+      test('should generate "on track" message when 0 < remaining < buffer',
+          () {
         // Buffer for 5000 income = 500
-        final status = FinanceCalculator.calculateStatus(
-          monthlyIncome: 5000,
-          monthlyExpenses: 3500,
-          savingsGoal: 1000,
-        );
-
         // remaining = 500, which equals buffer -> should be "doing great"
         // But if remaining is 400, it should be "on track"
         final status2 = FinanceCalculator.calculateStatus(
@@ -149,7 +145,8 @@ void main() {
         expect(status.level, StatusLevel.good);
       });
 
-      test('should return CAUTION status when over budget but within buffer', () {
+      test('should return CAUTION status when over budget but within buffer',
+          () {
         // Buffer for 5000 income = 500
         // Need remaining between -500 and 0 for CAUTION
         // remaining = income - expenses - savingsGoal = 5000 - 4200 - 1000 = -200
@@ -265,10 +262,20 @@ void main() {
     group('calculateTotalExpenses', () {
       test('should sum only negative amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: 200.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '4', amount: 500.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3', amount: 200.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '4', amount: 500.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -283,8 +290,10 @@ void main() {
 
       test('should return zero for income-only list', () {
         final transactions = [
-          Transaction(id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '2', amount: 200.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '2', amount: 200.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -293,9 +302,18 @@ void main() {
 
       test('should handle zero amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: 0.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -50.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: 0.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3', amount: -50.0, category: 'dining', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -304,8 +322,13 @@ void main() {
 
       test('should handle very small amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -0.01, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -0.99, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -0.01,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: -0.99, category: 'dining', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -314,8 +337,16 @@ void main() {
 
       test('should handle very large amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -1000000.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '2', amount: -500000.0, category: 'housing', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -1000000.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -500000.0,
+              category: 'housing',
+              date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -324,7 +355,11 @@ void main() {
 
       test('should handle single expense transaction', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -333,10 +368,20 @@ void main() {
 
       test('should handle mixed positive and negative amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: 50.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '3', amount: -200.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '4', amount: 300.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: 50.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -200.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '4', amount: 300.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -347,10 +392,20 @@ void main() {
     group('calculateTotalIncome', () {
       test('should sum only positive amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: 200.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '4', amount: 500.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3', amount: 200.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '4', amount: 500.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -365,8 +420,16 @@ void main() {
 
       test('should return zero for expense-only list', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -200.0, category: 'housing', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -200.0,
+              category: 'housing',
+              date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -375,9 +438,15 @@ void main() {
 
       test('should handle zero amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '2', amount: 0.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: 50.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: 0.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3', amount: 50.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -386,8 +455,10 @@ void main() {
 
       test('should handle very small amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: 0.01, category: 'income', date: DateTime.now()),
-          Transaction(id: '2', amount: 0.99, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1', amount: 0.01, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '2', amount: 0.99, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -396,8 +467,16 @@ void main() {
 
       test('should handle very large amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: 1000000.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '2', amount: 500000.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: 1000000.0,
+              category: 'income',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: 500000.0,
+              category: 'income',
+              date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -406,7 +485,8 @@ void main() {
 
       test('should handle single income transaction', () {
         final transactions = [
-          Transaction(id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -415,10 +495,20 @@ void main() {
 
       test('should handle mixed positive and negative amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: 50.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '3', amount: -200.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '4', amount: 300.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: 50.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -200.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '4', amount: 300.0, category: 'income', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalIncome(transactions);
@@ -429,10 +519,23 @@ void main() {
     group('groupByCategory', () {
       test('should group expenses by category', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -200.0, category: 'dining', date: DateTime.now()),
-          Transaction(id: '4', amount: 100.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -200.0,
+              category: 'dining',
+              date: DateTime.now()),
+          Transaction(
+              id: '4', amount: 100.0, category: 'income', date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -449,8 +552,13 @@ void main() {
 
       test('should exclude income from grouping', () {
         final transactions = [
-          Transaction(id: '1', amount: 1000.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '2', amount: 500.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: 1000.0,
+              category: 'income',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: 500.0, category: 'income', date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -459,10 +567,26 @@ void main() {
 
       test('should handle mixed categories', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -75.0, category: 'transport', date: DateTime.now()),
-          Transaction(id: '4', amount: -25.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -75.0,
+              category: 'transport',
+              date: DateTime.now()),
+          Transaction(
+              id: '4',
+              amount: -25.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -474,15 +598,48 @@ void main() {
 
       test('should handle all valid expense categories', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '2', amount: -200.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -150.0, category: 'dining', date: DateTime.now()),
-          Transaction(id: '4', amount: -75.0, category: 'transport', date: DateTime.now()),
-          Transaction(id: '5', amount: -50.0, category: 'entertainment', date: DateTime.now()),
-          Transaction(id: '6', amount: -25.0, category: 'health', date: DateTime.now()),
-          Transaction(id: '7', amount: -175.0, category: 'shopping', date: DateTime.now()),
-          Transaction(id: '8', amount: -30.0, category: 'subscriptions', date: DateTime.now()),
-          Transaction(id: '9', amount: 1000.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -200.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -150.0,
+              category: 'dining',
+              date: DateTime.now()),
+          Transaction(
+              id: '4',
+              amount: -75.0,
+              category: 'transport',
+              date: DateTime.now()),
+          Transaction(
+              id: '5',
+              amount: -50.0,
+              category: 'entertainment',
+              date: DateTime.now()),
+          Transaction(
+              id: '6', amount: -25.0, category: 'health', date: DateTime.now()),
+          Transaction(
+              id: '7',
+              amount: -175.0,
+              category: 'shopping',
+              date: DateTime.now()),
+          Transaction(
+              id: '8',
+              amount: -30.0,
+              category: 'subscriptions',
+              date: DateTime.now()),
+          Transaction(
+              id: '9',
+              amount: 1000.0,
+              category: 'income',
+              date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -501,8 +658,16 @@ void main() {
 
       test('should handle very large amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -1000000.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '2', amount: -500000.0, category: 'housing', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -1000000.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -500000.0,
+              category: 'housing',
+              date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -511,8 +676,16 @@ void main() {
 
       test('should handle very small fractional amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -0.01, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -0.99, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -0.01,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -0.99,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -521,7 +694,11 @@ void main() {
 
       test('should handle single expense transaction', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -531,10 +708,26 @@ void main() {
 
       test('should accumulate amounts for same category', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -25.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '4', amount: -75.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -25.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '4',
+              amount: -75.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
         final grouped = FinanceCalculator.groupByCategory(transactions);
@@ -545,12 +738,25 @@ void main() {
     group('getHighestSpendingCategory', () {
       test('should return category with highest spending', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -200.0, category: 'dining', date: DateTime.now()),
-          Transaction(id: '3', amount: -50.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -200.0,
+              category: 'dining',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
 
         expect(highest, 'dining'); // 200 > 150
       });
@@ -562,20 +768,31 @@ void main() {
 
       test('should return None for income-only list', () {
         final transactions = [
-          Transaction(id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1', amount: 100.0, category: 'income', date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'None');
       });
 
       test('should handle tie by returning first', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -100.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -100.0,
+              category: 'dining',
+              date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
 
         // Should return one of them (implementation dependent)
         expect(['groceries', 'dining'], contains(highest));
@@ -583,79 +800,158 @@ void main() {
 
       test('should exclude income from calculation', () {
         final transactions = [
-          Transaction(id: '1', amount: 10000.0, category: 'income', date: DateTime.now()),
-          Transaction(id: '2', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -50.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: 10000.0,
+              category: 'income',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3', amount: -50.0, category: 'dining', date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
 
         expect(highest, 'groceries');
       });
 
       test('should handle single expense transaction', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'groceries');
       });
 
       test('should handle very large amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -1000000.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '2', amount: -500000.0, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -1000000.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -500000.0,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'housing');
       });
 
       test('should handle all valid expense categories', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'housing', date: DateTime.now()),
-          Transaction(id: '2', amount: -200.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -150.0, category: 'dining', date: DateTime.now()),
-          Transaction(id: '4', amount: -75.0, category: 'transport', date: DateTime.now()),
-          Transaction(id: '5', amount: -50.0, category: 'entertainment', date: DateTime.now()),
-          Transaction(id: '6', amount: -25.0, category: 'health', date: DateTime.now()),
-          Transaction(id: '7', amount: -175.0, category: 'shopping', date: DateTime.now()),
-          Transaction(id: '8', amount: -30.0, category: 'subscriptions', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'housing',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -200.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -150.0,
+              category: 'dining',
+              date: DateTime.now()),
+          Transaction(
+              id: '4',
+              amount: -75.0,
+              category: 'transport',
+              date: DateTime.now()),
+          Transaction(
+              id: '5',
+              amount: -50.0,
+              category: 'entertainment',
+              date: DateTime.now()),
+          Transaction(
+              id: '6', amount: -25.0, category: 'health', date: DateTime.now()),
+          Transaction(
+              id: '7',
+              amount: -175.0,
+              category: 'shopping',
+              date: DateTime.now()),
+          Transaction(
+              id: '8',
+              amount: -30.0,
+              category: 'subscriptions',
+              date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'groceries'); // 200 is highest
       });
 
       test('should handle very small fractional amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -0.99, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -0.01, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -0.99,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: -0.01, category: 'dining', date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'groceries');
       });
 
       test('should accumulate transactions for same category', () {
         final transactions = [
-          Transaction(id: '1', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: -125.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -50.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3',
+              amount: -125.0,
+              category: 'dining',
+              date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'groceries'); // 150 > 125
       });
 
       test('should handle zero amount expenses', () {
         final transactions = [
-          Transaction(id: '1', amount: 0.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -50.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: 0.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: -50.0, category: 'dining', date: DateTime.now()),
         ];
 
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
         expect(highest, 'dining');
       });
     });
@@ -803,7 +1099,11 @@ void main() {
 
       test('should handle micro-fractional amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: -0.0001, category: 'groceries', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: -0.0001,
+              category: 'groceries',
+              date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -814,15 +1114,24 @@ void main() {
     group('Zero amount edge cases', () {
       test('should handle all transactions with zero amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: 0.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: 0.0, category: 'dining', date: DateTime.now()),
-          Transaction(id: '3', amount: 0.0, category: 'income', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: 0.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2', amount: 0.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '3', amount: 0.0, category: 'income', date: DateTime.now()),
         ];
 
-        final totalExpenses = FinanceCalculator.calculateTotalExpenses(transactions);
-        final totalIncome = FinanceCalculator.calculateTotalIncome(transactions);
+        final totalExpenses =
+            FinanceCalculator.calculateTotalExpenses(transactions);
+        final totalIncome =
+            FinanceCalculator.calculateTotalIncome(transactions);
         final grouped = FinanceCalculator.groupByCategory(transactions);
-        final highest = FinanceCalculator.getHighestSpendingCategory(transactions);
+        final highest =
+            FinanceCalculator.getHighestSpendingCategory(transactions);
 
         expect(totalExpenses, 0.0);
         expect(totalIncome, 0.0);
@@ -832,10 +1141,20 @@ void main() {
 
       test('should handle mixed zero and non-zero amounts', () {
         final transactions = [
-          Transaction(id: '1', amount: 0.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '2', amount: -100.0, category: 'groceries', date: DateTime.now()),
-          Transaction(id: '3', amount: 0.0, category: 'dining', date: DateTime.now()),
-          Transaction(id: '4', amount: -50.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '1',
+              amount: 0.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '2',
+              amount: -100.0,
+              category: 'groceries',
+              date: DateTime.now()),
+          Transaction(
+              id: '3', amount: 0.0, category: 'dining', date: DateTime.now()),
+          Transaction(
+              id: '4', amount: -50.0, category: 'dining', date: DateTime.now()),
         ];
 
         final total = FinanceCalculator.calculateTotalExpenses(transactions);
@@ -861,7 +1180,9 @@ void main() {
         expect(insights.length, 20);
       });
 
-      test('should calculate status with insights containing special characters', () {
+      test(
+          'should calculate status with insights containing special characters',
+          () {
         final insights = ['Save \$500', 'Reduce dining by 20%', '🎯 Goal met!'];
         final status = FinanceCalculator.calculateStatus(
           monthlyIncome: 5000,

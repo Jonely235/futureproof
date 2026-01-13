@@ -67,7 +67,7 @@ class _VelocityChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.length < 2) return;
 
-    final padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 24);
+    const padding = EdgeInsets.symmetric(horizontal: 16, vertical: 24);
     final chartWidth = size.width - padding.horizontal;
     final chartHeight = size.height - padding.vertical;
 
@@ -81,9 +81,8 @@ class _VelocityChartPainter extends CustomPainter {
     final points = <Offset>[];
     for (int i = 0; i < data.length; i++) {
       final x = padding.left + (i / (data.length - 1)) * chartWidth;
-      final normalizedValue = valueRange > 0
-          ? (data[i].amount - minValue) / valueRange
-          : 0.5;
+      final normalizedValue =
+          valueRange > 0 ? (data[i].amount - minValue) / valueRange : 0.5;
       final y = padding.top + chartHeight - (normalizedValue * chartHeight);
       points.add(Offset(x, y));
     }
@@ -131,7 +130,11 @@ class _VelocityChartPainter extends CustomPainter {
       ],
     ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    canvas.drawPath(fillPath, Paint()..shader = gradient..style = PaintingStyle.fill);
+    canvas.drawPath(
+        fillPath,
+        Paint()
+          ..shader = gradient
+          ..style = PaintingStyle.fill);
 
     // Draw line
     final linePaint = Paint()

@@ -1,11 +1,13 @@
 import 'dart:convert';
-import '../models/spending_analysis.dart';
-import '../models/app_error.dart';
-import '../models/transaction.dart' as model;
-import 'database_service.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../config/finance_config.dart';
+import '../models/app_error.dart';
+import '../models/spending_analysis.dart';
+import '../models/transaction.dart' as model;
 import '../utils/app_logger.dart';
+import 'database_service.dart';
 
 class AnalyticsService {
   final DatabaseService _dbService = DatabaseService();
@@ -348,18 +350,19 @@ class AnalyticsService {
   Future<double> getAverageCategorySpending(String category) async {
     try {
       final transactions = await _dbService.getAllTransactions();
-      final categoryTransactions = transactions
-          .where((t) => t.category == category)
-          .toList();
+      final categoryTransactions =
+          transactions.where((t) => t.category == category).toList();
 
       if (categoryTransactions.isEmpty) return 0.0;
 
-      final total =
-          categoryTransactions.map((t) => t.amount.abs()).fold(0.0, (a, b) => a + b);
+      final total = categoryTransactions
+          .map((t) => t.amount.abs())
+          .fold(0.0, (a, b) => a + b);
       return total / categoryTransactions.length;
     } catch (e, st) {
       if (e is AppError) rethrow;
-      AppLogger.analytics.severe('Error calculating average category spending', e);
+      AppLogger.analytics
+          .severe('Error calculating average category spending', e);
       throw AppError(
         type: AppErrorType.database,
         message: 'Could not calculate average spending for category',

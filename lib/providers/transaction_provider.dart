@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
-import '../models/transaction.dart';
+
 import '../models/app_error.dart';
-import '../services/database_service.dart';
+import '../models/transaction.dart';
 import '../services/analytics_service.dart';
+import '../services/database_service.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_tracker.dart';
 
@@ -94,7 +95,8 @@ class TransactionProvider extends ChangeNotifier {
               stackTrace: st,
             );
       AppLogger.provider.severe('Failed to load transactions', _error);
-      ErrorTracker().trackError(_error!, 'TransactionProvider.loadTransactions', stackTrace: st);
+      ErrorTracker().trackError(_error!, 'TransactionProvider.loadTransactions',
+          stackTrace: st);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -121,7 +123,8 @@ class TransactionProvider extends ChangeNotifier {
               stackTrace: st,
             );
       AppLogger.provider.severe('Failed to add transaction', _error);
-      ErrorTracker().trackError(_error!, 'TransactionProvider.addTransaction', stackTrace: st);
+      ErrorTracker().trackError(_error!, 'TransactionProvider.addTransaction',
+          stackTrace: st);
       notifyListeners();
       return false;
     }
@@ -149,7 +152,9 @@ class TransactionProvider extends ChangeNotifier {
               stackTrace: st,
             );
       AppLogger.provider.severe('Failed to update transaction', _error);
-      ErrorTracker().trackError(_error!, 'TransactionProvider.updateTransaction', stackTrace: st);
+      ErrorTracker().trackError(
+          _error!, 'TransactionProvider.updateTransaction',
+          stackTrace: st);
       notifyListeners();
       return false;
     }
@@ -177,7 +182,9 @@ class TransactionProvider extends ChangeNotifier {
               stackTrace: st,
             );
       AppLogger.provider.severe('Failed to delete transaction', _error);
-      ErrorTracker().trackError(_error!, 'TransactionProvider.deleteTransaction', stackTrace: st);
+      ErrorTracker().trackError(
+          _error!, 'TransactionProvider.deleteTransaction',
+          stackTrace: st);
       notifyListeners();
       return false;
     }

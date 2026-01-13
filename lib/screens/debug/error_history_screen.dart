@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+
 import '../../models/app_error.dart';
-import '../../utils/error_tracker.dart';
 import '../../utils/error_display.dart';
+import '../../utils/error_tracker.dart';
 
 /// Developer-only screen for viewing error history.
-/// 
+///
 /// Provides a list of recent errors with full details, filtering by type,
 /// and capabilities to clear history or export logs.
 class ErrorHistoryScreen extends StatefulWidget {
@@ -20,7 +21,7 @@ class ErrorHistoryScreen extends StatefulWidget {
 class _ErrorHistoryScreenState extends State<ErrorHistoryScreen> {
   final _tracker = ErrorTracker();
   AppErrorType? _filterType;
-  
+
   List<TrackedError> get _errors {
     if (_filterType == null) {
       return _tracker.getRecentErrors(count: 100);
@@ -121,7 +122,8 @@ class _ErrorHistoryScreenState extends State<ErrorHistoryScreen> {
             onPressed: () {
               setState(() => _tracker.clearHistory());
               Navigator.pop(context);
-              ErrorDisplay.showSuccessSnackBar(context, 'Error history cleared');
+              ErrorDisplay.showSuccessSnackBar(
+                  context, 'Error history cleared');
             },
             child: const Text('CLEAR'),
           ),
@@ -134,7 +136,8 @@ class _ErrorHistoryScreenState extends State<ErrorHistoryScreen> {
     final log = _tracker.exportErrorLog();
     await Clipboard.setData(ClipboardData(text: log));
     if (mounted) {
-      ErrorDisplay.showSuccessSnackBar(context, 'Error log copied to clipboard');
+      ErrorDisplay.showSuccessSnackBar(
+          context, 'Error log copied to clipboard');
     }
   }
 }
@@ -166,7 +169,7 @@ class _ErrorListItem extends StatelessWidget {
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
-    
+
     return DateFormat('MMM d, HH:mm').format(dt);
   }
 
@@ -194,7 +197,8 @@ class _ErrorListItem extends StatelessWidget {
                 _buildInfoRow('Timestamp', trackedError.timestamp.toString()),
                 _buildInfoRow('Context', trackedError.context),
                 if (trackedError.error.technicalDetails != null)
-                  _buildInfoRow('Technical Details', trackedError.error.technicalDetails!),
+                  _buildInfoRow('Technical Details',
+                      trackedError.error.technicalDetails!),
                 if (trackedError.stackTrace != null) ...[
                   const SizedBox(height: 8),
                   const Text(

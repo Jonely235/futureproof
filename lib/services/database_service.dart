@@ -1,9 +1,10 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart';
 import 'package:logging/logging.dart';
-import '../models/transaction.dart' as model;
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+
 import '../models/app_error.dart';
+import '../models/transaction.dart' as model;
 import '../utils/app_logger.dart';
 import '../utils/error_tracker.dart';
 
@@ -83,7 +84,8 @@ class DatabaseService {
     try {
       if (_isWeb) {
         _webTransactions.add(transaction);
-        AppLogger.database.info('✅ Added transaction ${transaction.id} to web memory');
+        AppLogger.database
+            .info('✅ Added transaction ${transaction.id} to web memory');
         return transaction.id;
       }
 
@@ -107,13 +109,16 @@ class DatabaseService {
         'updated_at': now,
       };
 
-      await db.insert('transactions', data, conflictAlgorithm: ConflictAlgorithm.replace);
-      AppLogger.database.info('✅ Added transaction ${transaction.id} to SQLite');
+      await db.insert('transactions', data,
+          conflictAlgorithm: ConflictAlgorithm.replace);
+      AppLogger.database
+          .info('✅ Added transaction ${transaction.id} to SQLite');
       return transaction.id;
     } catch (e, st) {
       AppLogger.database.severe('❌ Error adding transaction', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.addTransaction', stackTrace: st);
+        ErrorTracker()
+            .trackError(e, 'DatabaseService.addTransaction', stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -123,7 +128,8 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.addTransaction', stackTrace: st);
+      ErrorTracker().trackError(appError, 'DatabaseService.addTransaction',
+          stackTrace: st);
       throw appError;
     }
   }
@@ -133,7 +139,8 @@ class DatabaseService {
       if (_isWeb) {
         final transactions = List<model.Transaction>.from(_webTransactions);
         transactions.sort((a, b) => b.date.compareTo(a.date));
-        AppLogger.database.info('📊 Retrieved ${transactions.length} transactions from web memory');
+        AppLogger.database.info(
+            '📊 Retrieved ${transactions.length} transactions from web memory');
         return transactions;
       }
 
@@ -143,7 +150,8 @@ class DatabaseService {
         orderBy: 'date DESC',
       );
 
-      AppLogger.database.info('📊 Retrieved ${maps.length} transactions from SQLite');
+      AppLogger.database
+          .info('📊 Retrieved ${maps.length} transactions from SQLite');
 
       if (maps.isEmpty) return [];
 
@@ -151,7 +159,8 @@ class DatabaseService {
     } catch (e, st) {
       AppLogger.database.severe('❌ Error getting transactions', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.getAllTransactions', stackTrace: st);
+        ErrorTracker().trackError(e, 'DatabaseService.getAllTransactions',
+            stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -161,7 +170,8 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.getAllTransactions', stackTrace: st);
+      ErrorTracker().trackError(appError, 'DatabaseService.getAllTransactions',
+          stackTrace: st);
       throw appError;
     }
   }
@@ -173,10 +183,11 @@ class DatabaseService {
     try {
       if (_isWeb) {
         return _webTransactions
-            .where((t) => t.date.isAfter(start.subtract(const Duration(days: 1))) &&
-                          t.date.isBefore(end.add(const Duration(days: 1))))
+            .where((t) =>
+                t.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                t.date.isBefore(end.add(const Duration(days: 1))))
             .toList()
-            ..sort((a, b) => b.date.compareTo(a.date));
+          ..sort((a, b) => b.date.compareTo(a.date));
       }
 
       final db = await database;
@@ -189,9 +200,12 @@ class DatabaseService {
 
       return maps.map((map) => _transactionFromMap(map)).toList();
     } catch (e, st) {
-      AppLogger.database.severe('❌ Error getting transactions by date range', e);
+      AppLogger.database
+          .severe('❌ Error getting transactions by date range', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.getTransactionsByDateRange', stackTrace: st);
+        ErrorTracker().trackError(
+            e, 'DatabaseService.getTransactionsByDateRange',
+            stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -201,7 +215,9 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.getTransactionsByDateRange', stackTrace: st);
+      ErrorTracker().trackError(
+          appError, 'DatabaseService.getTransactionsByDateRange',
+          stackTrace: st);
       throw appError;
     }
   }
@@ -209,10 +225,12 @@ class DatabaseService {
   Future<bool> updateTransaction(model.Transaction transaction) async {
     try {
       if (_isWeb) {
-        final index = _webTransactions.indexWhere((t) => t.id == transaction.id);
+        final index =
+            _webTransactions.indexWhere((t) => t.id == transaction.id);
         if (index >= 0) {
           _webTransactions[index] = transaction;
-          AppLogger.database.info('✅ Updated transaction ${transaction.id} in web memory');
+          AppLogger.database
+              .info('✅ Updated transaction ${transaction.id} in web memory');
           return true;
         }
         return false;
@@ -241,7 +259,8 @@ class DatabaseService {
     } catch (e, st) {
       AppLogger.database.severe('❌ Error updating transaction', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.updateTransaction', stackTrace: st);
+        ErrorTracker()
+            .trackError(e, 'DatabaseService.updateTransaction', stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -251,7 +270,8 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.updateTransaction', stackTrace: st);
+      ErrorTracker().trackError(appError, 'DatabaseService.updateTransaction',
+          stackTrace: st);
       throw appError;
     }
   }
@@ -276,7 +296,8 @@ class DatabaseService {
     } catch (e, st) {
       AppLogger.database.severe('❌ Error deleting transaction', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.deleteTransaction', stackTrace: st);
+        ErrorTracker()
+            .trackError(e, 'DatabaseService.deleteTransaction', stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -286,7 +307,8 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.deleteTransaction', stackTrace: st);
+      ErrorTracker().trackError(appError, 'DatabaseService.deleteTransaction',
+          stackTrace: st);
       throw appError;
     }
   }
@@ -306,7 +328,8 @@ class DatabaseService {
     } catch (e, st) {
       AppLogger.database.severe('❌ Error deleting all transactions', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.deleteAllTransactions', stackTrace: st);
+        ErrorTracker().trackError(e, 'DatabaseService.deleteAllTransactions',
+            stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -315,7 +338,9 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.deleteAllTransactions', stackTrace: st);
+      ErrorTracker().trackError(
+          appError, 'DatabaseService.deleteAllTransactions',
+          stackTrace: st);
       throw appError;
     }
   }
@@ -323,7 +348,8 @@ class DatabaseService {
   Future<double> getTotalForMonth(int year, int month) async {
     try {
       final start = DateTime(year, month, 1);
-      final end = DateTime(year, month + 1, 1).subtract(const Duration(days: 1));
+      final end =
+          DateTime(year, month + 1, 1).subtract(const Duration(days: 1));
 
       final transactions = await getTransactionsByDateRange(start, end);
 
@@ -335,7 +361,8 @@ class DatabaseService {
     } catch (e, st) {
       AppLogger.database.severe('❌ Error getting total for month', e);
       if (e is AppError) {
-        ErrorTracker().trackError(e, 'DatabaseService.getTotalForMonth', stackTrace: st);
+        ErrorTracker()
+            .trackError(e, 'DatabaseService.getTotalForMonth', stackTrace: st);
         rethrow;
       }
       final appError = AppError(
@@ -345,7 +372,8 @@ class DatabaseService {
         originalError: e,
         stackTrace: st,
       );
-      ErrorTracker().trackError(appError, 'DatabaseService.getTotalForMonth', stackTrace: st);
+      ErrorTracker().trackError(appError, 'DatabaseService.getTotalForMonth',
+          stackTrace: st);
       throw appError;
     }
   }

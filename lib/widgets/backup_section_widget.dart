@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/backup_service.dart';
+
 import '../config/app_colors.dart';
+import '../services/backup_service.dart';
 import '../utils/app_logger.dart';
 
 /// Backup Section Widget
@@ -27,7 +28,7 @@ class BackupSectionWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.cloud_upload,
                   color: AppColors.black,
                   size: 20,
@@ -139,7 +140,8 @@ class BackupSectionWidget extends StatelessWidget {
       final jsonData = await backupService.exportData();
       final filename = backupService.getExportFilename();
 
-      AppLogger.widgets.info('BackupSectionWidget: Export successful, filename: $filename');
+      AppLogger.widgets
+          .info('BackupSectionWidget: Export successful, filename: $filename');
 
       // Show success dialog with data
       if (context.mounted) {

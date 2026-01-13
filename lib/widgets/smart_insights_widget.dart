@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../config/app_colors.dart';
 import '../services/analytics_service.dart';
 import '../utils/app_logger.dart';
-import '../config/app_colors.dart';
 
 /// Smart Insights Widget
 ///
@@ -108,12 +109,13 @@ class SmartInsightsWidget extends StatelessWidget {
             // Tip of the Day
             _buildTipCard(
               tip: _getDailyTip(stats),
-          ),
+            ),
 
             const SizedBox(height: 12),
 
             // Top Category Alert (if applicable)
-            if (stats['topCategory'] != null && (stats['topCategoryAmount'] as double) > monthlyIncome * 0.3)
+            if (stats['topCategory'] != null &&
+                (stats['topCategoryAmount'] as double) > monthlyIncome * 0.3)
               _buildCategoryAlert(
                 category: stats['topCategory'] as String,
                 amount: stats['topCategoryAmount'] as double,

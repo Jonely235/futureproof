@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../config/app_colors.dart';
-import '../widgets/smart_insights_widget.dart';
-import '../widgets/theme_picker_widget.dart';
-import '../widgets/financial_goals_form_widget.dart';
 import '../widgets/backup_section_widget.dart';
+import '../widgets/financial_goals_form_widget.dart';
+import '../widgets/theme_picker_widget.dart';
 import 'debug/error_history_screen.dart';
 
 /// Settings Screen
@@ -63,14 +63,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Smart Insights Section
-                  _buildSectionHeader('Smart Insights'),
-                  _buildSettingsSection([
-                    const SmartInsightsWidget(),
-                  ]),
-
-                  const SizedBox(height: 32),
-
                   // Theme Section
                   _buildSectionHeader('Appearance'),
                   _buildSettingsSection([
@@ -107,7 +99,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSettingsSection([
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.bug_report, color: Colors.red),
+                        leading:
+                            const Icon(Icons.bug_report, color: Colors.red),
                         title: Text(
                           'Error History',
                           style: GoogleFonts.spaceGrotesk(
@@ -214,6 +207,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-
 }

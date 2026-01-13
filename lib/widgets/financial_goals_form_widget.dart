@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../config/app_colors.dart';
 import '../models/app_error.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
-import '../config/app_colors.dart';
 
 /// Financial Goals Form Widget
 ///
@@ -84,7 +85,7 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
 
       ErrorDisplay.showErrorSnackBar(
         context,
-        AppError(
+        const AppError(
           type: AppErrorType.validation,
           message: 'Please enter a valid monthly income',
         ),
@@ -99,7 +100,7 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
 
       ErrorDisplay.showErrorSnackBar(
         context,
-        AppError(
+        const AppError(
           type: AppErrorType.validation,
           message: 'Please enter a valid savings goal',
         ),

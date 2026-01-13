@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../config/app_colors.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
-import '../config/app_colors.dart';
 import 'edit_transaction_screen.dart';
 
 /// Transaction History Screen - Timeline View
@@ -242,7 +243,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: AppColors.gray100,
                               ),
@@ -298,9 +299,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                             child: ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _groupTransactionsByDate(transactions).length,
+                              itemCount:
+                                  _groupTransactionsByDate(transactions).length,
                               itemBuilder: (context, index) {
-                                final grouped = _groupTransactionsByDate(transactions);
+                                final grouped =
+                                    _groupTransactionsByDate(transactions);
                                 final dateKey = grouped.keys.elementAt(index);
                                 final transactionsForDate = grouped[dateKey]!;
 
@@ -309,7 +312,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                   children: [
                                     // Date Header
                                     Container(
-                                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                                      padding: const EdgeInsets.fromLTRB(
+                                          24, 24, 24, 16),
                                       child: Row(
                                         children: [
                                           Container(
@@ -317,7 +321,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                             height: 24,
                                             decoration: BoxDecoration(
                                               color: AppColors.black,
-                                              borderRadius: BorderRadius.circular(2),
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
                                             ),
                                           ),
                                           const SizedBox(width: 12),
@@ -335,16 +340,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                     ),
 
                                     // Timeline Cards
-                                    ...transactionsForDate.asMap().entries.map((entry) {
+                                    ...transactionsForDate
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
                                       final itemIndex = entry.key;
                                       final transaction = entry.value;
-                                      final isLast = itemIndex == transactionsForDate.length - 1;
+                                      final isLast = itemIndex ==
+                                          transactionsForDate.length - 1;
 
                                       return _TimelineTransactionCard(
                                         transaction: transaction,
                                         isFirst: itemIndex == 0,
                                         isLast: isLast,
-                                        onDelete: () => _deleteTransaction(transaction),
+                                        onDelete: () =>
+                                            _deleteTransaction(transaction),
                                       );
                                     }),
                                   ],
@@ -482,9 +492,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                       height: 12,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isExpense
-                            ? AppColors.black
-                            : AppColors.success,
+                        color: isExpense ? AppColors.black : AppColors.success,
                         border: Border.all(
                           color: Colors.white,
                           width: 2,

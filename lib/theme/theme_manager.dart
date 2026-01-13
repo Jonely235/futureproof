@@ -11,6 +11,11 @@ class ThemeManager {
     AppTheme.oceanCalm,
     AppTheme.sunsetWarm,
     AppTheme.forest,
+    AppTheme.lavenderDream,
+    AppTheme.midnightBlue,
+    AppTheme.cherryBlossom,
+    AppTheme.goldenHour,
+    AppTheme.arcticFrost,
   ];
 
   // Current theme
@@ -24,7 +29,8 @@ class ThemeManager {
     try {
       final prefs = await SharedPreferences.getInstance();
       final themeIndex = prefs.getInt(_themeKey) ?? 0;
-      _currentTheme = availableThemes[themeIndex.clamp(0, availableThemes.length - 1)];
+      _currentTheme =
+          availableThemes[themeIndex.clamp(0, availableThemes.length - 1)];
     } catch (e) {
       // Default to editorial if loading fails
       _currentTheme = AppTheme.editorial;
@@ -53,6 +59,16 @@ class ThemeManager {
         return _buildSunsetWarmTheme();
       case AppTheme.forest:
         return _buildForestTheme();
+      case AppTheme.lavenderDream:
+        return _buildLavenderDreamTheme();
+      case AppTheme.midnightBlue:
+        return _buildMidnightBlueTheme();
+      case AppTheme.cherryBlossom:
+        return _buildCherryBlossomTheme();
+      case AppTheme.goldenHour:
+        return _buildGoldenHourTheme();
+      case AppTheme.arcticFrost:
+        return _buildArcticFrostTheme();
     }
   }
 
@@ -97,15 +113,15 @@ class ThemeManager {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
-        primary: const Color(0xFF0288D1),
-        onPrimary: const Color(0xFFFFFFFF),
-        primaryContainer: const Color(0xFFB3E5FC),
-        onPrimaryContainer: const Color(0xFF001F3F),
-        secondary: const Color(0xFF00ACC1),
-        onSecondary: const Color(0xFFFFFFFF),
-        surface: const Color(0xFFE1F5FE),
-        onSurface: const Color(0xFF01579B),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF0288D1),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFB3E5FC),
+        onPrimaryContainer: Color(0xFF001F3F),
+        secondary: Color(0xFF00ACC1),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFE1F5FE),
+        onSurface: Color(0xFF01579B),
       ),
       scaffoldBackgroundColor: const Color(0xFFE1F5FE),
       appBarTheme: const AppBarTheme(
@@ -136,14 +152,14 @@ class ThemeManager {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
-        primary: const Color(0xFFFF7043),
-        onPrimary: const Color(0xFFFFFFFF),
-        primaryContainer: const Color(0xFFFFCCBC),
-        secondary: const Color(0xFFFF8A65),
-        onSecondary: const Color(0xFFFFFFFF),
-        surface: const Color(0xFFFBE9E7),
-        onSurface: const Color(0xFFBF360C),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFFFF7043),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFFFCCBC),
+        secondary: Color(0xFFFF8A65),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFFBE9E7),
+        onSurface: Color(0xFFBF360C),
       ),
       scaffoldBackgroundColor: const Color(0xFFFBE9E7),
       appBarTheme: const AppBarTheme(
@@ -174,20 +190,210 @@ class ThemeManager {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
-        primary: const Color(0xFF43A047),
-        onPrimary: const Color(0xFFFFFFFF),
-        primaryContainer: const Color(0xFFC8E6C9),
-        secondary: const Color(0xFF66BB6A),
-        onSecondary: const Color(0xFFFFFFFF),
-        surface: const Color(0xFFF1F8E9),
-        onSurface: const Color(0xFF1B5E20),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF43A047),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFC8E6C9),
+        secondary: Color(0xFF66BB6A),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFF1F8E9),
+        onSurface: Color(0xFF1B5E20),
       ),
       scaffoldBackgroundColor: const Color(0xFFF1F8E9),
       appBarTheme: const AppBarTheme(
         centerTitle: false,
         elevation: 0,
         backgroundColor: Color(0xFF43A047),
+        foregroundColor: Color(0xFFFFFFFF),
+        iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        color: Color(0xFFFFFFFF),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+
+  /// Lavender Dream theme - purple and lavender gradients
+  ThemeData _buildLavenderDreamTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF9C27B0),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFE1BEE7),
+        secondary: Color(0xFFBA68C8),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFF3E5F5),
+        onSurface: Color(0xFF4A148C),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFF3E5F5),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFF9C27B0),
+        foregroundColor: Color(0xFFFFFFFF),
+        iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        color: Color(0xFFFFFFFF),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+
+  /// Midnight Blue theme - deep blue, professional
+  ThemeData _buildMidnightBlueTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF1A237E),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFC5CAE9),
+        secondary: Color(0xFF3F51B5),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFE8EAF6),
+        onSurface: Color(0xFF1A237E),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFE8EAF6),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFF1A237E),
+        foregroundColor: Color(0xFFFFFFFF),
+        iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        color: Color(0xFFFFFFFF),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+
+  /// Cherry Blossom theme - pink and rose, elegant
+  ThemeData _buildCherryBlossomTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFFE91E63),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFFCE4EC),
+        secondary: Color(0xFFF06292),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFFCE4EC),
+        onSurface: Color(0xFF880E4F),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFFCE4EC),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFFE91E63),
+        foregroundColor: Color(0xFFFFFFFF),
+        iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        color: Color(0xFFFFFFFF),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+
+  /// Golden Hour theme - warm gold and orange
+  ThemeData _buildGoldenHourTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFFFF6F00),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFFFD54F),
+        secondary: Color(0xFFFF8F00),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFFFF8E1),
+        onSurface: Color(0xFFBF360C),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFFFF8E1),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFFFF6F00),
+        foregroundColor: Color(0xFFFFFFFF),
+        iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: const CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        color: Color(0xFFFFFFFF),
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+
+  /// Arctic Frost theme - white and icy blue, clean
+  ThemeData _buildArcticFrostTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF00BCD4),
+        onPrimary: Color(0xFFFFFFFF),
+        primaryContainer: Color(0xFFB2EBF2),
+        secondary: Color(0xFF00ACC1),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFFE0F7FA),
+        onSurface: Color(0xFF006064),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFE0F7FA),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFF00BCD4),
         foregroundColor: Color(0xFFFFFFFF),
         iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
         titleTextStyle: TextStyle(
@@ -213,7 +419,12 @@ enum AppTheme {
   editorial,
   oceanCalm,
   sunsetWarm,
-  forest;
+  forest,
+  lavenderDream,
+  midnightBlue,
+  cherryBlossom,
+  goldenHour,
+  arcticFrost;
 
   String get displayName {
     switch (this) {
@@ -225,6 +436,16 @@ enum AppTheme {
         return 'Sunset Warm';
       case forest:
         return 'Forest';
+      case lavenderDream:
+        return 'Lavender Dream';
+      case midnightBlue:
+        return 'Midnight Blue';
+      case cherryBlossom:
+        return 'Cherry Blossom';
+      case goldenHour:
+        return 'Golden Hour';
+      case arcticFrost:
+        return 'Arctic Frost';
     }
   }
 
@@ -238,6 +459,16 @@ enum AppTheme {
         return 'Orange and coral, cozy feel';
       case forest:
         return 'Greens and earth tones, natural';
+      case lavenderDream:
+        return 'Purple and lavender, dreamy vibes';
+      case midnightBlue:
+        return 'Deep blue, professional and clean';
+      case cherryBlossom:
+        return 'Pink and rose, elegant and soft';
+      case goldenHour:
+        return 'Warm gold and orange, sunny feel';
+      case arcticFrost:
+        return 'White and icy blue, fresh and clean';
     }
   }
 
@@ -251,6 +482,16 @@ enum AppTheme {
         return const Color(0xFFFF7043);
       case forest:
         return const Color(0xFF43A047);
+      case lavenderDream:
+        return const Color(0xFF9C27B0);
+      case midnightBlue:
+        return const Color(0xFF1A237E);
+      case cherryBlossom:
+        return const Color(0xFFE91E63);
+      case goldenHour:
+        return const Color(0xFFFF6F00);
+      case arcticFrost:
+        return const Color(0xFF00BCD4);
     }
   }
 }

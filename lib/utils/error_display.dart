@@ -51,7 +51,8 @@ class ErrorDisplay {
     );
 
     // Track error in ErrorTracker
-    ErrorTracker().trackError(error, 'UI: SnackBar', stackTrace: error.stackTrace);
+    ErrorTracker()
+        .trackError(error, 'UI: SnackBar', stackTrace: error.stackTrace);
 
     if (!context.mounted) return;
 

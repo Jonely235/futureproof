@@ -308,7 +308,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
               // Category Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(
@@ -357,8 +357,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveChanges,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _isExpense ? Colors.red : Colors.green,
+                    backgroundColor: _isExpense ? Colors.red : Colors.green,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -376,14 +375,14 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                                 AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : Text(
+                      : const Text(
                           'Save Changes',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-              ),
+                ),
               ),
             ],
           ),

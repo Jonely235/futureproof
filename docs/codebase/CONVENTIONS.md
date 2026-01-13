@@ -1,6 +1,6 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-01-11
+**Analysis Date:** 2026-01-13
 
 ## Naming Patterns
 
@@ -62,10 +62,12 @@
 - Some long lines in UI building code (80-120 characters)
 
 **Imports:**
-- `import 'package:flutter/material.dart'` first (framework)
-- Relative imports next: `import '../models/transaction.dart'`
-- Package imports last: `import 'package:provider/provider.dart'`
+- `dart:` imports first (if any): `dart:convert`, `dart:math`
+- `package:flutter*` imports second: `package:flutter/material.dart`
+- Third-party packages third (alphabetical): `package:provider/provider.dart`, `package:google_fonts/google_fonts.dart`
+- Relative imports fourth (alphabetical): `import '../models/transaction.dart'`
 - Organized alphabetically within groups
+- One blank line between groups
 
 **Nullable Types:**
 - Nullable types used extensively (`String?`, `DateTime?`)

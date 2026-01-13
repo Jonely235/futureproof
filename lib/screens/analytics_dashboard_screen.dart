@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../config/app_colors.dart';
 import '../models/app_error.dart';
 import '../models/spending_analysis.dart';
 import '../services/analytics_service.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
-import '../config/app_colors.dart';
-import '../widgets/pie_chart_widget.dart';
 import '../widgets/bar_chart_widget.dart';
+import '../widgets/pie_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
 import '../widgets/velocity_chart_widget.dart';
 
@@ -122,7 +123,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       elevation: 0,
                       backgroundColor: Colors.white,
                       flexibleSpace: FlexibleSpaceBar(
-                        titlePadding: const EdgeInsets.only(left: 16, bottom: 12),
+                        titlePadding:
+                            const EdgeInsets.only(left: 16, bottom: 12),
                         title: Text(
                           'Analytics',
                           style: GoogleFonts.playfairDisplay(
@@ -134,7 +136,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       ),
                       actions: [
                         IconButton(
-                          icon: const Icon(Icons.refresh, color: AppColors.black),
+                          icon:
+                              const Icon(Icons.refresh, color: AppColors.black),
                           onPressed: _loadAnalytics,
                           tooltip: 'Refresh',
                         ),
@@ -360,95 +363,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
             style: GoogleFonts.jetBrainsMono(
               fontSize: 22,
               fontWeight: FontWeight.w600,
-              color: isPositive
-                  ? AppColors.black
-                  : AppColors.danger,
+              color: isPositive ? AppColors.black : AppColors.danger,
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrendSection() {
-    if (_analysis!.monthlyTrends.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Monthly Trends',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Trend indicator
-        Center(
-          child: TrendIndicator(
-            percentage: _analysis!.trendPercentage,
-            label: 'vs last month',
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Bar chart
-        SizedBox(
-          height: 200,
-          child: BarChartWidget(
-            data: _analysis!.monthlyTrends,
-          ),
-        ),
-      ],
     );
   }
 

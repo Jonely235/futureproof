@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:futureproof/models/app_error.dart';
 import 'package:futureproof/models/transaction.dart' as model;
 import 'package:futureproof/services/database_service.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../helper/test_helper.dart';
 
 void main() {
@@ -174,8 +172,8 @@ void main() {
       });
 
       test('should deserialize transaction from Firestore map format', () {
-        final date = '2024-01-10T00:00:00.000Z';
-        final createdAt = '2024-01-09T00:00:00.000Z';
+        const date = '2024-01-10T00:00:00.000Z';
+        const createdAt = '2024-01-09T00:00:00.000Z';
 
         final firestoreMap = {
           'amount': 123.45,
@@ -254,7 +252,7 @@ void main() {
           final restored = model.Transaction.fromSqliteMap(sqliteMap);
 
           expect(restored.amount, closeTo(amount, 0.001),
-            reason: 'Amount $amount should round-trip correctly');
+              reason: 'Amount $amount should round-trip correctly');
         }
       });
 
@@ -283,7 +281,7 @@ void main() {
           final restored = model.Transaction.fromSqliteMap(sqliteMap);
 
           expect(restored.date, date,
-            reason: 'DateTime $date should round-trip correctly');
+              reason: 'DateTime $date should round-trip correctly');
         }
       });
     });
@@ -429,7 +427,8 @@ void main() {
         expect(transactions.first.note, equals('Updated note'));
       });
 
-      test('should return false when updating non-existent transaction', () async {
+      test('should return false when updating non-existent transaction',
+          () async {
         final nonExistent = model.Transaction(
           id: 'does-not-exist',
           amount: -100.0,
@@ -458,8 +457,10 @@ void main() {
         expect(transactions, isEmpty);
       });
 
-      test('should return false when deleting non-existent transaction', () async {
-        final result = await databaseService.deleteTransaction('does-not-exist');
+      test('should return false when deleting non-existent transaction',
+          () async {
+        final result =
+            await databaseService.deleteTransaction('does-not-exist');
         expect(result, isFalse);
       });
 
@@ -493,7 +494,8 @@ void main() {
     });
 
     group('Database Query Operations', () {
-      test('should retrieve all transactions sorted by date descending', () async {
+      test('should retrieve all transactions sorted by date descending',
+          () async {
         final transactions = [
           model.Transaction(
             id: 'test-sort-1',
@@ -563,7 +565,8 @@ void main() {
         final start = DateTime(2024, 1, 8);
         final end = DateTime(2024, 1, 18);
 
-        final retrieved = await databaseService.getTransactionsByDateRange(start, end);
+        final retrieved =
+            await databaseService.getTransactionsByDateRange(start, end);
         expect(retrieved, hasLength(2));
 
         final ids = retrieved.map((t) => t.id).toSet();
@@ -573,7 +576,8 @@ void main() {
         expect(ids, isNot(contains('test-range-4')));
       });
 
-      test('should return empty list for date range with no transactions', () async {
+      test('should return empty list for date range with no transactions',
+          () async {
         final transaction = model.Transaction(
           id: 'test-empty-range',
           amount: -100.0,
@@ -586,7 +590,8 @@ void main() {
         final start = DateTime(2024, 2, 1);
         final end = DateTime(2024, 2, 28);
 
-        final retrieved = await databaseService.getTransactionsByDateRange(start, end);
+        final retrieved =
+            await databaseService.getTransactionsByDateRange(start, end);
         expect(retrieved, isEmpty);
       });
 
@@ -623,13 +628,16 @@ void main() {
         }
 
         final januaryTotal = await databaseService.getTotalForMonth(2024, 1);
-        expect(januaryTotal, equals(300.0)); // 100 + 200 (absolute value of expenses)
+        expect(januaryTotal,
+            equals(300.0)); // 100 + 200 (absolute value of expenses)
 
         final februaryTotal = await databaseService.getTotalForMonth(2024, 2);
         expect(februaryTotal, equals(50.0));
       });
 
-      test('should return empty list when getting all transactions from empty database', () async {
+      test(
+          'should return empty list when getting all transactions from empty database',
+          () async {
         final transactions = await databaseService.getAllTransactions();
         expect(transactions, isEmpty);
       });

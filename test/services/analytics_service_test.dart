@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:futureproof/models/transaction.dart';
-import 'package:futureproof/models/spending_analysis.dart';
 import 'package:futureproof/models/app_error.dart';
+import 'package:futureproof/models/spending_analysis.dart';
+import 'package:futureproof/models/transaction.dart';
 import 'package:futureproof/services/analytics_service.dart';
 import 'package:futureproof/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../helper/test_helper.dart';
 
 void main() {
@@ -446,7 +447,8 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'monthly_income': 5000.0,
         'savings_goal': 1000.0,
-        'category_budgets': '{"groceries": 10.0, "dining": 10.0, "transport": 10.0}',
+        'category_budgets':
+            '{"groceries": 10.0, "dining": 10.0, "transport": 10.0}',
       });
 
       final result = await analyticsService.getFinancialHealthScore();
@@ -525,7 +527,8 @@ void main() {
     test('should return zero for non-existent category', () async {
       SharedPreferences.setMockInitialValues({});
 
-      final result = await analyticsService.getAverageCategorySpending('nonexistent');
+      final result =
+          await analyticsService.getAverageCategorySpending('nonexistent');
 
       expect(result, 0.0);
     });
@@ -533,7 +536,8 @@ void main() {
     test('should return zero for category with no transactions', () async {
       SharedPreferences.setMockInitialValues({});
 
-      final result = await analyticsService.getAverageCategorySpending('groceries');
+      final result =
+          await analyticsService.getAverageCategorySpending('groceries');
 
       expect(result, 0.0);
     });
@@ -541,7 +545,8 @@ void main() {
     test('should calculate average per transaction in category', () async {
       SharedPreferences.setMockInitialValues({});
 
-      final result = await analyticsService.getAverageCategorySpending('groceries');
+      final result =
+          await analyticsService.getAverageCategorySpending('groceries');
 
       expect(result, isA<double>());
     });
@@ -549,7 +554,8 @@ void main() {
     test('should handle single transaction in category', () async {
       SharedPreferences.setMockInitialValues({});
 
-      final result = await analyticsService.getAverageCategorySpending('dining');
+      final result =
+          await analyticsService.getAverageCategorySpending('dining');
 
       expect(result, greaterThanOrEqualTo(0.0));
     });
@@ -1001,12 +1007,14 @@ void main() {
       if (trends.length >= 2) {
         final latest = trends.last.amount;
         final previous = trends[trends.length - 2].amount;
-        print('Latest: $latest, Previous: $previous, Is trending up: $isTrendingUp');
+        print(
+            'Latest: $latest, Previous: $previous, Is trending up: $isTrendingUp');
 
         // Test verifies the calculation works, not specific values
         expect(isTrendingUp, latest > previous);
         if (previous > 0) {
-          expect(trendPercentage, closeTo((latest - previous) / previous * 100, 0.01));
+          expect(trendPercentage,
+              closeTo((latest - previous) / previous * 100, 0.01));
         }
       } else {
         expect(isTrendingUp, false);
@@ -1166,8 +1174,10 @@ void main() {
         await dbService.addTransaction(t);
       }
 
-      final avgGroceries = await analyticsService.getAverageCategorySpending('groceries');
-      final avgDining = await analyticsService.getAverageCategorySpending('dining');
+      final avgGroceries =
+          await analyticsService.getAverageCategorySpending('groceries');
+      final avgDining =
+          await analyticsService.getAverageCategorySpending('dining');
 
       expect(avgGroceries, 150.0); // (100 + 200) / 2
       expect(avgDining, 150.0); // 150 / 1
