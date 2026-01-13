@@ -1,5 +1,5 @@
 import '../value_objects/money.dart';
-import '../value_objects/date_range.dart';
+import '../value_objects/transaction_date.dart';
 
 /// Transaction entity - core business object in the domain layer
 /// Framework-independent, contains only business logic
