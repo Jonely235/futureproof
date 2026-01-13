@@ -96,21 +96,29 @@ jobs:
 
       - name: Create IPA from archive
         run: |
-          # List what's in the build directory
-          ls -la ios/build/
-          # Check if archive exists
+          # Check current directory
+          echo "Current directory: $(pwd)"
+          # List what's in the ios directory
+          ls -la ios/
+          # Check if build directory exists in ios
+          if [ -d "ios/build" ]; then
+            echo "ios/build exists, listing contents:"
+            ls -la ios/build/
+          else
+            echo "ios/build does not exist"
+          fi
+          # Check if archive exists at the expected location
           if [ -d "ios/build/Runner.xcarchive" ]; then
             echo "Archive found at ios/build/Runner.xcarchive"
-            # List structure of the archive
             find ios/build/Runner.xcarchive -name "*.app" -type d
           else
             echo "Archive not found at ios/build/Runner.xcarchive"
-            # Try to find any xcarchive
-            find ios/build -name "*.xcarchive" -type d
+            # Try to find any xcarchive anywhere
+            find . -name "*.xcarchive" -type d
           fi
           # Create IPA if we found the app
           mkdir -p Payload
-          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d 2>/dev/null | head -1)
           if [ -n "$APP_PATH" ]; then
             cp -R "$APP_PATH" Payload/
             zip -r FutureProof.ipa Payload/
