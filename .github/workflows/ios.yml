@@ -96,12 +96,29 @@ jobs:
 
       - name: Create IPA from archive
         run: |
-          # Manually create IPA from xcarchive (skip exportArchive)
-          # The .app is in Products/Applications/
+          # List what's in the build directory
+          ls -la ios/build/
+          # Check if archive exists
+          if [ -d "ios/build/Runner.xcarchive" ]; then
+            echo "Archive found at ios/build/Runner.xcarchive"
+            # List structure of the archive
+            find ios/build/Runner.xcarchive -name "*.app" -type d
+          else
+            echo "Archive not found at ios/build/Runner.xcarchive"
+            # Try to find any xcarchive
+            find ios/build -name "*.xcarchive" -type d
+          fi
+          # Create IPA if we found the app
           mkdir -p Payload
-          cp -R ios/build/Runner.xcarchive/Products/Applications/Runner.app Payload/
-          zip -r FutureProof.ipa Payload/
-          ls -lh FutureProof.ipa
+          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+          if [ -n "$APP_PATH" ]; then
+            cp -R "$APP_PATH" Payload/
+            zip -r FutureProof.ipa Payload/
+            ls -lh FutureProof.ipa
+          else
+            echo "ERROR: Runner.app not found in archive"
+            exit 1
+          fi
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
