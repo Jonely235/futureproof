@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../config/app_colors.dart';
 import '../widgets/backup_section_widget.dart';
 import '../widgets/financial_goals_form_widget.dart';
+import '../widgets/firebase_config_widget.dart';
 import '../widgets/theme_picker_widget.dart';
+import '../data/repositories/firebase_backup_repository_impl.dart';
 import 'debug/error_history_screen.dart';
 
 /// Settings Screen
@@ -70,6 +72,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onThemeChanged: (theme) {
                         // Trigger rebuild to show updated selection
                         setState(() {});
+                      },
+                    ),
+                  ]),
+
+                  const SizedBox(height: 32),
+
+                  // Cloud Sync Section (NEW)
+                  _buildSectionHeader('Cloud Sync'),
+                  _buildSettingsSection([
+                    Builder(
+                      builder: (context) {
+                        // Create repository lazily only when needed
+                        final cloudBackupRepo = FirebaseBackupRepositoryImpl();
+                        return FirebaseConfigWidget(
+                          cloudBackupRepo: cloudBackupRepo,
+                        );
                       },
                     ),
                   ]),

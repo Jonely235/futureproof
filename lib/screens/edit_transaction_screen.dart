@@ -51,6 +51,38 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     'Other': '💸',
   };
 
+  /// Map display category names to internal category names
+  String _mapDisplayCategoryToInternal(String displayName) {
+    final mapping = {
+      'Groceries': 'groceries',
+      'Dining Out': 'dining',
+      'Transport': 'transport',
+      'Entertainment': 'entertainment',
+      'Health': 'health',
+      'Shopping': 'shopping',
+      'Subscriptions': 'subscriptions',
+      'Housing': 'housing',
+      'Other': 'housing',
+    };
+    return mapping[displayName] ?? 'housing';
+  }
+
+  /// Map internal category names to display category names
+  String _mapInternalCategoryToDisplay(String internalName) {
+    final mapping = {
+      'groceries': 'Groceries',
+      'dining': 'Dining Out',
+      'transport': 'Transport',
+      'entertainment': 'Entertainment',
+      'health': 'Health',
+      'shopping': 'Shopping',
+      'subscriptions': 'Subscriptions',
+      'housing': 'Housing',
+      'income': 'Income',
+    };
+    return mapping[internalName] ?? 'Other';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -62,7 +94,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     _noteController = TextEditingController(
       text: widget.transaction.note ?? '',
     );
-    _selectedCategory = widget.transaction.category;
+    _selectedCategory = _mapInternalCategoryToDisplay(widget.transaction.category);
     _isExpense = widget.transaction.amount < 0;
   }
 
@@ -99,7 +131,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       final updatedTransaction = Transaction(
         id: widget.transaction.id,
         amount: _isExpense ? -amount : amount,
-        category: _selectedCategory,
+        category: _mapDisplayCategoryToInternal(_selectedCategory),
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),

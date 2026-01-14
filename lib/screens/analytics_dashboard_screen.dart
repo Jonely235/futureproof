@@ -52,6 +52,17 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
     _loadAnalytics();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Auto-refresh when returning to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadAnalytics();
+      }
+    });
+  }
+
   Future<void> _loadAnalytics() async {
     setState(() {
       _isLoading = true;
@@ -134,48 +145,36 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                           ),
                         ),
                       ),
-                      actions: [
-                        IconButton(
-                          icon:
-                              const Icon(Icons.refresh, color: AppColors.black),
-                          onPressed: _loadAnalytics,
-                          tooltip: 'Refresh',
-                        ),
-                      ],
                     ),
 
                     // Content
                     SliverToBoxAdapter(
-                      child: RefreshIndicator(
-                        onRefresh: _loadAnalytics,
-                        color: AppColors.black,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Overview Cards
-                            _buildOverviewSection(),
-                            const SizedBox(height: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Overview Cards
+                          _buildOverviewSection(),
+                          const SizedBox(height: 24),
 
-                            // Spend Velocity Chart
-                            if (_analysis!.monthlyTrends.length >= 2)
-                              _buildVelocitySection(),
-                            const SizedBox(height: 24),
+                          // Spend Velocity Chart
+                          if (_analysis!.monthlyTrends.length >= 2)
+                            _buildVelocitySection(),
+                          const SizedBox(height: 24),
 
-                            // Category Breakdown
-                            _buildCategorySection(),
-                            const SizedBox(height: 24),
+                          // Category Breakdown
+                          _buildCategorySection(),
+                          const SizedBox(height: 24),
 
-                            // Budget Comparisons
-                            if (_analysis!.budgetComparisons.isNotEmpty)
-                              _buildBudgetSection(),
-                            const SizedBox(height: 24),
+                          // Budget Comparisons
+                          if (_analysis!.budgetComparisons.isNotEmpty)
+                            _buildBudgetSection(),
+                          const SizedBox(height: 24),
 
-                            // Quick Insights
-                            if (_analysis!.insights.isNotEmpty)
-                              _buildInsightsSection(),
-                            const SizedBox(height: 32),
-                          ],
-                        ),
+                          // Quick Insights
+                          if (_analysis!.insights.isNotEmpty)
+                            _buildInsightsSection(),
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
                   ],

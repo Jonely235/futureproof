@@ -84,8 +84,6 @@ class DatabaseService {
     try {
       if (_isWeb) {
         _webTransactions.add(transaction);
-        AppLogger.database
-            .info('✅ Added transaction ${transaction.id} to web memory');
         return transaction.id;
       }
 
@@ -139,8 +137,6 @@ class DatabaseService {
       if (_isWeb) {
         final transactions = List<model.Transaction>.from(_webTransactions);
         transactions.sort((a, b) => b.date.compareTo(a.date));
-        AppLogger.database.info(
-            '📊 Retrieved ${transactions.length} transactions from web memory');
         return transactions;
       }
 

@@ -407,7 +407,7 @@ class _TimelineTransactionCard extends StatelessWidget {
       ),
       confirmDismiss: (direction) async {
         HapticFeedback.heavyImpact();
-        return await showDialog(
+        final result = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
@@ -449,8 +449,35 @@ class _TimelineTransactionCard extends StatelessWidget {
             );
           },
         );
+
+        if (result == true) {
+          // Delete immediately and wait for completion
+          try {
+            final provider = context.read<TransactionProvider>();
+            await provider.deleteTransaction(transaction.id);
+            HapticFeedback.lightImpact();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Transaction deleted'),
+                backgroundColor: AppColors.black,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: $e'),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          }
+          return true;
+        }
+        return false;
       },
-      onDismissed: (direction) => onDelete(),
+      onDismissed: (direction) {
+        // Widget is already removed by confirmDismiss
+      },
       child: GestureDetector(
         onTap: () async {
           HapticFeedback.lightImpact();
@@ -479,13 +506,13 @@ class _TimelineTransactionCard extends StatelessWidget {
               SizedBox(
                 width: 40,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     if (!isFirst)
-                      Expanded(
-                        child: Container(
-                          width: 2,
-                          color: AppColors.border,
-                        ),
+                      Container(
+                        height: 24,
+                        width: 2,
+                        color: AppColors.border,
                       ),
                     Container(
                       width: 12,
@@ -500,11 +527,10 @@ class _TimelineTransactionCard extends StatelessWidget {
                       ),
                     ),
                     if (!isLast)
-                      Expanded(
-                        child: Container(
-                          width: 2,
-                          color: AppColors.border,
-                        ),
+                      Container(
+                        height: 24,
+                        width: 2,
+                        color: AppColors.border,
                       ),
                   ],
                 ),

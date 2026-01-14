@@ -79,6 +79,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     },
   ];
 
+  /// Map display category names to internal category names
+  String _mapDisplayCategoryToInternal(String displayName) {
+    final mapping = {
+      AppStrings.groceries: 'groceries',
+      AppStrings.diningOut: 'dining',
+      AppStrings.transport: 'transport',
+      AppStrings.entertainment: 'entertainment',
+      AppStrings.health: 'health',
+      AppStrings.shopping: 'shopping',
+      AppStrings.subscriptions: 'subscriptions',
+      AppStrings.housing: 'housing',
+      AppStrings.other: 'housing',
+    };
+    return mapping[displayName] ?? 'housing';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -117,7 +133,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       final transaction = Transaction(
         id: const Uuid().v4(),
         amount: _isExpense ? -amount : amount,
-        category: _selectedCategory,
+        category: _mapDisplayCategoryToInternal(_selectedCategory),
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),

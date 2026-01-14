@@ -124,4 +124,26 @@ class Transaction {
       'createdAt': createdAt.toIso8601String(),
     };
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Transaction &&
+        other.id == id &&
+        other.amount == amount &&
+        other.category == category &&
+        other.note == note &&
+        other.date == date &&
+        other.householdId == householdId;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        amount,
+        category,
+        note,
+        date,
+        householdId,
+      );
 }

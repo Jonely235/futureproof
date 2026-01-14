@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'providers/transaction_provider.dart';
 import 'providers/gamification_provider.dart';
@@ -8,12 +9,15 @@ import 'providers/insight_provider.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/gamification_repository_impl.dart';
+import 'data/repositories/firebase_backup_repository_impl.dart';
+import 'domain/repositories/cloud_backup_repository.dart';
 import 'domain/services/streak_calculator_service.dart';
 import 'domain/services/achievement_service.dart';
 import 'domain/services/budget_comparison_service.dart';
 import 'domain/services/insight_generation_service.dart';
 import 'theme/theme_manager.dart';
 import 'widgets/main_navigation.dart';
+import 'utils/app_logger.dart';
 
 String _getEmojiForLevel(Level level) {
   if (level >= Level.SEVERE) return '❌';
@@ -55,6 +59,9 @@ void main() async {
   final transactionRepository = TransactionRepositoryImpl();
   final budgetRepository = BudgetRepositoryImpl();
   final gamificationRepository = GamificationRepositoryImpl();
+
+  // Firebase Cloud Backup is initialized lazily when user configures it
+  // Don't create it here to avoid Firebase errors on web/mobile
 
   // Initialize domain services
   final streakCalculatorService = StreakCalculatorService();
