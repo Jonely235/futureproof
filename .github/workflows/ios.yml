@@ -43,7 +43,9 @@ jobs:
 
           # Ensure Podfile has iOS 15.0 and modular headers
           sed -i.bak "s/platform :ios,.*$/platform :ios, '15.0'/" Podfile
-          sed -i.bak '/^#.*modular headers/a use_modular_headers!' Podfile || { sed -i.bak '2 a use_modular_headers!' Podfile }
+          if ! grep -q "use_modular_headers" Podfile; then
+            sed -i.bak '2 a use_modular_headers!' Podfile
+          fi
           cd ..
 
       - name: Disable code signing
