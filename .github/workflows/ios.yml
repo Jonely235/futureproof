@@ -78,7 +78,7 @@ jobs:
           warning_on_retry: true
           command: |
             # Build for iOS device using xcodebuild directly
-            # This bypasses Flutter's code signing checks
+            # This bypasses Flutter's code signing checks and builds the .app directly
             cd ios
             xcodebuild -workspace Runner.xcworkspace \
               -scheme Runner \
@@ -88,52 +88,40 @@ jobs:
               CODE_SIGN_IDENTITY="-" \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGNING_ALLOWED=NO \
-              archive \
-              -archivePath build/Runner.xcarchive \
-              ONLY_ACTIVE_ARCH=NO
+              ONLY_ACTIVE_ARCH=NO \
+              build
             echo "Build completed successfully"
+
+            # Find the built .app file
+            find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d
+            # Also check if it's in build/Release-iphoneos
+            ls -la build/Release-iphoneos/ || true
             cd ..
 
-      - name: Create export options plist
-        run: |
-          cat > ios/export-options.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>teamID</key>
-              <string></string>
-              <key>compileBitcode</key>
-              <false/>
-              <key>uploadSymbols</key>
-              <false/>
-              <key>signingStyle</key>
-              <string>automatic</string>
-              <key>signingCertificate</key>
-              <string>-</string>
-          </dict>
-          </plist>
-          EOF
-
-      - name: Export IPA from archive
+      - name: Create IPA
         run: |
           set -x
-          cd ios
+          # Find the built .app file
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d | grep -v "simulator" | head -1)
 
-          # Use xcodebuild to export IPA from the archive
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportPath build/export \
-            -exportOptionsPlist export-options.plist
+          if [ -z "$APP_PATH" ]; then
+            # Try alternative location
+            APP_PATH=$(find ios/build -name "Runner.app" -type d | head -1)
+          fi
 
-          # The IPA should be at build/export/*.ipa
-          ls -la build/export/
-          find build/export -name "*.ipa" -exec cp {} ../FutureProof.ipa \;
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found"
+            find . -name "*.app" -type d
+            exit 1
+          fi
 
-          cd ..
-          ls -lh FutureProof.ipa || (echo "IPA not found!" && exit 1)
+          echo "Found Runner.app at: $APP_PATH"
+
+          # Create IPA
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r FutureProof.ipa Payload/
+          ls -lh FutureProof.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
