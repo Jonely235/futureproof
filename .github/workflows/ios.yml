@@ -82,19 +82,6 @@ jobs:
           echo "Configured ad-hoc code signing"
           cd ..
 
-      - name: Install CocoaPods dependencies (with retry)
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 15
-          max_attempts: 5
-          retry_wait_seconds: 30
-          warning_on_retry: true
-          command: |
-            cd ios
-            rm -rf Pods Podfile.lock
-            pod install --repo-update
-            cd ..
-
       - name: Build iOS app (with retry)
         uses: nick-fields/retry@v3
         with:
