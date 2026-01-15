@@ -90,6 +90,13 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
+            # Clean Flutter build cache
+            flutter clean
+
+            # Clean iOS build artifacts
+            rm -rf ios/Pods ios/Podfile.lock ios/build
+            rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
             # Build iOS app using Flutter with no-codesign
             # Flutter will compile Dart code and then build the native iOS app
             flutter build ios --release --no-codesign || {
