@@ -105,9 +105,7 @@ jobs:
           command: |
             # Build iOS app using Flutter with no-codesign
             # Flutter will compile Dart code and then build the native iOS app
-            flutter build ios --release --no-codesign \
-              --obfuscate --split-debug-info=./ios-flutter-obfuscate \
-              || {
+            flutter build ios --release --no-codesign || {
                 echo "Flutter build failed, trying alternative approach..."
                 # If Flutter build fails, try direct xcodebuild with Flutter artifacts
                 cd ios
