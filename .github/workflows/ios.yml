@@ -33,39 +33,34 @@ jobs:
 
       - name: Prepare iOS platform
         run: |
-          # Check if iOS folder exists
-          if [ -d "ios" ]; then
-            echo "iOS folder exists, updating..."
-            # Just update existing iOS config
-            cd ios
-            # Fix bundle ID if needed
-            sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+          # Remove and regenerate iOS folder to ensure clean configuration
+          echo "Regenerating iOS folder from scratch..."
+          rm -rf ios
+          flutter create --platforms=ios . --project-name futureproof
 
-            # Set deployment target to 15.0 in Xcode project
-            sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
-            cd ..
-          else
-            echo "iOS folder missing, creating..."
-            flutter create --platforms=ios . --project-name futureproof
-            cd ios
-            sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+          cd ios
+          # Fix bundle ID
+          sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
 
-            # Set deployment target to 15.0 in Xcode project
-            sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
+          # Set deployment target to 15.0 in Xcode project
+          sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
+          cd ..
+
+          echo "iOS folder regenerated successfully"
+
+      - name: Update Podfile
+        run: |
+          # Add use_modular_headers! to Podfile for Firebase Swift pods
+          if ! grep -q "use_modular_headers!" ios/Podfile; then
+            cd ios
+            sed -i.bak '7 a\
+\
+# Enable modular headers for Firebase Swift pods\
+use_modular_headers!
+' Podfile || true
             cd ..
           fi
-
-          # Ensure Podfile has correct platform
-          if ! grep -q "platform :ios, '15.0'" ios/Podfile; then
-            echo "Updating Podfile platform..."
-            sed -i.bak "s/platform :ios,.*$/platform :ios, '15.0'/" ios/Podfile || true
-          fi
-
-          # Verify deployment target is set
-          echo "Deployment target in Podfile:"
-          grep "platform :ios" ios/Podfile || true
-          echo "Deployment target in project.pbxproj:"
-          grep "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj | head -5 || true
+          echo "Podfile updated"
 
       - name: Disable code signing
         run: |
