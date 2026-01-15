@@ -33,9 +33,17 @@ jobs:
 
       - name: Prepare iOS platform
         run: |
-          # Set deployment target to 15.0 in Xcode project
+          # Regenerate iOS folder for clean state
+          rm -rf ios
+          flutter create --platforms=ios . --project-name futureproof
+
+          # Fix deployment target
           cd ios
           sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
+
+          # Ensure Podfile has iOS 15.0 and modular headers
+          sed -i.bak "s/platform :ios,.*$/platform :ios, '15.0'/" Podfile
+          sed -i.bak '/^#.*modular headers/a use_modular_headers!' Podfile || { sed -i.bak '2 a use_modular_headers!' Podfile }
           cd ..
 
       - name: Disable code signing
@@ -61,41 +69,55 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
-            echo "=== Starting Flutter iOS build ==="
+            echo "=== Starting Xcode archive build ==="
 
-            # Clean iOS build artifacts only (not Flutter cache)
-            rm -rf ios/Pods ios/Podfile.lock ios/build
+            cd ios
+
+            # Clean build artifacts
+            rm -rf Pods Podfile.lock build
             rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
-            # Build iOS app - no fallback, fail if this doesn't work
-            flutter build ios --release --no-codesign
+            # Install pods
+            pod install --repo-update
 
-            echo "=== Build completed, verifying output ==="
+            echo "=== Building archive with xcodebuild ==="
+            xcodebuild -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration Release \
+              -sdk iphoneos \
+              -destination generic/platform=iOS \
+              CODE_SIGN_IDENTITY="-" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              archive \
+              -archivePath build/Runner.xcarchive \
+              ONLY_ACTIVE_ARCH=NO
 
-            # Critical: Verify build output exists
-            if [ ! -d "build/ios/iphoneos/Runner.app" ]; then
-              echo "ERROR: Flutter build failed to produce Runner.app"
+            echo "=== Verifying archive created ==="
+            if [ ! -d "build/Runner.xcarchive" ]; then
+              echo "ERROR: Archive not created"
               exit 1
             fi
 
-            # Critical: Verify Flutter binary exists
-            if [ ! -f "build/ios/iphoneos/Runner.app/Runner" ] && \
-               [ ! -d "build/ios/iphoneos/Runner.app/Frameworks/App.framework" ]; then
-              echo "ERROR: Runner.app missing Flutter binary"
-              ls -la build/ios/iphoneos/Runner.app/
+            # Find Runner.app in xcarchive
+            APP_PATH=$(find build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+
+            if [ -z "$APP_PATH" ]; then
+              echo "ERROR: Runner.app not found in archive"
               exit 1
             fi
 
-            echo "=== Build verification successful ==="
-            ls -lh build/ios/iphoneos/Runner.app
+            echo "=== Archive verification successful ==="
+            echo "Runner.app found at: $APP_PATH"
+            ls -lh "$APP_PATH"
 
       - name: Create IPA
         run: |
           set -x
-          # Create IPA from verified build output
-          APP_PATH="build/ios/iphoneos/Runner.app"
+          # Find Runner.app in xcarchive
+          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
 
-          # Create IPA
+          # Verify and create IPA
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/Runner.app
           zip -r FutureProof.ipa Payload/
