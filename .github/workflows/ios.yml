@@ -40,12 +40,18 @@ jobs:
             cd ios
             # Fix bundle ID if needed
             sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+
+            # Set deployment target to 15.0 in Xcode project
+            sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
             cd ..
           else
             echo "iOS folder missing, creating..."
             flutter create --platforms=ios . --project-name futureproof
             cd ios
             sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+
+            # Set deployment target to 15.0 in Xcode project
+            sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
             cd ..
           fi
 
@@ -54,6 +60,12 @@ jobs:
             echo "Updating Podfile platform..."
             sed -i.bak "s/platform :ios,.*$/platform :ios, '15.0'/" ios/Podfile || true
           fi
+
+          # Verify deployment target is set
+          echo "Deployment target in Podfile:"
+          grep "platform :ios" ios/Podfile || true
+          echo "Deployment target in project.pbxproj:"
+          grep "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj | head -5 || true
 
       - name: Disable code signing
         run: |
