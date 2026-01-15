@@ -69,7 +69,7 @@ jobs:
             pod install --repo-update
             cd ..
 
-      - name: Build iOS app for device (with retry)
+      - name: Build iOS app (with retry)
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 45
@@ -77,51 +77,64 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
-            # Build for iOS device using xcodebuild directly
-            # This bypasses Flutter's code signing checks and builds the .app directly
-            cd ios
-            xcodebuild -workspace Runner.xcworkspace \
-              -scheme Runner \
-              -configuration Release \
-              -sdk iphoneos \
-              -destination generic/platform=iOS \
-              CODE_SIGN_IDENTITY="-" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              ONLY_ACTIVE_ARCH=NO \
-              build
+            # Build iOS app using Flutter with no-codesign
+            # Flutter will compile Dart code and then build the native iOS app
+            flutter build ios --release --no-codesign \
+              --obfuscate --split-debug-info=./ios-flutter-obfuscate \
+              || {
+                echo "Flutter build failed, trying alternative approach..."
+                # If Flutter build fails, try direct xcodebuild with Flutter artifacts
+                cd ios
+                xcodebuild -workspace Runner.xcworkspace \
+                  -scheme Runner \
+                  -configuration Release \
+                  -sdk iphoneos \
+                  -destination generic/platform=iOS \
+                  CODE_SIGN_IDENTITY="-" \
+                  CODE_SIGNING_REQUIRED=NO \
+                  CODE_SIGNING_ALLOWED=NO \
+                  ONLY_ACTIVE_ARCH=NO \
+                  build
+                cd ..
+              }
             echo "Build completed successfully"
 
-            # Find the built .app file
-            find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d
-            # Also check if it's in build/Release-iphoneos
-            ls -la build/Release-iphoneos/ || true
-            cd ..
+            # Find the built .app file in Flutter's build output
+            ls -la build/ios/iphoneos/Runner.app || true
+            find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d || true
 
       - name: Create IPA
         run: |
           set -x
-          # Find the built .app file
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d | grep -v "simulator" | head -1)
-
-          if [ -z "$APP_PATH" ]; then
-            # Try alternative location
-            APP_PATH=$(find ios/build -name "Runner.app" -type d | head -1)
+          # Flutter builds to build/ios/iphoneos/Runner.app
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            APP_PATH="build/ios/iphoneos/Runner.app"
+            echo "Found Flutter build at: $APP_PATH"
+          else
+            # Fallback to finding in DerivedData
+            APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d | grep -v "simulator" | head -1)
+            if [ -z "$APP_PATH" ]; then
+              echo "ERROR: Runner.app not found"
+              find . -name "*.app" -type d
+              exit 1
+            fi
+            echo "Found Runner.app at: $APP_PATH"
           fi
 
-          if [ -z "$APP_PATH" ]; then
-            echo "ERROR: Runner.app not found"
-            find . -name "*.app" -type d
+          # Verify the app has the Flutter binary
+          if [ ! -f "$APP_PATH/Runner" ] && [ ! -d "$APP_PATH/Frameworks/App.framework" ]; then
+            echo "ERROR: Runner.app appears incomplete (missing Flutter binary)"
+            ls -la "$APP_PATH"
             exit 1
           fi
 
-          echo "Found Runner.app at: $APP_PATH"
-
           # Create IPA
           mkdir -p Payload
-          cp -R "$APP_PATH" Payload/
+          cp -R "$APP_PATH" Payload/Runner.app
           zip -r FutureProof.ipa Payload/
           ls -lh FutureProof.ipa
+          echo "IPA size:"
+          du -sh FutureProof.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
