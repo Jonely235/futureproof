@@ -41,8 +41,10 @@ jobs:
           cd ios
           sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
 
-          # Ensure Podfile has iOS 15.0 and modular headers
-          sed -i.bak "s/platform :ios,.*$/platform :ios, '15.0'/" Podfile
+          # Ensure Podfile has iOS 15.0
+          sed -i.bak "s/platform :ios,.*/platform :ios, '15.0'/" Podfile
+
+          # Add modular headers if not present
           if ! grep -q "use_modular_headers" Podfile; then
             sed -i.bak '2 a use_modular_headers!' Podfile
           fi
