@@ -33,34 +33,10 @@ jobs:
 
       - name: Prepare iOS platform
         run: |
-          # Remove and regenerate iOS folder to ensure clean configuration
-          echo "Regenerating iOS folder from scratch..."
-          rm -rf ios
-          flutter create --platforms=ios . --project-name futureproof
-
-          cd ios
-          # Fix bundle ID
-          sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
-
           # Set deployment target to 15.0 in Xcode project
+          cd ios
           sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
           cd ..
-
-          echo "iOS folder regenerated successfully"
-
-      - name: Update Podfile
-        run: |
-          # Add use_modular_headers! to Podfile for Firebase Swift pods
-          if ! grep -q "use_modular_headers!" ios/Podfile; then
-            cd ios
-            sed -i.bak '7 a\
-\
-# Enable modular headers for Firebase Swift pods\
-use_modular_headers!
-' Podfile || true
-            cd ..
-          fi
-          echo "Podfile updated"
 
       - name: Disable code signing
         run: |
