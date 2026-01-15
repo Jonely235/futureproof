@@ -93,8 +93,10 @@ use_modular_headers!
             rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
             # Build iOS app using Flutter with no-codesign
-            # Flutter will compile Dart code and then build the native iOS app
-            flutter build ios --release --no-codesign || {
+            # Try building IPA directly
+            flutter build ipa --release --no-codesign || {
+              echo "IPA build failed, trying flutter build ios..."
+              flutter build ios --release --no-codesign || {
                 echo "Flutter build failed, trying alternative approach..."
                 # If Flutter build fails, try direct xcodebuild with Flutter artifacts
                 cd ios
