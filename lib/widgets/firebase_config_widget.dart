@@ -9,6 +9,7 @@ import '../config/app_colors.dart';
 import '../domain/repositories/cloud_backup_repository.dart';
 import '../utils/app_logger.dart';
 import '../models/app_error.dart';
+import 'firebase_setup_wizard.dart';
 
 /// Firebase Configuration Widget
 ///
@@ -279,127 +280,23 @@ class _FirebaseConfigWidgetState extends State<FirebaseConfigWidget> {
 
   Future<void> _showConfigDialog() async {
     HapticFeedback.lightImpact();
-    AppLogger.widgets.info('FirebaseConfigWidget: Showing config dialog');
+    AppLogger.widgets.info('FirebaseConfigWidget: Showing setup wizard');
 
-    final controller = TextEditingController();
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Setup Firebase Cloud Sync'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Paste your Firebase configuration JSON below:',
-              style: TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'To get your config:\n'
-              '1. Go to console.firebase.google.com\n'
-              '2. Create a project (or use existing)\n'
-              '3. Add a web app\n'
-              '4. Copy the config JSON',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              maxLines: 10,
-              decoration: const InputDecoration(
-                hintText: 'Paste Firebase config JSON here...',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.all(12),
-              ),
-            ),
-          ],
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FirebaseSetupWizard(
+          cloudBackupRepo: widget.cloudBackupRepo,
+          onSetupComplete: () {
+            setState(() {
+              _isConfigured = true;
+              _isAuthenticated = true;
+            });
+            _checkStatus();
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Save & Connect'),
-          ),
-        ],
       ),
     );
-
-    if (result != null && result.isNotEmpty) {
-      await _saveAndInitializeConfig(result);
-    }
-  }
-
-  Future<void> _saveAndInitializeConfig(String configJson) async {
-    HapticFeedback.lightImpact();
-    setState(() => _isLoading = true);
-
-    try {
-      // Parse and validate JSON
-      final config = _parseFirebaseConfig(configJson);
-
-      // Initialize Firebase with user config
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: FirebaseOptions(
-            apiKey: config['apiKey'] as String,
-            appId: config['appId'] as String,
-            messagingSenderId: config['messagingSenderId'] as String,
-            projectId: config['projectId'] as String,
-          ),
-        );
-        AppLogger.widgets.info('Firebase initialized successfully');
-      }
-
-      // Authenticate
-      await widget.cloudBackupRepo.authenticate();
-
-      setState(() {
-        _isConfigured = true;
-        _isAuthenticated = true;
-        _isLoading = false;
-      });
-
-      if (mounted) {
-        await _showInitialSyncDialog();
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Configuration failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Map<String, dynamic> _parseFirebaseConfig(String json) {
-    try {
-      final config = jsonDecode(json) as Map<String, dynamic>;
-
-      // Validate required fields
-      final required = ['apiKey', 'appId', 'projectId', 'messagingSenderId'];
-      for (final field in required) {
-        if (!config.containsKey(field) || config[field] == null) {
-          throw ArgumentError('Missing required field: $field');
-        }
-      }
-
-      return config;
-    } catch (e) {
-      throw AppError(
-        type: AppErrorType.validation,
-        message: 'Invalid Firebase config JSON',
-        technicalDetails: e.toString(),
-      );
-    }
   }
 
   Future<void> _showInitialSyncDialog() async {

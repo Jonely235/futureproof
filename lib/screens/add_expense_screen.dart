@@ -90,9 +90,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       AppStrings.shopping: 'shopping',
       AppStrings.subscriptions: 'subscriptions',
       AppStrings.housing: 'housing',
-      AppStrings.other: 'housing',
+      AppStrings.other: 'other', // Fixed: was 'housing'
     };
-    return mapping[displayName] ?? 'housing';
+    return mapping[displayName] ?? 'other'; // Fixed: better default
   }
 
   @override
@@ -113,6 +113,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   void _saveExpense() async {
+    _focusNode.unfocus(); // Dismiss keyboard before saving
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
       HapticFeedback.heavyImpact();
@@ -207,6 +208,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   void _showCategoryPicker() {
+    _focusNode.unfocus(); // Dismiss keyboard before showing picker
+    HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -267,9 +270,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
+      body: GestureDetector(
+        onTap: () {
+          // Dismiss keyboard when tapping outside
+          final currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
+        },
+        child: SafeArea(
+          child: Column(
+            children: [
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -461,6 +472,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

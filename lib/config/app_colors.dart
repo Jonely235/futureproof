@@ -66,4 +66,15 @@ class AppColors {
   static const categorySubscriptions = Color(0xFF00BCD4);
   static const categoryHousing = Color(0xFF795548);
   static const categoryOther = Color(0xFF9E9E9E);
+
+  // ============================================
+  // FINTHECH PALETTE (Analytics/Settings)
+  // ============================================
+
+  static const fintechTeal = Color(0xFF00BFA5);
+  static const fintechTealLight = Color(0xFF5DF2D6);
+  static const fintechNavy = Color(0xFF1A237E);
+  static const fintechIndigo = Color(0xFF3949AB);
+  static const fintechTrust = Color(0xFF00897B);
+  static const fintechGrowth = Color(0xFF43A047);
 }

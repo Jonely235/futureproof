@@ -11,6 +11,7 @@ import '../widgets/bar_chart_widget.dart';
 import '../widgets/pie_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
 import '../widgets/velocity_chart_widget.dart';
+import '../widgets/ui_helpers.dart';
 
 /// Analytics Dashboard Screen
 ///
@@ -28,11 +29,13 @@ class AnalyticsDashboardScreen extends StatefulWidget {
       _AnalyticsDashboardScreenState();
 }
 
-class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
+class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
+    with WidgetsBindingObserver {
   final AnalyticsService _analyticsService = AnalyticsService();
   SpendingAnalysis? _analysis;
   Map<String, dynamic>? _quickStats;
   bool _isLoading = true;
+  bool _hasLoadedOnce = false;
 
   final Map<String, String> _categoryEmojis = {
     'Groceries': '🛒',
@@ -49,16 +52,33 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadAnalytics();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh data when app is resumed
+      _loadAnalytics();
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Auto-refresh when returning to this screen
+    // Auto-refresh when returning to this screen (but not on first load)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && _hasLoadedOnce) {
         _loadAnalytics();
+      } else if (mounted && !_hasLoadedOnce) {
+        _hasLoadedOnce = true;
       }
     });
   }
@@ -124,60 +144,65 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                     ],
                   ),
                 )
-              : CustomScrollView(
-                  slivers: [
-                    // App Bar
-                    SliverAppBar(
-                      expandedHeight: 140,
-                      floating: false,
-                      pinned: true,
-                      elevation: 0,
-                      backgroundColor: Colors.white,
-                      flexibleSpace: FlexibleSpaceBar(
-                        titlePadding:
-                            const EdgeInsets.only(left: 16, bottom: 12),
-                        title: Text(
-                          'Analytics',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.black,
+              : RefreshIndicator(
+                  onRefresh: _loadAnalytics,
+                  color: AppColors.fintechTeal,
+                  backgroundColor: Colors.white,
+                  child: CustomScrollView(
+                    slivers: [
+                      // App Bar
+                      SliverAppBar(
+                        expandedHeight: 140,
+                        floating: false,
+                        pinned: true,
+                        elevation: 0,
+                        backgroundColor: Colors.white,
+                        flexibleSpace: FlexibleSpaceBar(
+                          titlePadding:
+                              const EdgeInsets.only(left: 16, bottom: 12),
+                          title: Text(
+                            'Analytics',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.black,
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Content
-                    SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Overview Cards
-                          _buildOverviewSection(),
-                          const SizedBox(height: 24),
+                      // Content
+                      SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Overview Cards
+                            _buildOverviewSection(),
+                            const SizedBox(height: 24),
 
-                          // Spend Velocity Chart
-                          if (_analysis!.monthlyTrends.length >= 2)
-                            _buildVelocitySection(),
-                          const SizedBox(height: 24),
+                            // Spend Velocity Chart
+                            if (_analysis!.monthlyTrends.length >= 2)
+                              _buildVelocitySection(),
+                            const SizedBox(height: 24),
 
-                          // Category Breakdown
-                          _buildCategorySection(),
-                          const SizedBox(height: 24),
+                            // Category Breakdown
+                            _buildCategorySection(),
+                            const SizedBox(height: 24),
 
-                          // Budget Comparisons
-                          if (_analysis!.budgetComparisons.isNotEmpty)
-                            _buildBudgetSection(),
-                          const SizedBox(height: 24),
+                            // Budget Comparisons
+                            if (_analysis!.budgetComparisons.isNotEmpty)
+                              _buildBudgetSection(),
+                            const SizedBox(height: 24),
 
-                          // Quick Insights
-                          if (_analysis!.insights.isNotEmpty)
-                            _buildInsightsSection(),
-                          const SizedBox(height: 32),
-                        ],
+                            // Quick Insights
+                            if (_analysis!.insights.isNotEmpty)
+                              _buildInsightsSection(),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
     );
   }
@@ -309,63 +334,27 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
     IconData icon, {
     bool isPositive = true,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.gray100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: AppColors.black,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.gray700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: isPositive ? AppColors.black : AppColors.danger,
-            ),
-          ),
-        ],
+    // Use different gradient for each card based on title
+    final gradients = {
+      'Total Spending': [AppColors.fintechTeal, AppColors.fintechTealLight],
+      'Average/Month': [AppColors.fintechNavy, AppColors.fintechIndigo],
+      'Savings': [AppColors.fintechTrust, AppColors.fintechGrowth],
+      'Savings Rate': [AppColors.fintechTeal, AppColors.fintechIndigo],
+    };
+
+    final cardGradient = gradients[title] ?? [
+      AppColors.fintechTeal,
+      AppColors.fintechTealLight
+    ];
+
+    return FadeInWidget(
+      delay: const Duration(milliseconds: 100),
+      child: FintechStatCard(
+        title: title,
+        value: value,
+        icon: icon,
+        gradientColors: cardGradient.map((c) => c).toList(),
+        isPositive: isPositive,
       ),
     );
   }
@@ -446,16 +435,16 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: AppColors.danger.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red),
+                    border: Border.all(color: AppColors.danger),
                   ),
                   child: Text(
                     '$overBudget over budget',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.red,
+                      color: AppColors.danger,
                     ),
                   ),
                 ),
