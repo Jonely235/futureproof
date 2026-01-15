@@ -32,12 +32,21 @@ jobs:
 
       - name: Prepare iOS platform
         run: |
-          # Force complete iOS platform regeneration
+          # Regenerate iOS folder for clean state
           rm -rf ios
           flutter create --platforms=ios . --project-name futureproof
-          # Fix bundle ID to avoid conflicts
+
+          # Fix deployment target
           cd ios
-          sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+          sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
+
+          # Ensure Podfile has iOS 15.0
+          sed -i.bak "s/platform :ios,.*/platform :ios, '15.0'/" Podfile
+
+          # Add modular headers if not present
+          if ! grep -q "use_modular_headers" Podfile; then
+            sed -i.bak '2 a use_modular_headers!' Podfile
+          fi
           cd ..
 
       - name: Disable code signing
@@ -55,20 +64,7 @@ jobs:
           echo "Configured ad-hoc code signing"
           cd ..
 
-      - name: Install CocoaPods dependencies (with retry)
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 15
-          max_attempts: 5
-          retry_wait_seconds: 30
-          warning_on_retry: true
-          command: |
-            cd ios
-            rm -rf Pods Podfile.lock
-            pod install --repo-update
-            cd ..
-
-      - name: Build iOS app for device (with retry)
+      - name: Build iOS app (with retry)
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 45
@@ -76,7 +72,18 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
+            echo "=== Starting Xcode archive build ==="
+
             cd ios
+
+            # Clean build artifacts
+            rm -rf Pods Podfile.lock build
+            rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+            # Install pods
+            pod install --repo-update
+
+            echo "=== Building archive with xcodebuild ==="
             xcodebuild -workspace Runner.xcworkspace \
               -scheme Runner \
               -configuration Release \
@@ -88,61 +95,38 @@ jobs:
               archive \
               -archivePath build/Runner.xcarchive \
               ONLY_ACTIVE_ARCH=NO
-            echo "Build completed successfully"
-            cd ..
 
-      - name: Create IPA from archive
+            echo "=== Verifying archive created ==="
+            if [ ! -d "build/Runner.xcarchive" ]; then
+              echo "ERROR: Archive not created"
+              exit 1
+            fi
+
+            # Find Runner.app in xcarchive
+            APP_PATH=$(find build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+
+            if [ -z "$APP_PATH" ]; then
+              echo "ERROR: Runner.app not found in archive"
+              exit 1
+            fi
+
+            echo "=== Archive verification successful ==="
+            echo "Runner.app found at: $APP_PATH"
+            ls -lh "$APP_PATH"
+
+      - name: Create IPA
         run: |
           set -x
-          echo "Current directory: $(pwd)"
-          echo "Searching for Runner.app in various locations..."
+          # Find Runner.app in xcarchive
+          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
 
-          # The archive could be in different places depending on xcodebuild behavior
-          # Try multiple search locations
-          SEARCH_PATHS=(
-            "ios/build/Runner.xcarchive"
-            "ios/Runner.xcarchive"
-            "build/ios/iphoneos/Runner.app"
-            "build/Runner.app"
-          )
-
-          FOUND_APP=""
-          FOUND_ARCHIVE=""
-
-          # First, try to find the archive
-          for search_path in "${SEARCH_PATHS[@]}"; do
-            if [ -d "$search_path" ]; then
-              echo "Found directory at: $search_path"
-              if [[ "$search_path" == *.xcarchive ]]; then
-                FOUND_ARCHIVE="$search_path"
-                # Look for Runner.app inside the archive
-                if find "$search_path" -name "Runner.app" -type d | head -1; then
-                  APP_PATH=$(find "$search_path" -name "Runner.app" -type d | head -1)
-                  FOUND_APP="$APP_PATH"
-                  break
-                fi
-              fi
-            fi
-          done
-
-          # If not found in expected locations, search recursively
-          if [ -z "$FOUND_APP" ]; then
-            echo "Searching recursively for Runner.app..."
-            FOUND_APP=$(find . -name "Runner.app" -type d 2>/dev/null | grep -v ".simulator" | head -1)
-          fi
-
-          if [ -n "$FOUND_APP" ]; then
-            echo "Found Runner.app at: $FOUND_APP"
-            mkdir -p Payload
-            cp -R "$FOUND_APP" Payload/
-            zip -r FutureProof.ipa Payload/
-            ls -lh FutureProof.ipa
-          else
-            echo "ERROR: Runner.app not found anywhere"
-            echo "Directory structure:"
-            find . -type d \( -name "*.app" -o -name "*.xcarchive" \) 2>/dev/null || true
-            exit 1
-          fi
+          # Verify and create IPA
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/Runner.app
+          zip -r FutureProof.ipa Payload/
+          ls -lh FutureProof.ipa
+          echo "IPA size:"
+          du -sh FutureProof.ipa
 
       - name: Upload iOS IPA to Release
         uses: softprops/action-gh-release@v1
