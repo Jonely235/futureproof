@@ -94,58 +94,46 @@ jobs:
             echo "Build completed successfully"
             cd ..
 
-      - name: Create IPA from archive
+      - name: Create export options plist
+        run: |
+          cat > ios/export-options.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>development</string>
+              <key>teamID</key>
+              <string></string>
+              <key>compileBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <false/>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>signingCertificate</key>
+              <string>-</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA from archive
         run: |
           set -x
-          echo "Current directory: $(pwd)"
-          echo "Searching for Runner.app in various locations..."
+          cd ios
 
-          # The archive could be in different places depending on xcodebuild behavior
-          # Try multiple search locations
-          SEARCH_PATHS=(
-            "ios/build/Runner.xcarchive"
-            "ios/Runner.xcarchive"
-            "build/ios/iphoneos/Runner.app"
-            "build/Runner.app"
-          )
+          # Use xcodebuild to export IPA from the archive
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist export-options.plist
 
-          FOUND_APP=""
-          FOUND_ARCHIVE=""
+          # The IPA should be at build/export/*.ipa
+          ls -la build/export/
+          find build/export -name "*.ipa" -exec cp {} ../FutureProof.ipa \;
 
-          # First, try to find the archive
-          for search_path in "${SEARCH_PATHS[@]}"; do
-            if [ -d "$search_path" ]; then
-              echo "Found directory at: $search_path"
-              if [[ "$search_path" == *.xcarchive ]]; then
-                FOUND_ARCHIVE="$search_path"
-                # Look for Runner.app inside the archive
-                if find "$search_path" -name "Runner.app" -type d | head -1; then
-                  APP_PATH=$(find "$search_path" -name "Runner.app" -type d | head -1)
-                  FOUND_APP="$APP_PATH"
-                  break
-                fi
-              fi
-            fi
-          done
-
-          # If not found in expected locations, search recursively
-          if [ -z "$FOUND_APP" ]; then
-            echo "Searching recursively for Runner.app..."
-            FOUND_APP=$(find . -name "Runner.app" -type d 2>/dev/null | grep -v ".simulator" | head -1)
-          fi
-
-          if [ -n "$FOUND_APP" ]; then
-            echo "Found Runner.app at: $FOUND_APP"
-            mkdir -p Payload
-            cp -R "$FOUND_APP" Payload/
-            zip -r FutureProof.ipa Payload/
-            ls -lh FutureProof.ipa
-          else
-            echo "ERROR: Runner.app not found anywhere"
-            echo "Directory structure:"
-            find . -type d -name "*.app" -o -name "*.xcarchive" 2>/dev/null || true
-            exit 1
-          fi
+          cd ..
+          ls -lh FutureProof.ipa || (echo "IPA not found!" && exit 1)
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
