@@ -44,8 +44,9 @@ post_install do |installer|
       config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
       config.build_settings['OTHER_LDFLAGS'].delete('-G') if config.build_settings['OTHER_LDFLAGS'].include?('-G')
 
-      # Explicitly link Flutter framework for all pods
-      config.build_settings['OTHER_LDFLAGS'] << ' -framework Flutter'
+      # Add Flutter framework search path
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '$(inherited)/Flutter/Flutter.framework'
     end
   end
 
