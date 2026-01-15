@@ -33,13 +33,27 @@ jobs:
 
       - name: Prepare iOS platform
         run: |
-          # Force complete iOS platform regeneration
-          rm -rf ios
-          flutter create --platforms=ios . --project-name futureproof
-          # Fix bundle ID to avoid conflicts
-          cd ios
-          sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
-          cd ..
+          # Check if iOS folder exists
+          if [ -d "ios" ]; then
+            echo "iOS folder exists, updating..."
+            # Just update existing iOS config
+            cd ios
+            # Fix bundle ID if needed
+            sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+            cd ..
+          else
+            echo "iOS folder missing, creating..."
+            flutter create --platforms=ios . --project-name futureproof
+            cd ios
+            sed -i.bak 's/com.example.futureproof/com.yourname.FutureProof/g' Runner.xcodeproj/project.pbxproj || true
+            cd ..
+          fi
+
+          # Ensure Podfile has correct platform
+          if ! grep -q "platform :ios, '15.0'" ios/Podfile; then
+            echo "Updating Podfile platform..."
+            sed -i.bak "s/platform :ios,.*$/platform :ios, '15.0'/" ios/Podfile || true
+          fi
 
       - name: Disable code signing
         run: |
