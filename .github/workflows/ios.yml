@@ -61,63 +61,39 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
-            # Clean Flutter build cache
-            flutter clean
+            echo "=== Starting Flutter iOS build ==="
 
-            # Clean iOS build artifacts
+            # Clean iOS build artifacts only (not Flutter cache)
             rm -rf ios/Pods ios/Podfile.lock ios/build
             rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
-            # Build iOS app using Flutter with no-codesign
-            # Try building IPA directly
-            flutter build ipa --release --no-codesign || {
-              echo "IPA build failed, trying flutter build ios..."
-              flutter build ios --release --no-codesign || {
-                echo "Flutter build failed, trying alternative approach..."
-                # If Flutter build fails, try direct xcodebuild with Flutter artifacts
-                cd ios
-                xcodebuild -workspace Runner.xcworkspace \
-                  -scheme Runner \
-                  -configuration Release \
-                  -sdk iphoneos \
-                  -destination generic/platform=iOS \
-                  CODE_SIGN_IDENTITY="-" \
-                  CODE_SIGNING_REQUIRED=NO \
-                  CODE_SIGNING_ALLOWED=NO \
-                  ONLY_ACTIVE_ARCH=NO \
-                  build
-                cd ..
-              }
-            echo "Build completed successfully"
+            # Build iOS app - no fallback, fail if this doesn't work
+            flutter build ios --release --no-codesign
 
-            # Find the built .app file in Flutter's build output
-            ls -la build/ios/iphoneos/Runner.app || true
-            find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d || true
+            echo "=== Build completed, verifying output ==="
+
+            # Critical: Verify build output exists
+            if [ ! -d "build/ios/iphoneos/Runner.app" ]; then
+              echo "ERROR: Flutter build failed to produce Runner.app"
+              exit 1
+            fi
+
+            # Critical: Verify Flutter binary exists
+            if [ ! -f "build/ios/iphoneos/Runner.app/Runner" ] && \
+               [ ! -d "build/ios/iphoneos/Runner.app/Frameworks/App.framework" ]; then
+              echo "ERROR: Runner.app missing Flutter binary"
+              ls -la build/ios/iphoneos/Runner.app/
+              exit 1
+            fi
+
+            echo "=== Build verification successful ==="
+            ls -lh build/ios/iphoneos/Runner.app
 
       - name: Create IPA
         run: |
           set -x
-          # Flutter builds to build/ios/iphoneos/Runner.app
-          if [ -d "build/ios/iphoneos/Runner.app" ]; then
-            APP_PATH="build/ios/iphoneos/Runner.app"
-            echo "Found Flutter build at: $APP_PATH"
-          else
-            # Fallback to finding in DerivedData
-            APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -type d | grep -v "simulator" | head -1)
-            if [ -z "$APP_PATH" ]; then
-              echo "ERROR: Runner.app not found"
-              find . -name "*.app" -type d
-              exit 1
-            fi
-            echo "Found Runner.app at: $APP_PATH"
-          fi
-
-          # Verify the app has the Flutter binary
-          if [ ! -f "$APP_PATH/Runner" ] && [ ! -d "$APP_PATH/Frameworks/App.framework" ]; then
-            echo "ERROR: Runner.app appears incomplete (missing Flutter binary)"
-            ls -la "$APP_PATH"
-            exit 1
-          fi
+          # Create IPA from verified build output
+          APP_PATH="build/ios/iphoneos/Runner.app"
 
           # Create IPA
           mkdir -p Payload
