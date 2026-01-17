@@ -196,14 +196,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: '*'
+          merge-multiple: true
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/ios-release/*.ipa
-            artifacts/android-release/*.apk
-            artifacts/android-release/*.aab
+            artifacts/**/*.ipa
+            artifacts/**/*.apk
+            artifacts/**/*.aab
           generate_release_notes: true
           draft: false
           prerelease: false
