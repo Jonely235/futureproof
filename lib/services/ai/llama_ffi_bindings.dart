@@ -55,7 +55,7 @@ typedef _llama_tokenize_dart = int Function(
   Int32 ctxId,
   Pointer<Utf8> text,
   Pointer<Int32> tokens,
-  int maxTokens,
+  Int32 maxTokens,
 );
 
 typedef _llama_get_embeddings_native = Int32 Function(
@@ -66,7 +66,7 @@ typedef _llama_get_embeddings_native = Int32 Function(
 typedef _llama_get_embeddings_dart = int Function(
   Int32 ctxId,
   Pointer<Float> embeddings,
-  int size,
+  Int32 size,
 );
 
 /// FFI bindings for llama.cpp
@@ -148,7 +148,11 @@ class LlamaFFI {
   int loadModel(String modelPath, {int contextLength = 2048, int gpuLayers = 0}) {
     final pathPtr = modelPath.toNativeUtf8();
     try {
-      final result = _llama_load_model_from_file(pathPtr, contextLength, gpuLayers);
+      final result = _llama_load_model_from_file(
+        pathPtr,
+        contextLength,
+        gpuLayers,
+      );
       return result;
     } finally {
       calloc.free(pathPtr);
@@ -170,19 +174,22 @@ class LlamaFFI {
 
   String generate(int ctxId, String prompt, {int maxOutput = 512}) {
     final promptPtr = prompt.toNativeUtf8();
-    final outputPtr = calloc<Utf8>(maxOutput);
+    // Allocate buffer for output (maxOutput bytes)
+    final outputBuffer = calloc<Uint8>(maxOutput);
 
     try {
-      final result = _llama_generate(ctxId, promptPtr, outputPtr, maxOutput);
+      final result = _llama_generate(ctxId, promptPtr, outputBuffer.cast<Utf8>(), maxOutput);
 
       if (result < 0) {
         throw AIServiceException('Generation failed with code: $result');
       }
 
+      // Convert to Dart string
+      final outputPtr = outputBuffer.cast<Utf8>();
       return outputPtr.toDartString();
     } finally {
       calloc.free(promptPtr);
-      calloc.free(outputPtr);
+      calloc.free(outputBuffer);
     }
   }
 
