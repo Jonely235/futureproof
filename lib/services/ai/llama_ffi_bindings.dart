@@ -77,13 +77,13 @@ class LlamaFFI {
   static bool _initialized = false;
 
   // Native function signatures
-  late final _llama_load_model_from_file_native _llama_load_model_from_file;
-  late final _llama_free_model_native _llama_free_model;
-  late final _llama_init_context_native _llama_init_context;
-  late final _llama_free_native _llama_free;
-  late final _llama_generate_native _llama_generate;
-  late final _llama_tokenize_native _llama_tokenize;
-  late final _llama_get_embeddings_native _llama_get_embeddings;
+  late final _llama_load_model_from_file_dart _llama_load_model_from_file;
+  late final _llama_free_model_dart _llama_free_model;
+  late final _llama_init_context_dart _llama_init_context;
+  late final _llama_free_dart _llama_free;
+  late final _llama_generate_dart _llama_generate;
+  late final _llama_tokenize_dart _llama_tokenize;
+  late final _llama_get_embeddings_dart _llama_get_embeddings;
 
   /// Initialize the FFI bindings and load the native library
   static Future<LlamaFFI> initialize() async {
@@ -148,7 +148,8 @@ class LlamaFFI {
   int loadModel(String modelPath, {int contextLength = 2048, int gpuLayers = 0}) {
     final pathPtr = modelPath.toNativeUtf8();
     try {
-      return _llama_load_model_from_file(pathPtr, contextLength, gpuLayers);
+      final result = _llama_load_model_from_file(pathPtr, contextLength, gpuLayers);
+      return result;
     } finally {
       calloc.free(pathPtr);
     }
@@ -159,7 +160,8 @@ class LlamaFFI {
   }
 
   int initContext(int modelId, {double temperature = 0.7, double topP = 0.9}) {
-    return _llama_init_context(modelId, temperature, topP);
+    final result = _llama_init_context(modelId, temperature, topP);
+    return result;
   }
 
   void free(int ctxId) {
