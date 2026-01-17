@@ -1,17 +1,120 @@
 import '../entities/transaction_entity.dart';
 import '../entities/budget_entity.dart';
 import '../entities/streak_entity.dart';
+import '../../services/ai/ai_service.dart';
 
 /// Insight generation service - generates personalized financial insights
-/// This replaces hardcoded AI suggestions with dynamic, data-driven insights
+/// Enhanced with Llama-3.2-3B-Instruct for AI-powered insights
+/// Falls back to rule-based insights when AI is unavailable
 class InsightGenerationService {
+  /// Optional AI service for enhanced insights
+  AIService? _aiService;
+
+  /// Set the AI service for enhanced insights
+  void setAIService(AIService? aiService) {
+    _aiService = aiService;
+  }
+
+  /// Check if AI service is available
+  bool get isAIEnabled => _aiService != null && _aiService!.isReady;
   /// Generate comprehensive insights from financial data
-  List<Insight> generateInsights({
+  /// Uses AI if available, otherwise falls back to rule-based insights
+  Future<List<Insight>> generateInsights({
     required List<TransactionEntity> transactions,
     required BudgetEntity budget,
     required StreakEntity streak,
     required MonthOverMonthData? monthOverMonth,
-  }) {
+  }) async {
+    // Try AI-generated insights first
+    if (isAIEnabled) {
+      try {
+        final aiInsight = await _generateAIInsight(
+          transactions,
+          budget,
+          streak,
+        );
+
+        // Combine AI insight with essential rule-based insights
+        final insights = <Insight>[];
+
+        // Add AI insight as the primary insight
+        insights.add(aiInsight);
+
+        // Add critical rule-based insights (budget status, streak)
+        insights.add(_generateBudgetHealthInsight(transactions, budget));
+        insights.add(_generateStreakInsight(streak));
+
+        return insights;
+      } catch (e) {
+        // Fall back to rule-based if AI fails
+        return _generateRuleBasedInsights(
+          transactions,
+          budget,
+          streak,
+          monthOverMonth,
+        );
+      }
+    }
+
+    // Use rule-based insights
+    return _generateRuleBasedInsights(
+      transactions,
+      budget,
+      streak,
+      monthOverMonth,
+    );
+  }
+
+  /// Generate insights using AI
+  Future<Insight> _generateAIInsight(
+    List<TransactionEntity> transactions,
+    BudgetEntity budget,
+    StreakEntity streak,
+  ) async {
+    // Calculate category breakdown
+    final categoryBreakdown = <String, double>{};
+    for (final transaction in transactions) {
+      if (transaction.isExpense) {
+        categoryBreakdown[transaction.category] =
+            (categoryBreakdown[transaction.category] ?? 0) + transaction.absoluteAmount;
+      }
+    }
+
+    // Calculate daily average
+    final now = DateTime.now();
+    final daysPassed = now.day;
+    final dailyAverage = daysPassed > 0
+        ? transactions
+            .where((t) => t.isExpense)
+            .fold<double>(0, (sum, t) => sum + t.absoluteAmount) / daysPassed
+        : 0.0;
+
+    // Get AI-generated insight
+    final aiMessage = await _aiService!.generateInsights(
+      transactions: transactions,
+      budget: budget,
+      streak: streak,
+      categoryBreakdown: categoryBreakdown,
+      dailyAverage: dailyAverage,
+    );
+
+    return Insight(
+      type: InsightType.info,
+      title: 'AI Insight',
+      message: aiMessage,
+      icon: '🤖',
+      priority: InsightPriority.high,
+      actionText: 'Ask follow-up',
+    );
+  }
+
+  /// Generate rule-based insights (fallback)
+  List<Insight> _generateRuleBasedInsights(
+    List<TransactionEntity> transactions,
+    BudgetEntity budget,
+    StreakEntity streak,
+    MonthOverMonthData? monthOverMonth,
+  ) {
     final insights = <Insight>[];
 
     // Budget health insight

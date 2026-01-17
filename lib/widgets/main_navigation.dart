@@ -6,6 +6,8 @@ import '../screens/analytics_dashboard_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/transaction_history_screen.dart';
+import '../screens/ai_advisor_screen.dart';
+import '../screens/ai_settings_screen.dart';
 
 /// Main Navigation Widget
 ///
@@ -24,6 +26,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomeScreen(),
     const TransactionHistoryScreen(),
     const AnalyticsDashboardScreen(),
+    const AIAdvisorScreen(),
     const SettingsScreen(),
   ];
 
@@ -62,6 +65,10 @@ class _MainNavigationState extends State<MainNavigation> {
             label: 'Analytics',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.smart_toy),
+            label: 'AI Advisor',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
           ),
@@ -86,7 +93,7 @@ class _MainNavigationState extends State<MainNavigation> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         child: const Icon(Icons.add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

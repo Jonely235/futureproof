@@ -8,6 +8,7 @@ import '../config/app_colors.dart';
 import '../config/app_strings.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/anti_fragile_wallet_provider.dart';
 
 /// Add Expense Screen - Number-First Experience
 ///
@@ -112,6 +113,110 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
+  /// Show friction dialog when user tries to add a "Want" expense in Red Mode
+  Future<bool> _showWarModeFrictionDialog(String category, double runwayDays) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // User must make a choice
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Text('⚠️', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'War Mode Active',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.timer, size: 20, color: AppColors.danger),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${runwayDays.toStringAsFixed(0)} days of cash left',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'This expense puts you at risk. Consider if this is truly necessary.',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 13,
+                      color: AppColors.gray700,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Do you want to proceed anyway?',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Never mind',
+              style: GoogleFonts.spaceGrotesk(
+                color: AppColors.gray700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'I understand, proceed',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   void _saveExpense() async {
     _focusNode.unfocus(); // Dismiss keyboard before saving
     final amount = double.tryParse(_amountController.text);
@@ -207,7 +312,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  void _showCategoryPicker() {
+  void _showCategoryPicker() async {
     _focusNode.unfocus(); // Dismiss keyboard before showing picker
     HapticFeedback.lightImpact();
     showModalBottomSheet(
@@ -217,11 +322,30 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       builder: (context) => _CategoryBottomSheet(
         categories: _categories,
         selectedCategory: _selectedCategory,
-        onSelect: (category) {
+        onSelect: (category) async {
+          final internalCategory = _mapDisplayCategoryToInternal(category);
+
+          // Check if this category should be restricted in War Mode
+          final walletProvider = context.read<AntiFragileWalletProvider>();
+          if (walletProvider.isCategoryRestricted(internalCategory)) {
+            final warMode = walletProvider.warMode;
+            if (warMode != null) {
+              // Show friction dialog
+              final confirmed = await _showWarModeFrictionDialog(
+                category,
+                warMode.runwayDays,
+              );
+              if (!confirmed) {
+                return; // User cancelled, don't select category
+              }
+              HapticFeedback.heavyImpact(); // Acknowledge the risk
+            }
+          }
+
           setState(() {
             _selectedCategory = category;
           });
-          Navigator.pop(context);
+          if (mounted) Navigator.pop(context);
         },
       ),
     );

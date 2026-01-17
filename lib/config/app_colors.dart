@@ -53,6 +53,11 @@ class AppColors {
   static const border = Color(0xFFE0E0E0);
   static const shadow = Color(0x14000000);
 
+  // Convenience aliases
+  static const background = offWhite;
+  static const primary = fintechTeal;
+  static const accent = fintechTeal;
+
   // ============================================
   // CATEGORY COLORS
   // ============================================
@@ -77,4 +82,25 @@ class AppColors {
   static const fintechIndigo = Color(0xFF3949AB);
   static const fintechTrust = Color(0xFF00897B);
   static const fintechGrowth = Color(0xFF43A047);
+
+  // ============================================
+  // CATEGORY COLORS MAP (for donut chart & insights)
+  // ============================================
+
+  static const Map<String, Color> categoryColors = {
+    'Groceries': Color(0xFF4CAF50),      // Green - essential
+    'Dining Out': Color(0xFFFF9800),     // Orange - discretionary
+    'Transport': Color(0xFF2196F3),      // Blue - movement
+    'Entertainment': Color(0xFF9C27B0),  // Purple - fun
+    'Health': Color(0xFFF44336),         // Red - wellness
+    'Shopping': Color(0xFFE91E63),       // Pink - retail
+    'Subscriptions': Color(0xFF00BCD4),  // Cyan - recurring
+    'Housing': Color(0xFF795548),        // Brown - shelter
+    'Education': Color(0xFF00BCD4),      // Cyan - growth
+    'Travel': Color(0xFFFF9800),         // Orange - adventure
+    'Personal': Color(0xFF9C27B0),       // Purple - self
+    'Gifts': Color(0xFFE91E63),          // Pink - generosity
+    'Investments': Color(0xFF4CAF50),    // Green - returns
+    'Other': Color(0xFF9E9E9E),          // Gray - neutral
+  };
 }

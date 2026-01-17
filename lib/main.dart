@@ -6,9 +6,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/gamification_provider.dart';
 import 'providers/insight_provider.dart';
+import 'providers/ai_provider.dart';
+import 'providers/anti_fragile_wallet_provider.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/gamification_repository_impl.dart';
+import 'data/repositories/anti_fragile_settings_repository_impl.dart';
 import 'data/repositories/firebase_backup_repository_impl.dart';
 import 'domain/repositories/cloud_backup_repository.dart';
 import 'domain/services/streak_calculator_service.dart';
@@ -59,6 +62,7 @@ void main() async {
   final transactionRepository = TransactionRepositoryImpl();
   final budgetRepository = BudgetRepositoryImpl();
   final gamificationRepository = GamificationRepositoryImpl();
+  final antiFragileSettingsRepository = AntiFragileSettingsRepositoryImpl();
 
   // Firebase Cloud Backup is initialized lazily when user configures it
   // Don't create it here to avoid Firebase errors on web/mobile
@@ -74,6 +78,7 @@ void main() async {
     transactionRepository: transactionRepository,
     budgetRepository: budgetRepository,
     gamificationRepository: gamificationRepository,
+    antiFragileSettingsRepository: antiFragileSettingsRepository,
     streakCalculatorService: streakCalculatorService,
     achievementService: achievementService,
     budgetComparisonService: budgetComparisonService,
@@ -86,6 +91,7 @@ class FutureProofApp extends StatefulWidget {
   final TransactionRepositoryImpl transactionRepository;
   final BudgetRepositoryImpl budgetRepository;
   final GamificationRepositoryImpl gamificationRepository;
+  final AntiFragileSettingsRepositoryImpl antiFragileSettingsRepository;
   final StreakCalculatorService streakCalculatorService;
   final AchievementService achievementService;
   final BudgetComparisonService budgetComparisonService;
@@ -97,6 +103,7 @@ class FutureProofApp extends StatefulWidget {
     required this.transactionRepository,
     required this.budgetRepository,
     required this.gamificationRepository,
+    required this.antiFragileSettingsRepository,
     required this.streakCalculatorService,
     required this.achievementService,
     required this.budgetComparisonService,
@@ -135,6 +142,19 @@ class _FutureProofAppState extends State<FutureProofApp> {
             gamificationRepository: widget.gamificationRepository,
             insightService: widget.insightGenerationService,
             budgetComparisonService: widget.budgetComparisonService,
+          ),
+        ),
+
+        // NEW: AI provider - manages Llama on-device inference
+        ChangeNotifierProvider(
+          create: (_) => AIProvider(),
+        ),
+
+        // NEW: Anti-Fragile Wallet provider - manages Virtual Vault & War Mode
+        ChangeNotifierProvider(
+          create: (_) => AntiFragileWalletProvider(
+            transactionRepository: widget.transactionRepository,
+            settingsRepository: widget.antiFragileSettingsRepository,
           ),
         ),
 

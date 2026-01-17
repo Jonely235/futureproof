@@ -7,6 +7,9 @@ import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/gamification_provider.dart';
 import '../providers/insight_provider.dart';
+import '../providers/anti_fragile_wallet_provider.dart';
+import '../widgets/virtual_vault_widget.dart';
+import '../widgets/vault_details_dialog.dart';
 import '../services/finance_calculator.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
@@ -292,16 +295,42 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildWideStatCard(
-                      context,
-                      title: 'REMAINING',
-                      value: _status != null
-                          ? '\$${_status!.remaining.toStringAsFixed(0)}'
-                          : '\$0',
-                      subtitle: '${_status != null && _status!.remaining >= 0 ? "On track" : "Review spending"}',
-                      percentage: _monthlyIncome > 0
-                          ? ((_status?.remaining ?? 0) / _monthlyIncome * 100).round()
-                          : 0,
+                    // NEW: Virtual Vault Widget - Anti-Fragile Wallet
+                    Consumer<AntiFragileWalletProvider>(
+                      builder: (context, walletProvider, child) {
+                        final vault = walletProvider.virtualVault;
+                        final warMode = walletProvider.warMode;
+
+                        if (vault == null || warMode == null) {
+                          // Show loading or default state
+                          return _buildWideStatCard(
+                            context,
+                            title: 'AVAILABLE NOW',
+                            value: _status != null
+                                ? '\$${_status!.remaining.toStringAsFixed(0)}'
+                                : '\$0',
+                            subtitle: 'Loading vault...',
+                            percentage: _monthlyIncome > 0
+                                ? ((_status?.remaining ?? 0) / _monthlyIncome * 100).round()
+                                : 0,
+                          );
+                        }
+
+                        return VirtualVaultWidget(
+                          vault: vault,
+                          warMode: warMode,
+                          onVaultTap: () {
+                            HapticFeedback.mediumImpact();
+                            showDialog(
+                              context: context,
+                              builder: (context) => VaultDetailsDialog(
+                                vault: vault,
+                                warMode: warMode,
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),

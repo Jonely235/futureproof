@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
 import '../models/app_error.dart';
 import '../models/spending_analysis.dart';
+import '../providers/transaction_provider.dart';
 import '../services/analytics_service.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
+import '../widgets/analytics/category_legend_widget.dart';
+import '../widgets/analytics/insight_card.dart';
+import '../widgets/analytics/interactive_donut_chart.dart';
 import '../widgets/bar_chart_widget.dart';
-import '../widgets/pie_chart_widget.dart';
 import '../widgets/trend_indicator.dart';
 import '../widgets/velocity_chart_widget.dart';
 import '../widgets/ui_helpers.dart';
@@ -36,6 +40,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   Map<String, dynamic>? _quickStats;
   bool _isLoading = true;
   bool _hasLoadedOnce = false;
+  String? _selectedCategory;
+
+  // Track previous transaction count to detect changes
+  int _previousTransactionCount = 0;
 
   final Map<String, String> _categoryEmojis = {
     'Groceries': '🛒',
@@ -57,6 +65,35 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Watch for transaction changes
+    final transactionProvider = context.read<TransactionProvider>();
+    final currentTransactionCount = transactionProvider.transactions.length;
+
+    // Reload when transaction count changes
+    if (currentTransactionCount != _previousTransactionCount) {
+      _previousTransactionCount = currentTransactionCount;
+      if (_hasLoadedOnce) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _loadAnalytics();
+          }
+        });
+      }
+    }
+
+    // Auto-refresh when returning to this screen (but not on first load)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _hasLoadedOnce) {
+        _loadAnalytics();
+      } else if (mounted && !_hasLoadedOnce) {
+        _hasLoadedOnce = true;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -68,19 +105,6 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       // Refresh data when app is resumed
       _loadAnalytics();
     }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Auto-refresh when returning to this screen (but not on first load)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _hasLoadedOnce) {
-        _loadAnalytics();
-      } else if (mounted && !_hasLoadedOnce) {
-        _hasLoadedOnce = true;
-      }
-    });
   }
 
   Future<void> _loadAnalytics() async {
@@ -120,6 +144,21 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Watch TransactionProvider for changes - this will trigger rebuilds when transactions are added/updated
+    final transactionProvider = context.watch<TransactionProvider>();
+    final currentTransactionCount = transactionProvider.transactions.length;
+
+    // Reload analytics when transaction count changes (but not on first load)
+    if (_hasLoadedOnce && currentTransactionCount != _previousTransactionCount) {
+      _previousTransactionCount = currentTransactionCount;
+      // Schedule analytics reload
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_isLoading) {
+          _loadAnalytics();
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.offWhite,
       body: _isLoading
@@ -364,45 +403,92 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       return const SizedBox.shrink();
     }
 
+    final totalSpending = _analysis!.byCategory.values.fold(0.0, (a, b) => a + b);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Spending by Category',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: AppColors.black,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Spending by Category',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.black,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
-        // Pie chart
+        const SizedBox(height: 20),
+        // Interactive donut chart
         Center(
-          child: PieChartWidget(
-            data: _analysis!.byCategory,
-            categoryEmojis: _categoryEmojis,
+          child: InteractiveDonutChart(
+            categorySpending: _analysis!.byCategory,
+            totalSpending: totalSpending,
+            onCategoryTap: (category) {
+              setState(() {
+                if (_selectedCategory == category) {
+                  _selectedCategory = null;
+                } else {
+                  _selectedCategory = category;
+                }
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 24),
+        // Category legend
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: CategoryLegendWidget(
+            categorySpending: _analysis!.byCategory,
+            totalSpending: totalSpending,
+            selectedCategory: _selectedCategory,
+            onCategoryTap: (category) {
+              setState(() {
+                if (_selectedCategory == category) {
+                  _selectedCategory = null;
+                } else {
+                  _selectedCategory = category;
+                }
+              });
+            },
           ),
         ),
         const SizedBox(height: 24),
         // Horizontal bar chart
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Category Breakdown',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: HorizontalBarChartWidget(
-            data: _analysis!.byCategory,
-            categoryEmojis: _categoryEmojis,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Category Breakdown',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.black,
+                ),
+              ),
+              const SizedBox(height: 12),
+              HorizontalBarChartWidget(
+                data: _analysis!.byCategory,
+                categoryEmojis: _categoryEmojis,
+              ),
+            ],
           ),
         ),
       ],
@@ -473,40 +559,45 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'AI Insights',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: AppColors.black,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'AI Insights',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.black,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
         ...topInsights.map((insight) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Card(
-              elevation: 2,
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: insight.color.withOpacity(0.2),
-                  child: Text(
-                    insight.icon,
-                    style: const TextStyle(fontSize: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: InsightCard(
+              insight: insight,
+              onTap: () {
+                // Navigate to insight details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const InsightsScreen(),
                   ),
-                ),
-                title: Text(
-                  insight.title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(insight.description),
-                trailing: Icon(
-                  _getInsightIcon(insight.type),
-                  color: insight.color,
-                ),
-              ),
+                );
+              },
             ),
           );
         }),

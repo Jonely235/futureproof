@@ -35,6 +35,10 @@ dependencies:
   firebase_auth: ^5.3.0
   device_info_plus: ^10.1.0
 
+  # AI/ML - On-Device Llama Integration
+  ffi: ^2.1.0
+  async: ^2.11.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

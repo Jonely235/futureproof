@@ -89,7 +89,7 @@ class InsightProvider extends ChangeNotifier {
       );
 
       // Use domain service to generate insights
-      _insights = _insightService.generateInsights(
+      _insights = await _insightService.generateInsights(
         transactions: transactions,
         budget: budget,
         streak: streak,
