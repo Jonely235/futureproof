@@ -77,14 +77,10 @@ jobs:
       # ============================================
       - name: Prepare iOS platform
         run: |
-          # Only regenerate if iOS folder doesn't exist or Podfile changed
-          if [ ! -d "ios" ] || [ ! -f "ios/Podfile.lock" ]; then
-            echo "iOS folder missing or no Podfile.lock, regenerating..."
-            rm -rf ios
-            flutter create --platforms=ios . --project-name futureproof
-          else
-            echo "iOS folder exists, skipping regeneration"
-          fi
+          # ALWAYS regenerate iOS folder from scratch (Golden Rule #1)
+          echo "Regenerating iOS folder from scratch..."
+          rm -rf ios
+          flutter create --platforms=ios . --project-name futureproof
 
           # Always update deployment target to be safe
           cd ios
