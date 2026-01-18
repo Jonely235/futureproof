@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import '../domain/entities/budget_entity.dart';
+import '../domain/entities/streak_entity.dart';
+import '../domain/entities/transaction_entity.dart';
 import '../services/ai/ai_service.dart';
 import '../services/ai/llama_on_device_service.dart'
     if (dart.library.html) '../services/ai/ai_service_stub.dart';
@@ -99,9 +102,9 @@ class AIProvider with ChangeNotifier {
 
   /// Generate financial insights
   Future<String> generateInsights({
-    required List transactions,
-    required dynamic budget,
-    required dynamic streak,
+    required List<TransactionEntity> transactions,
+    required BudgetEntity budget,
+    required StreakEntity streak,
     required Map<String, double> categoryBreakdown,
     required double dailyAverage,
   }) async {
@@ -138,8 +141,8 @@ class AIProvider with ChangeNotifier {
   /// Answer a financial question
   Future<String> answerQuestion(
     String question,
-    List transactions,
-    dynamic budget,
+    List<TransactionEntity> transactions,
+    BudgetEntity budget,
   ) async {
     _ensureReady();
 

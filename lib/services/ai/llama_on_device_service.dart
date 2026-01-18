@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:logging/logging.dart';
+import '../../domain/entities/budget_entity.dart';
+import '../../domain/entities/streak_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 import 'ai_service.dart';
 import 'ai_prompt_builder.dart';
 import 'llama_model_manager.dart';
@@ -39,7 +42,7 @@ class LlamaOnDeviceService extends AIService {
     try {
       // Check if model is downloaded
       if (!await _modelManager.hasDownloadedModel()) {
-        throw _FfiAIServiceException(
+        throw AIServiceException(
           'No model found. Please download a model first using LlamaModelManager.',
         );
       }
@@ -48,7 +51,7 @@ class LlamaOnDeviceService extends AIService {
       if (_modelManager.currentModel == null) {
         final downloadedModels = await _modelManager.getDownloadedModels();
         if (downloadedModels.isEmpty) {
-          throw _FfiAIServiceException('No downloaded models available');
+          throw AIServiceException('No downloaded models available');
         }
 
         // Use the first available model or recommended one
@@ -74,7 +77,7 @@ class LlamaOnDeviceService extends AIService {
       );
 
       if (_modelId! < 0) {
-        throw _FfiAIServiceException('Failed to load model. Error code: $_modelId');
+        throw AIServiceException('Failed to load model. Error code: $_modelId');
       }
 
       // Initialize generation context
@@ -85,14 +88,14 @@ class LlamaOnDeviceService extends AIService {
       );
 
       if (_contextId! < 0) {
-        throw _FfiAIServiceException('Failed to initialize context. Error code: $_contextId');
+        throw AIServiceException('Failed to initialize context. Error code: $_contextId');
       }
 
       _logger.info('LlamaOnDeviceService initialized successfully');
       _logger.info('Model: ${_modelManager.currentModel?.name}');
     } catch (e, stackTrace) {
       _logger.severe('Failed to initialize service', e, stackTrace);
-      throw _FfiAIServiceException(
+      throw AIServiceException(
         'Failed to initialize LlamaOnDeviceService',
         cause: e,
         stackTrace: stackTrace,
@@ -143,7 +146,7 @@ class LlamaOnDeviceService extends AIService {
       return await _generate(prompt);
     } catch (e, stackTrace) {
       _logger.severe('Failed to generate insights', e, stackTrace);
-      throw _FfiAIServiceException('Failed to generate insights', cause: e, stackTrace: stackTrace);
+      throw AIServiceException('Failed to generate insights', cause: e, stackTrace: stackTrace);
     }
   }
 
@@ -215,7 +218,7 @@ class LlamaOnDeviceService extends AIService {
       return await _generate(prompt);
     } catch (e, stackTrace) {
       _logger.severe('Failed to answer question', e, stackTrace);
-      throw _FfiAIServiceException('Failed to answer question', cause: e, stackTrace: stackTrace);
+      throw AIServiceException('Failed to answer question', cause: e, stackTrace: stackTrace);
     }
   }
 
@@ -248,7 +251,7 @@ class LlamaOnDeviceService extends AIService {
       return await _generate(prompt);
     } catch (e, stackTrace) {
       _logger.severe('Failed to analyze scenario', e, stackTrace);
-      throw _FfiAIServiceException('Failed to analyze scenario', cause: e, stackTrace: stackTrace);
+      throw AIServiceException('Failed to analyze scenario', cause: e, stackTrace: stackTrace);
     }
   }
 
@@ -288,7 +291,7 @@ class LlamaOnDeviceService extends AIService {
       return await _generate(prompt);
     } catch (e, stackTrace) {
       _logger.severe('Failed to generate chat response', e, stackTrace);
-      throw _FfiAIServiceException('Failed to generate chat response', cause: e, stackTrace: stackTrace);
+      throw AIServiceException('Failed to generate chat response', cause: e, stackTrace: stackTrace);
     }
   }
 
@@ -318,7 +321,7 @@ class LlamaOnDeviceService extends AIService {
 
   Future<String> _generate(String prompt) async {
     if (_ffi == null || _contextId == null) {
-      throw _FfiAIServiceException('Service not initialized. Call initialize() first.');
+      throw AIServiceException('Service not initialized. Call initialize() first.');
     }
 
     try {
@@ -334,13 +337,13 @@ class LlamaOnDeviceService extends AIService {
       return response;
     } catch (e, stackTrace) {
       _logger.severe('Generation failed', e, stackTrace);
-      throw _FfiAIServiceException('Generation failed', cause: e, stackTrace: stackTrace);
+      throw AIServiceException('Generation failed', cause: e, stackTrace: stackTrace);
     }
   }
 
   void _ensureReady() {
     if (!isReady) {
-      throw _FfiAIServiceException(
+      throw AIServiceException(
         'Service not ready. Call initialize() and ensure a model is loaded.',
       );
     }

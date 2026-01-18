@@ -150,8 +150,8 @@ class LlamaFFI {
     try {
       final result = _llama_load_model_from_file(
         pathPtr,
-        contextLength,
-        gpuLayers,
+        contextLength as Int32,
+        gpuLayers as Int32,
       );
       return result;
     } finally {
@@ -198,7 +198,7 @@ class LlamaFFI {
     final tokensPtr = calloc<Int32>(maxTokens);
 
     try {
-      final count = _llama_tokenize(ctxId, textPtr, tokensPtr, maxTokens);
+      final count = _llama_tokenize(ctxId as Int32, textPtr, tokensPtr, maxTokens as Int32);
 
       if (count < 0) {
         throw AIServiceException('Tokenization failed with code: $count');
@@ -215,7 +215,7 @@ class LlamaFFI {
     final embeddingsPtr = calloc<Float>(size);
 
     try {
-      final result = _llama_get_embeddings(ctxId, embeddingsPtr, size);
+      final result = _llama_get_embeddings(ctxId as Int32, embeddingsPtr, size as Int32);
 
       if (result < 0) {
         throw AIServiceException('Failed to get embeddings: $result');
@@ -229,11 +229,11 @@ class LlamaFFI {
 }
 
 /// AI Service exception for errors during inference
-class _FfiAIServiceException implements Exception {
+class AIServiceException implements Exception {
   final String message;
   final Object? cause;
 
-  const _FfiAIServiceException(
+  const AIServiceException(
     this.message, {
     this.cause,
   });
@@ -241,7 +241,7 @@ class _FfiAIServiceException implements Exception {
   @override
   String toString() {
     final buffer = StringBuffer();
-    buffer.write('_FfiAIServiceException: $message');
+    buffer.write('AIServiceException: $message');
     if (cause != null) {
       buffer.write('\nCaused by: $cause');
     }

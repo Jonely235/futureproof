@@ -1,26 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../providers/settings_expansion_provider.dart';
+import '../providers/financial_goals_provider.dart';
+import '../providers/ai_provider.dart';
 import '../widgets/backup_section_widget.dart';
 import '../widgets/financial_goals_form_widget.dart';
 import '../widgets/settings/anti_fragile_settings_widget.dart';
 import '../widgets/firebase_config_widget.dart';
-import '../widgets/settings/premium_quick_actions_card.dart';
 import '../widgets/settings/quick_actions_color_picker.dart';
 import '../widgets/theme_picker_widget.dart';
 import '../widgets/ui_helpers.dart';
 import '../data/repositories/firebase_backup_repository_impl.dart';
 import 'debug/error_history_screen.dart';
-import 'add_expense_screen.dart';
-import 'analytics_dashboard_screen.dart';
 import 'ai_settings_screen.dart';
 
 /// Settings Screen
 ///
-/// Allows users to configure monthly income, savings goals,
-/// and other app preferences.
+/// Redesigned with accordion-style progressive disclosure.
+/// Sections expand/collapse with smooth animations.
+/// Premium Quick Actions card removed (moved to home screen).
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -36,6 +38,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _cloudBackupRepo = FirebaseBackupRepositoryImpl();
+
+    // Initialize expansion state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SettingsExpansionProvider>().loadState();
+      context.read<FinancialGoalsProvider>().loadGoals();
+    });
+
     _loadSavedColor();
   }
 
@@ -51,24 +60,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _cloudBackupRepo.dispose();
     super.dispose();
-  }
-
-  void _navigateToAddExpense() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AddExpenseScreen(),
-      ),
-    );
-  }
-
-  void _navigateToAnalytics() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AnalyticsDashboardScreen(),
-      ),
-    );
   }
 
   void _showSyncSnackBar() {
@@ -106,125 +97,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          // Content
+          // Content with Accordion
           SliverToBoxAdapter(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
+            child: Consumer2<SettingsExpansionProvider, FinancialGoalsProvider>(
+              builder: (context, expansionProvider, goalsProvider, child) {
+                return SettingsAccordion(
+                  children: [
+                    const SizedBox(height: 16),
 
-                  // Premium Quick Actions Card
-                  PremiumQuickActionsCard(
-                    primaryColor: _selectedQuickActionsColor,
-                    actions: [
-                      QuickAction(
-                        icon: Icons.add_rounded,
-                        title: 'Add Expense',
-                        subtitle: 'Quickly add a new transaction',
-                        onTap: _navigateToAddExpense,
-                      ),
-                      QuickAction(
-                        icon: Icons.bar_chart_rounded,
-                        title: 'View Analytics',
-                        subtitle: 'See your spending insights',
-                        onTap: _navigateToAnalytics,
-                      ),
-                      QuickAction(
-                        icon: Icons.cloud_sync_rounded,
-                        title: 'Sync Now',
-                        subtitle: 'Force backup to cloud',
-                        onTap: _showSyncSnackBar,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Financial Goals Section
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 200),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('Financial Goals'),
-                        _buildSettingsSection([
+                    // ========== FINANCE SECTION (Expanded by default) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 200),
+                      child: SettingsAccordionSection(
+                        sectionId: 'finance',
+                        icon: Icons.account_balance_wallet,
+                        title: 'Finance',
+                        summary: _buildFinanceSummary(goalsProvider),
+                        iconColor: AppColors.fintechTeal,
+                        isExpanded: expansionProvider.isExpanded('finance'),
+                        children: [
                           const FinancialGoalsFormWidget(),
-                        ]),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Anti-Fragile Wallet Settings Section (NEW)
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 300),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('Virtual Vault Settings'),
-                        _buildSettingsSection([
+                          const SizedBox(height: 16),
                           const AntiFragileSettingsWidget(),
-                        ]),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 16),
 
-                  // Quick Actions Color Section (NEW)
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 250),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('Quick Actions Style'),
-                        _buildSettingsSection([
+                    // ========== APPEARANCE SECTION (Expanded by default) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 300),
+                      child: SettingsAccordionSection(
+                        sectionId: 'appearance',
+                        icon: Icons.palette,
+                        title: 'Appearance',
+                        summary: _buildAppearanceSummary(),
+                        iconColor: AppColors.gold,
+                        isExpanded: expansionProvider.isExpanded('appearance'),
+                        children: [
+                          ThemePickerWidget(
+                            onThemeChanged: (theme) {
+                              // Trigger rebuild
+                              setState(() {});
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Quick Actions Style',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.gray700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           QuickActionsColorPicker(
                             selectedColor: _selectedQuickActionsColor,
                             onColorSelected: (color) {
                               setState(() {
                                 _selectedQuickActionsColor = color;
                               });
-                              // TODO: Save to shared preferences
                             },
                           ),
-                        ]),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 16),
 
-                  // Theme Section
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 300),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('Appearance'),
-                        _buildSettingsSection([
-                          ThemePickerWidget(
-                            onThemeChanged: (theme) {
-                              // Trigger rebuild to show updated selection
-                              setState(() {});
-                            },
-                          ),
-                        ]),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // AI Settings Section (NEW)
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 350),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('AI Financial Advisor'),
-                        _buildSettingsSection([
+                    // ========== AI SETTINGS SECTION (Expanded by default) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 400),
+                      child: SettingsAccordionSection(
+                        sectionId: 'ai',
+                        icon: Icons.smart_toy,
+                        title: 'AI Settings',
+                        summary: _buildAISummary(),
+                        iconColor: AppColors.fintechIndigo,
+                        isExpanded: expansionProvider.isExpanded('ai'),
+                        children: [
                           ListTile(
-                            leading: const Icon(Icons.smart_toy),
-                            title: const Text('AI Settings'),
-                            subtitle: const Text('Manage AI model & features'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.settings),
+                            title: Text(
+                              'AI Configuration',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Manage AI model & features',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 12,
+                                color: AppColors.gray700,
+                              ),
+                            ),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () {
                               Navigator.push(
@@ -236,77 +206,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             },
                           ),
                           ListTile(
+                            contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.psychology),
-                            title: const Text('About AI Features'),
-                            subtitle: const Text('Learn how AI helps you'),
+                            title: Text(
+                              'About AI Features',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Learn how AI helps you',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 12,
+                                color: AppColors.gray700,
+                              ),
+                            ),
                             trailing: const Icon(Icons.info_outline),
                             onTap: () {
                               _showAIDialog();
                             },
                           ),
-                        ]),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 16),
 
-                  // Cloud Sync Section (NEW)
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 400),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('Cloud Sync'),
-                        _buildSettingsSection([
+                    // ========== DATA & SYNC SECTION (Collapsed by default) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 500),
+                      child: SettingsAccordionSection(
+                        sectionId: 'data',
+                        icon: Icons.cloud_sync,
+                        title: 'Data & Sync',
+                        summary: _buildDataSyncSummary(),
+                        iconColor: AppColors.fintechTrust,
+                        isExpanded: expansionProvider.isExpanded('data'),
+                        children: [
                           FirebaseConfigWidget(
                             cloudBackupRepo: _cloudBackupRepo,
                           ),
-                        ]),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Backup & Export Section
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 500),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('Backup & Export'),
-                        _buildSettingsSection([
+                          const SizedBox(height: 16),
                           const BackupSectionWidget(),
-                        ]),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 16),
 
-                  // App Info Section
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 600),
-                    child: Column(
-                      children: [
-                        _buildSectionHeader('About'),
-                        _buildSettingsSection([
+                    // ========== ABOUT SECTION (Collapsed by default) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 600),
+                      child: SettingsAccordionSection(
+                        sectionId: 'about',
+                        icon: Icons.info,
+                        title: 'About',
+                        summary: 'Version 1.0.0',
+                        iconColor: AppColors.gray700,
+                        isExpanded: expansionProvider.isExpanded('about'),
+                        children: [
                           _buildInfoRow('Version', '1.0.0'),
                           _buildInfoRow('Build', 'MVP Complete'),
                           _buildInfoRow('Status', '🎉 Ready'),
-                        ]),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  if (kDebugMode) ...[
-                    const SizedBox(height: 32),
-                    // Developer Tools Section
-                    FadeInWidget(
-                      delay: const Duration(milliseconds: 700),
-                      child: Column(
-                        children: [
-                          _buildSectionHeader('Developer Tools'),
-                          _buildSettingsSection([
+                    // ========== ADVANCED SECTION (Collapsed by default, debug only) ==========
+                    if (kDebugMode)
+                      FadeInWidget(
+                        delay: const Duration(milliseconds: 700),
+                        child: SettingsAccordionSection(
+                          sectionId: 'advanced',
+                          icon: Icons.bug_report,
+                          title: 'Advanced',
+                          summary: 'Error logs, diagnostics',
+                          iconColor: AppColors.danger,
+                          isExpanded: expansionProvider.isExpanded('advanced'),
+                          children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: const Icon(Icons.bug_report,
@@ -314,8 +293,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               title: Text(
                                 'Error History',
                                 style: GoogleFonts.spaceGrotesk(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.black,
                                 ),
                               ),
@@ -337,15 +316,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 );
                               },
                             ),
-                          ]),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
 
-                  const SizedBox(height: 24),
-                ],
-              ),
+                    const SizedBox(height: 24),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -353,46 +331,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      child: Text(
-        title,
-        style: GoogleFonts.playfairDisplay(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.black,
-        ),
-      ),
-    );
+  /// Build finance section summary
+  String _buildFinanceSummary(FinancialGoalsProvider provider) {
+    if (provider.isLoading) {
+      return 'Loading...';
+    }
+    return 'Income: ${provider.formattedIncome} | Reserve: \$500';
   }
 
-  Widget _buildSettingsSection(List<Widget> children) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
-        ),
-      ),
-    );
+  /// Build appearance section summary
+  String _buildAppearanceSummary() {
+    return 'Theme: System | Accent: Teal';
+  }
+
+  /// Build AI section summary
+  String _buildAISummary() {
+    final aiProvider = context.read<AIProvider>();
+    final isReady = aiProvider.isReady;
+    return isReady ? 'Model: Ready' : 'Model: Not Setup';
+  }
+
+  /// Build data & sync section summary
+  String _buildDataSyncSummary() {
+    // In a real implementation, this would check the last backup time
+    return 'Last backup: Today';
   }
 
   Widget _buildInfoRow(String label, String value) {
