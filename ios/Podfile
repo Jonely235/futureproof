@@ -52,12 +52,4 @@ post_install do |installer|
     config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
     config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
   end
-
-  # Remove sqflite_darwin target - it has Flutter.h dependency issues
-  # Use sqflite_sqflite (pure Dart implementation) instead
-  installer.pods_project.targets.each do |target|
-    if target.name == 'sqflite_darwin'
-      target.remove_from_project
-    end
-  end
 end
