@@ -52,10 +52,10 @@ typedef _llama_tokenize_native = Int32 Function(
   Int32 maxTokens,
 );
 typedef _llama_tokenize_dart = int Function(
-  Int32 ctxId,
+  int ctxId,
   Pointer<Utf8> text,
   Pointer<Int32> tokens,
-  Int32 maxTokens,
+  int maxTokens,
 );
 
 typedef _llama_get_embeddings_native = Int32 Function(
@@ -64,9 +64,9 @@ typedef _llama_get_embeddings_native = Int32 Function(
   Int32 size,
 );
 typedef _llama_get_embeddings_dart = int Function(
-  Int32 ctxId,
+  int ctxId,
   Pointer<Float> embeddings,
-  Int32 size,
+  int size,
 );
 
 /// FFI bindings for llama.cpp
@@ -150,8 +150,8 @@ class LlamaFFI {
     try {
       final result = _llama_load_model_from_file(
         pathPtr,
-        contextLength,
-        gpuLayers,
+        contextLength.toInt(),
+        gpuLayers.toInt(),
       );
       return result;
     } finally {
@@ -164,7 +164,7 @@ class LlamaFFI {
   }
 
   int initContext(int modelId, {double temperature = 0.7, double topP = 0.9}) {
-    final result = _llama_init_context(modelId, temperature, topP);
+    final result = _llama_init_context(modelId.toInt(), temperature, topP);
     return result;
   }
 
@@ -178,7 +178,7 @@ class LlamaFFI {
     final outputBuffer = calloc<Uint8>(maxOutput);
 
     try {
-      final result = _llama_generate(ctxId, promptPtr, outputBuffer.cast<Utf8>(), maxOutput);
+      final result = _llama_generate(ctxId.toInt(), promptPtr, outputBuffer.cast<Utf8>(), maxOutput.toInt());
 
       if (result < 0) {
         throw FFIException('Generation failed with code: $result');
@@ -198,7 +198,7 @@ class LlamaFFI {
     final tokensPtr = calloc<Int32>(maxTokens);
 
     try {
-      final count = _llama_tokenize(ctxId, textPtr, tokensPtr, maxTokens);
+      final count = _llama_tokenize(ctxId.toInt(), textPtr, tokensPtr, maxTokens.toInt());
 
       if (count < 0) {
         throw FFIException('Tokenization failed with code: $count');
@@ -215,7 +215,7 @@ class LlamaFFI {
     final embeddingsPtr = calloc<Float>(size);
 
     try {
-      final result = _llama_get_embeddings(ctxId, embeddingsPtr, size);
+      final result = _llama_get_embeddings(ctxId.toInt(), embeddingsPtr, size.toInt());
 
       if (result < 0) {
         throw FFIException('Failed to get embeddings: $result');
