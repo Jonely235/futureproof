@@ -23,12 +23,8 @@ dependencies:
   logging: ^1.2.0
 
   # Data Persistence (Phase 1: SQLite - MVP without Firebase)
-  sqflite:
-  android:
-    sqflite: ^2.3.0
-  ios:
-    sqflite_sqflite: ^2.3.0
-  sqflite_common_ffi: ^2.3.0
+  sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.3
   path: ^1.8.3
   path_provider: ^2.1.1
   shared_preferences: ^2.2.2
@@ -47,6 +43,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+
+dependency_overrides:
+  # iOS: Use sqflite_sqflite (pure Dart, no Flutter.h dependency)
+  # Android: Use regular sqflite (includes sqflite_dart with Flutter.h)
+  sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.3
 
 flutter:
   uses-material-design: true
