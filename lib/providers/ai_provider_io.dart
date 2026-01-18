@@ -161,8 +161,8 @@ class AIProvider with ChangeNotifier {
   /// Analyze a "what-if" scenario
   Future<String> analyzeScenario(
     String scenario,
-    List transactions,
-    dynamic budget,
+    List<TransactionEntity> transactions,
+    BudgetEntity budget,
   ) async {
     _ensureReady();
 

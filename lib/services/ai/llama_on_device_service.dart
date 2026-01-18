@@ -124,7 +124,7 @@ class LlamaOnDeviceService extends AIService {
           : categoryBreakdown.entries.reduce((a, b) => a.value > b.value ? a : b);
 
       final totalSpent = categoryBreakdown.values.fold(0.0, (sum, v) => sum + v);
-      final budgetUsed = totalSpent / (budget.totalAmount + totalSpent);
+      final budgetUsed = totalSpent / (budget.monthlyBudget + totalSpent);
       final budgetRemaining = budget.getRemaining(totalSpent);
 
       final now = DateTime.now();
@@ -204,7 +204,7 @@ class LlamaOnDeviceService extends AIService {
 
       final financialData = {
         'budget': {
-          'total': budget.totalAmount,
+          'total': budget.monthlyBudget,
           'remaining': budget.getRemaining(totalSpent),
           'daysRemaining': daysRemaining,
         },
@@ -243,7 +243,7 @@ class LlamaOnDeviceService extends AIService {
 
       final currentData = {
         'categories': categoryBreakdown,
-        'budget': budget.totalAmount,
+        'budget': budget.monthlyBudget,
         'spent': totalSpent,
       };
 
@@ -281,7 +281,7 @@ class LlamaOnDeviceService extends AIService {
           .fold<double>(0, (sum, t) => sum + t.absoluteAmount);
 
       final contextData = {
-        'budget': context.budget.totalAmount,
+        'budget': context.budget.monthlyBudget,
         'spent': totalSpent,
         'remaining': context.budgetRemaining,
         'streak': context.streak.currentStreak,

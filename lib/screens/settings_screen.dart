@@ -12,6 +12,7 @@ import '../widgets/financial_goals_form_widget.dart';
 import '../widgets/settings/anti_fragile_settings_widget.dart';
 import '../widgets/firebase_config_widget.dart';
 import '../widgets/settings/quick_actions_color_picker.dart';
+import '../widgets/settings/settings_accordion.dart';
 import '../widgets/theme_picker_widget.dart';
 import '../widgets/ui_helpers.dart';
 import '../data/repositories/firebase_backup_repository_impl.dart';
@@ -33,6 +34,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late final FirebaseBackupRepositoryImpl _cloudBackupRepo;
   Color _selectedQuickActionsColor = AppColors.fintechTeal;
+  DateTime? _lastBackupTime;
 
   @override
   void initState() {
@@ -54,6 +56,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _selectedQuickActionsColor = AppColors.fintechTeal;
     });
+
+    // Load last backup time
+    _loadLastBackupTime();
+  }
+
+  Future<void> _loadLastBackupTime() async {
+    final lastBackup = await _cloudBackupRepo.getLastBackupTime();
+    if (mounted) {
+      setState(() {
+        _lastBackupTime = lastBackup;
+      });
+    }
+  }
+
+  String _formatBackupTime(DateTime? time) {
+    if (time == null) return 'Never';
+
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        final minutes = difference.inMinutes;
+        return minutes <= 1 ? 'Just now' : '$minutes minutes ago';
+      }
+      return '${difference.inHours} hours ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${time.month}/${time.day}/${time.year}';
+    }
   }
 
   @override
@@ -353,8 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// Build data & sync section summary
   String _buildDataSyncSummary() {
-    // In a real implementation, this would check the last backup time
-    return 'Last backup: Today';
+    return 'Last backup: ${_formatBackupTime(_lastBackupTime)}';
   }
 
   Widget _buildInfoRow(String label, String value) {

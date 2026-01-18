@@ -118,7 +118,7 @@ class LlamaFFI {
       }
     } catch (e) {
       _logger.severe('Failed to load llama library: $e');
-      throw AIServiceException(
+      throw FFIException(
         'Failed to load llama.cpp native library. '
         'Make sure the native library is bundled with the app.',
         cause: e,
@@ -150,8 +150,8 @@ class LlamaFFI {
     try {
       final result = _llama_load_model_from_file(
         pathPtr,
-        contextLength as Int32,
-        gpuLayers as Int32,
+        contextLength,
+        gpuLayers,
       );
       return result;
     } finally {
@@ -181,7 +181,7 @@ class LlamaFFI {
       final result = _llama_generate(ctxId, promptPtr, outputBuffer.cast<Utf8>(), maxOutput);
 
       if (result < 0) {
-        throw AIServiceException('Generation failed with code: $result');
+        throw FFIException('Generation failed with code: $result');
       }
 
       // Convert to Dart string
@@ -198,10 +198,10 @@ class LlamaFFI {
     final tokensPtr = calloc<Int32>(maxTokens);
 
     try {
-      final count = _llama_tokenize(ctxId as Int32, textPtr, tokensPtr, maxTokens as Int32);
+      final count = _llama_tokenize(ctxId, textPtr, tokensPtr, maxTokens);
 
       if (count < 0) {
-        throw AIServiceException('Tokenization failed with code: $count');
+        throw FFIException('Tokenization failed with code: $count');
       }
 
       return tokensPtr.asTypedList(count).toList();
@@ -215,10 +215,10 @@ class LlamaFFI {
     final embeddingsPtr = calloc<Float>(size);
 
     try {
-      final result = _llama_get_embeddings(ctxId as Int32, embeddingsPtr, size as Int32);
+      final result = _llama_get_embeddings(ctxId, embeddingsPtr, size);
 
       if (result < 0) {
-        throw AIServiceException('Failed to get embeddings: $result');
+        throw FFIException('Failed to get embeddings: $result');
       }
 
       return embeddingsPtr.asTypedList(size).toList();
@@ -229,11 +229,11 @@ class LlamaFFI {
 }
 
 /// AI Service exception for errors during inference
-class AIServiceException implements Exception {
+class FFIException implements Exception {
   final String message;
   final Object? cause;
 
-  const AIServiceException(
+  const FFIException(
     this.message, {
     this.cause,
   });
@@ -241,7 +241,7 @@ class AIServiceException implements Exception {
   @override
   String toString() {
     final buffer = StringBuffer();
-    buffer.write('AIServiceException: $message');
+    buffer.write('FFIException: $message');
     if (cause != null) {
       buffer.write('\nCaused by: $cause');
     }

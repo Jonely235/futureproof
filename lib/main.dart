@@ -8,6 +8,8 @@ import 'providers/gamification_provider.dart';
 import 'providers/insight_provider.dart';
 import 'providers/ai_provider.dart';
 import 'providers/anti_fragile_wallet_provider.dart';
+import 'providers/settings_expansion_provider.dart';
+import 'providers/financial_goals_provider.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/gamification_repository_impl.dart';
@@ -156,6 +158,16 @@ class _FutureProofAppState extends State<FutureProofApp> {
             transactionRepository: widget.transactionRepository,
             settingsRepository: widget.antiFragileSettingsRepository,
           ),
+        ),
+
+        // Settings Expansion Provider - manages accordion state
+        ChangeNotifierProvider(
+          create: (_) => SettingsExpansionProvider(),
+        ),
+
+        // Financial Goals Provider - manages income and savings goals
+        ChangeNotifierProvider(
+          create: (_) => FinancialGoalsProvider(),
         ),
 
         // Theme manager
