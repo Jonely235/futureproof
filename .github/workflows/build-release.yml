@@ -1,4 +1,4 @@
-name: Build Release
+name: Build Release (Optimized)
 
 on:
   push:
@@ -15,6 +15,50 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ============================================
+      # CACHING STRATEGY
+      # ============================================
+      - name: Cache CocoaPods
+        id: cocoapods-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ios/Podfile.lock
+            ~/.cocoapods/repos
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .flutter_tool_state
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      - name: Cache Xcode DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('ios/**', '.flutter-plugins') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Cache CocoaPods Specs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cocoapods/specs
+          key: ${{ runner.os }}-cocoapods-specs-${{ hashFiles('ios/Podfile') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-specs-
+
+      # ============================================
+      # FLUTTER SETUP
+      # ============================================
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -28,17 +72,23 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # ============================================
+      # iOS PREPARATION - OPTIMIZED
+      # ============================================
       - name: Prepare iOS platform
         run: |
-          # Regenerate iOS folder for clean state
-          rm -rf ios
-          flutter create --platforms=ios . --project-name futureproof
+          # Only regenerate if iOS folder doesn't exist or Podfile changed
+          if [ ! -d "ios" ] || [ ! -f "ios/Podfile.lock" ]; then
+            echo "iOS folder missing or no Podfile.lock, regenerating..."
+            rm -rf ios
+            flutter create --platforms=ios . --project-name futureproof
+          else
+            echo "iOS folder exists, skipping regeneration"
+          fi
 
-          # Fix deployment target
+          # Always update deployment target to be safe
           cd ios
           sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
-
-          # Ensure Podfile has iOS 15.0
           sed -i.bak "s/platform :ios,.*/platform :ios, '15.0'/" Podfile
 
           # Add modular headers if not present
@@ -62,10 +112,29 @@ jobs:
           echo "Configured ad-hoc code signing"
           cd ..
 
+      # ============================================
+      # COCOAPODS INSTALL - WITH CONDITIONAL REPO-UPDATE
+      # ============================================
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+
+          # Only run repo-update if cache miss or Podfile.lock changed
+          if [ "${{ steps.cocoapods-cache.outputs.cache-hit }}" != "true" ]; then
+            echo "Cache miss - running pod install with repo-update..."
+            pod install --repo-update
+          else
+            echo "Cache hit - running pod install without repo-update (much faster)..."
+            pod install
+          fi
+
+      # ============================================
+      # BUILD - OPTIMIZED WITH LESS CLEANING
+      # ============================================
       - name: Build iOS app (with retry)
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 45
+          timeout_minutes: 30
           max_attempts: 3
           retry_wait_seconds: 60
           warning_on_retry: true
@@ -74,12 +143,8 @@ jobs:
 
             cd ios
 
-            # Clean build artifacts
-            rm -rf Pods Podfile.lock build
-            rm -rf ~/Library/Developer/Xcode/DerivedData/*
-
-            # Install pods
-            pod install --repo-update
+            # Only clean if explicitly needed (less aggressive)
+            rm -rf build/Runner.xcarchive
 
             echo "=== Building archive with xcodebuild ==="
             xcodebuild -workspace Runner.xcworkspace \
@@ -133,6 +198,9 @@ jobs:
           path: FutureProof.ipa
           retention-days: 30
 
+  # ============================================
+  # ANDROID BUILD - RUNS IN PARALLEL WITH iOS
+  # ============================================
   build-android:
     name: Build Android APK & AAB
     runs-on: ubuntu-latest
@@ -141,11 +209,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Cache for Gradle
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .flutter_tool_state
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -160,7 +250,7 @@ jobs:
       - name: Build Android APK (with retry)
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 30
+          timeout_minutes: 20
           max_attempts: 3
           retry_wait_seconds: 30
           warning_on_retry: true
@@ -169,7 +259,7 @@ jobs:
       - name: Build Android App Bundle (with retry)
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 30
+          timeout_minutes: 20
           max_attempts: 3
           retry_wait_seconds: 30
           warning_on_retry: true
