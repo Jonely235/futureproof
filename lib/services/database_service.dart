@@ -2,24 +2,80 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 import '../models/app_error.dart';
 import '../models/transaction.dart' as model;
 import '../utils/app_logger.dart';
 import '../utils/error_tracker.dart';
 
+/// Database service for multi-vault finance app
+///
+/// Each vault has its own isolated SQLite database.
+/// Use getDatabaseForVault(vaultId) to get a specific vault's database.
+/// For backward compatibility, the default database property returns
+/// the active vault's database (or a default database if no vault is active).
 class DatabaseService {
   static final _instance = DatabaseService._internal();
-  static Database? _database;
+  static final _databases = <String, Database>{};
   static final _log = Logger('DatabaseService');
 
-  final List<model.Transaction> _webTransactions = [];
+  // Default database for backward compatibility (used when no vault is active)
+  static Database? _defaultDatabase;
+
+  // Web transactions storage (per-vault)
+  final Map<String, List<model.Transaction>> _webTransactions = {};
+
+  // Active vault ID
+  String? _activeVaultId;
 
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
   bool get _isWeb => kIsWeb;
 
+  /// Set the active vault ID
+  void setActiveVault(String? vaultId) {
+    _activeVaultId = vaultId;
+    AppLogger.database.info('🔑 Active vault set to: $vaultId');
+  }
+
+  /// Get active vault ID
+  String? get activeVaultId => _activeVaultId;
+
+  /// Get database for a specific vault
+  Future<Database> getDatabaseForVault(String vaultId) async {
+    if (_isWeb) {
+      throw const AppError(
+        type: AppErrorType.database,
+        message: 'Database not available on web platform',
+        technicalDetails: 'Web platform uses in-memory storage only',
+      );
+    }
+
+    // Return cached database if available
+    if (_databases.containsKey(vaultId)) {
+      return _databases[vaultId]!;
+    }
+
+    try {
+      final db = await _initDatabaseForVault(vaultId);
+      _databases[vaultId] = db;
+      return db;
+    } catch (e, st) {
+      _log.severe('Error initializing database for vault: $vaultId', e);
+      throw AppError(
+        type: AppErrorType.database,
+        message: 'Could not initialize database for vault',
+        technicalDetails: 'Vault ID: $vaultId',
+        originalError: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Get the active vault's database (or default database for backward compatibility)
   Future<Database> get database async {
     if (_isWeb) {
       throw const AppError(
@@ -28,12 +84,20 @@ class DatabaseService {
         technicalDetails: 'Web platform uses in-memory storage only',
       );
     }
-    if (_database != null) return _database!;
+
+    // If active vault is set, use its database
+    if (_activeVaultId != null && _databases.containsKey(_activeVaultId)) {
+      return _databases[_activeVaultId]!;
+    }
+
+    // Otherwise, use default database (backward compatibility)
+    if (_defaultDatabase != null) return _defaultDatabase!;
+
     try {
-      _database = await _initDatabase();
-      return _database!;
+      _defaultDatabase = await _initDefaultDatabase();
+      return _defaultDatabase!;
     } catch (e, st) {
-      _log.severe('Error initializing database', e);
+      _log.severe('Error initializing default database', e);
       throw AppError(
         type: AppErrorType.database,
         message: 'Could not initialize database',
@@ -44,7 +108,39 @@ class DatabaseService {
     }
   }
 
-  Future<Database> _initDatabase() async {
+  /// Initialize database for a specific vault
+  Future<Database> _initDatabaseForVault(String vaultId) async {
+    if (_isWeb) {
+      _log.info('Using in-memory storage for web (UI testing only)');
+      throw const AppError(
+        type: AppErrorType.database,
+        message: 'Database not available on web platform',
+        technicalDetails: 'Web platform uses in-memory storage only',
+      );
+    }
+
+    // Get vault directory from app documents
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final vaultsDir = Directory('${appDocDir.path}/vaults/$vaultId');
+
+    // Create vault directory if it doesn't exist
+    if (!await vaultsDir.exists()) {
+      await vaultsDir.create(recursive: true);
+    }
+
+    final dbPath = join(vaultsDir.path, 'transactions.db');
+
+    AppLogger.database.info('📁 Vault database path: $dbPath');
+
+    return await openDatabase(
+      dbPath,
+      version: 1,
+      onCreate: _onCreate,
+    );
+  }
+
+  /// Initialize default database (backward compatibility)
+  Future<Database> _initDefaultDatabase() async {
     if (_isWeb) {
       _log.info('Using in-memory storage for web (UI testing only)');
       throw const AppError(
@@ -57,7 +153,7 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'futureproof.db');
 
-    AppLogger.database.info('📁 Database path: $path');
+    AppLogger.database.info('📁 Default database path: $path');
 
     return await openDatabase(
       path,
@@ -80,12 +176,29 @@ class DatabaseService {
     ''');
   }
 
-  Future<String> addTransaction(model.Transaction transaction) async {
+  /// Get web transactions for a vault
+  List<model.Transaction> _getWebTransactions(String vaultId) {
+    if (!_webTransactions.containsKey(vaultId)) {
+      _webTransactions[vaultId] = [];
+    }
+    return _webTransactions[vaultId]!;
+  }
+
+  Future<String> addTransaction(model.Transaction transaction, {String? vaultId}) async {
     try {
+      final effectiveVaultId = vaultId ?? _activeVaultId;
+
       if (_isWeb) {
-        _webTransactions.add(transaction);
+        // Web: use in-memory storage for the vault
+        final storage = effectiveVaultId ?? 'default';
+        _getWebTransactions(storage).add(transaction);
         return transaction.id;
       }
+
+      // Get the appropriate database
+      final db = effectiveVaultId != null
+          ? await getDatabaseForVault(effectiveVaultId)
+          : await database;
 
       if (transaction.id.isEmpty) {
         throw const AppError(
@@ -95,7 +208,6 @@ class DatabaseService {
         );
       }
 
-      final db = await database;
       final now = DateTime.now().millisecondsSinceEpoch;
       final data = {
         'id': transaction.id,
@@ -109,8 +221,10 @@ class DatabaseService {
 
       await db.insert('transactions', data,
           conflictAlgorithm: ConflictAlgorithm.replace);
+
+      final vaultMsg = effectiveVaultId != null ? ' [vault: $effectiveVaultId]' : '';
       AppLogger.database
-          .info('✅ Added transaction ${transaction.id} to SQLite');
+          .info('✅ Added transaction ${transaction.id} to SQLite$vaultMsg');
       return transaction.id;
     } catch (e, st) {
       AppLogger.database.severe('❌ Error adding transaction', e);
@@ -132,22 +246,31 @@ class DatabaseService {
     }
   }
 
-  Future<List<model.Transaction>> getAllTransactions() async {
+  Future<List<model.Transaction>> getAllTransactions({String? vaultId}) async {
     try {
+      final effectiveVaultId = vaultId ?? _activeVaultId;
+
       if (_isWeb) {
-        final transactions = List<model.Transaction>.from(_webTransactions);
+        // Web: use in-memory storage for the vault
+        final storage = effectiveVaultId ?? 'default';
+        final transactions = List<model.Transaction>.from(_getWebTransactions(storage));
         transactions.sort((a, b) => b.date.compareTo(a.date));
         return transactions;
       }
 
-      final db = await database;
+      // Get the appropriate database
+      final db = effectiveVaultId != null
+          ? await getDatabaseForVault(effectiveVaultId)
+          : await database;
+
       final List<Map<String, dynamic>> maps = await db.query(
         'transactions',
         orderBy: 'date DESC',
       );
 
+      final vaultMsg = effectiveVaultId != null ? ' [vault: $effectiveVaultId]' : '';
       AppLogger.database
-          .info('📊 Retrieved ${maps.length} transactions from SQLite');
+          .info('📊 Retrieved ${maps.length} transactions from SQLite$vaultMsg');
 
       if (maps.isEmpty) return [];
 
@@ -174,11 +297,15 @@ class DatabaseService {
 
   Future<List<model.Transaction>> getTransactionsByDateRange(
     DateTime start,
-    DateTime end,
-  ) async {
+    DateTime end, {
+    String? vaultId,
+  }) async {
     try {
+      final effectiveVaultId = vaultId ?? _activeVaultId;
+
       if (_isWeb) {
-        return _webTransactions
+        final storage = effectiveVaultId ?? 'default';
+        return _getWebTransactions(storage)
             .where((t) =>
                 t.date.isAfter(start.subtract(const Duration(days: 1))) &&
                 t.date.isBefore(end.add(const Duration(days: 1))))
@@ -186,7 +313,10 @@ class DatabaseService {
           ..sort((a, b) => b.date.compareTo(a.date));
       }
 
-      final db = await database;
+      final db = effectiveVaultId != null
+          ? await getDatabaseForVault(effectiveVaultId)
+          : await database;
+
       final List<Map<String, dynamic>> maps = await db.query(
         'transactions',
         where: 'date >= ? AND date <= ?',
@@ -218,13 +348,15 @@ class DatabaseService {
     }
   }
 
-  Future<bool> updateTransaction(model.Transaction transaction) async {
+  Future<bool> updateTransaction(model.Transaction transaction, {String? vaultId}) async {
     try {
+      final effectiveVaultId = vaultId ?? _activeVaultId;
+
       if (_isWeb) {
-        final index =
-            _webTransactions.indexWhere((t) => t.id == transaction.id);
+        final storage = effectiveVaultId ?? 'default';
+        final index = _getWebTransactions(storage).indexWhere((t) => t.id == transaction.id);
         if (index >= 0) {
-          _webTransactions[index] = transaction;
+          _getWebTransactions(storage)[index] = transaction;
           AppLogger.database
               .info('✅ Updated transaction ${transaction.id} in web memory');
           return true;
@@ -232,7 +364,10 @@ class DatabaseService {
         return false;
       }
 
-      final db = await database;
+      final db = effectiveVaultId != null
+          ? await getDatabaseForVault(effectiveVaultId)
+          : await database;
+
       final now = DateTime.now().millisecondsSinceEpoch;
       final data = {
         'id': transaction.id,
@@ -272,15 +407,21 @@ class DatabaseService {
     }
   }
 
-  Future<bool> deleteTransaction(String id) async {
+  Future<bool> deleteTransaction(String id, {String? vaultId}) async {
     try {
+      final effectiveVaultId = vaultId ?? _activeVaultId;
+
       if (_isWeb) {
-        _webTransactions.removeWhere((t) => t.id == id);
+        final storage = effectiveVaultId ?? 'default';
+        _getWebTransactions(storage).removeWhere((t) => t.id == id);
         AppLogger.database.info('✅ Deleted transaction $id from web memory');
         return true;
       }
 
-      final db = await database;
+      final db = effectiveVaultId != null
+          ? await getDatabaseForVault(effectiveVaultId)
+          : await database;
+
       final rowsAffected = await db.delete(
         'transactions',
         where: 'id = ?',
@@ -309,15 +450,21 @@ class DatabaseService {
     }
   }
 
-  Future<bool> deleteAllTransactions() async {
+  Future<bool> deleteAllTransactions({String? vaultId}) async {
     try {
+      final effectiveVaultId = vaultId ?? _activeVaultId;
+
       if (_isWeb) {
-        _webTransactions.clear();
+        final storage = effectiveVaultId ?? 'default';
+        _getWebTransactions(storage).clear();
         AppLogger.database.info('✅ Deleted all transactions from web memory');
         return true;
       }
 
-      final db = await database;
+      final db = effectiveVaultId != null
+          ? await getDatabaseForVault(effectiveVaultId)
+          : await database;
+
       await db.delete('transactions');
       AppLogger.database.info('✅ Deleted all transactions');
       return true;
@@ -341,13 +488,13 @@ class DatabaseService {
     }
   }
 
-  Future<double> getTotalForMonth(int year, int month) async {
+  Future<double> getTotalForMonth(int year, int month, {String? vaultId}) async {
     try {
       final start = DateTime(year, month, 1);
       final end =
           DateTime(year, month + 1, 1).subtract(const Duration(days: 1));
 
-      final transactions = await getTransactionsByDateRange(start, end);
+      final transactions = await getTransactionsByDateRange(start, end, vaultId: vaultId);
 
       final total = transactions
           .where((t) => t.amount < 0)
@@ -374,10 +521,30 @@ class DatabaseService {
     }
   }
 
-  Future<void> close() async {
+  Future<void> close({String? vaultId}) async {
     if (_isWeb) return;
-    final db = await database;
-    await db.close();
+
+    if (vaultId != null) {
+      // Close specific vault database
+      final db = _databases[vaultId];
+      if (db != null) {
+        await db.close();
+        _databases.remove(vaultId);
+        AppLogger.database.info('🔒 Closed vault database: $vaultId');
+      }
+    } else {
+      // Close all databases
+      for (final db in _databases.values) {
+        await db.close();
+      }
+      _databases.clear();
+
+      if (_defaultDatabase != null) {
+        await _defaultDatabase!.close();
+        _defaultDatabase = null;
+      }
+      AppLogger.database.info('🔒 Closed all databases');
+    }
   }
 
   model.Transaction _transactionFromMap(Map<String, dynamic> map) {

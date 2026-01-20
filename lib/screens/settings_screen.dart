@@ -6,24 +6,23 @@ import 'package:provider/provider.dart';
 import '../config/app_colors.dart';
 import '../providers/settings_expansion_provider.dart';
 import '../providers/financial_goals_provider.dart';
+import '../providers/vault_provider.dart';
 import '../providers/ai_provider.dart';
-import '../widgets/backup_section_widget.dart';
 import '../widgets/financial_goals_form_widget.dart';
 import '../widgets/settings/anti_fragile_settings_widget.dart';
-import '../widgets/firebase_config_widget.dart';
-import '../widgets/settings/quick_actions_color_picker.dart';
+import '../widgets/vault_switcher_widget.dart';
 import '../widgets/settings/settings_accordion.dart';
 import '../widgets/theme_picker_widget.dart';
 import '../widgets/ui_helpers.dart';
-import '../data/repositories/firebase_backup_repository_impl.dart';
 import 'debug/error_history_screen.dart';
 import 'ai_settings_screen.dart';
+import 'vault_browser_screen.dart';
 
 /// Settings Screen
 ///
 /// Redesigned with accordion-style progressive disclosure.
 /// Sections expand/collapse with smooth animations.
-/// Premium Quick Actions card removed (moved to home screen).
+/// Multi-vault system with iCloud sync.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -32,78 +31,15 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late final FirebaseBackupRepositoryImpl _cloudBackupRepo;
-  Color _selectedQuickActionsColor = AppColors.fintechTeal;
-  DateTime? _lastBackupTime;
-
   @override
   void initState() {
     super.initState();
-    _cloudBackupRepo = FirebaseBackupRepositoryImpl();
 
     // Initialize expansion state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SettingsExpansionProvider>().loadState();
       context.read<FinancialGoalsProvider>().loadGoals();
     });
-
-    _loadSavedColor();
-  }
-
-  Future<void> _loadSavedColor() async {
-    // Load saved color from shared preferences
-    // For now, just use the default
-    setState(() {
-      _selectedQuickActionsColor = AppColors.fintechTeal;
-    });
-
-    // Load last backup time
-    _loadLastBackupTime();
-  }
-
-  Future<void> _loadLastBackupTime() async {
-    final lastBackup = await _cloudBackupRepo.getLastBackupTime();
-    if (mounted) {
-      setState(() {
-        _lastBackupTime = lastBackup;
-      });
-    }
-  }
-
-  String _formatBackupTime(DateTime? time) {
-    if (time == null) return 'Never';
-
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inDays == 0) {
-      if (difference.inHours == 0) {
-        final minutes = difference.inMinutes;
-        return minutes <= 1 ? 'Just now' : '$minutes minutes ago';
-      }
-      return '${difference.inHours} hours ago';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
-    } else {
-      return '${time.month}/${time.day}/${time.year}';
-    }
-  }
-
-  @override
-  void dispose() {
-    _cloudBackupRepo.dispose();
-    super.dispose();
-  }
-
-  void _showSyncSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sync started...'),
-        duration: Duration(seconds: 2),
-      ),
-    );
   }
 
   @override
@@ -134,10 +70,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Content with Accordion
           SliverToBoxAdapter(
-            child: Consumer2<SettingsExpansionProvider, FinancialGoalsProvider>(
-              builder: (context, expansionProvider, goalsProvider, child) {
+            child: Consumer3<SettingsExpansionProvider, FinancialGoalsProvider, VaultProvider>(
+              builder: (context, expansionProvider, goalsProvider, vaultProvider, child) {
                 return SettingsAccordion(
                   children: [
+                    const SizedBox(height: 16),
+
+                    // ========== VAULTS SECTION (Expanded by default) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 100),
+                      child: SettingsAccordionSection(
+                        sectionId: 'vaults',
+                        icon: Icons.folder_open,
+                        title: 'Vaults',
+                        summary: _buildVaultsSummary(vaultProvider),
+                        iconColor: AppColors.fintechTeal,
+                        isExpanded: expansionProvider.isExpanded('vaults'),
+                        children: [
+                          // Active vault switcher
+                          VaultSwitcherWidget(
+                            currentVault: vaultProvider.activeVault,
+                            onVaultSwitch: (vault) async {
+                              final success = await vaultProvider.setActiveVault(vault.id);
+                              if (success && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Switched to "${vault.name}"'),
+                                    backgroundColor: AppColors.fintechTeal,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          // Vault management button
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.folder),
+                            title: Text(
+                              'Manage Vaults',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Create, switch, or delete vaults',
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 12,
+                                color: AppColors.gray700,
+                              ),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const VaultBrowserScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
                     const SizedBox(height: 16),
 
                     // ========== FINANCE SECTION (Expanded by default) ==========
@@ -173,26 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           ThemePickerWidget(
                             onThemeChanged: (theme) {
-                              // Trigger rebuild
                               setState(() {});
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Quick Actions Style',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.gray700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          QuickActionsColorPicker(
-                            selectedColor: _selectedQuickActionsColor,
-                            onColorSelected: (color) {
-                              setState(() {
-                                _selectedQuickActionsColor = color;
-                              });
                             },
                           ),
                         ],
@@ -269,28 +248,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ========== DATA & SYNC SECTION (Collapsed by default) ==========
-                    FadeInWidget(
-                      delay: const Duration(milliseconds: 500),
-                      child: SettingsAccordionSection(
-                        sectionId: 'data',
-                        icon: Icons.cloud_sync,
-                        title: 'Data & Sync',
-                        summary: _buildDataSyncSummary(),
-                        iconColor: AppColors.fintechTrust,
-                        isExpanded: expansionProvider.isExpanded('data'),
-                        children: [
-                          FirebaseConfigWidget(
-                            cloudBackupRepo: _cloudBackupRepo,
-                          ),
-                          const SizedBox(height: 16),
-                          const BackupSectionWidget(),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
                     // ========== ABOUT SECTION (Collapsed by default) ==========
                     FadeInWidget(
                       delay: const Duration(milliseconds: 600),
@@ -298,13 +255,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         sectionId: 'about',
                         icon: Icons.info,
                         title: 'About',
-                        summary: 'Version 1.0.0',
+                        summary: 'Version 2.0.0',
                         iconColor: AppColors.gray700,
                         isExpanded: expansionProvider.isExpanded('about'),
                         children: [
-                          _buildInfoRow('Version', '1.0.0'),
-                          _buildInfoRow('Build', 'MVP Complete'),
-                          _buildInfoRow('Status', '🎉 Ready'),
+                          _buildInfoRow('Version', '2.0.0'),
+                          _buildInfoRow('Build', 'Multi-Vault'),
+                          _buildInfoRow('Sync', 'iCloud (iOS)'),
                         ],
                       ),
                     ),
@@ -366,6 +323,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Build vaults section summary
+  String _buildVaultsSummary(VaultProvider vaultProvider) {
+    final count = vaultProvider.vaults.length;
+    final activeName = vaultProvider.activeVault?.name ?? 'None';
+    return '$count vault(s) | Active: $activeName';
+  }
+
   /// Build finance section summary
   String _buildFinanceSummary(FinancialGoalsProvider provider) {
     if (provider.isLoading) {
@@ -384,11 +348,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final aiProvider = context.read<AIProvider>();
     final isReady = aiProvider.isReady;
     return isReady ? 'Model: Ready' : 'Model: Not Setup';
-  }
-
-  /// Build data & sync section summary
-  String _buildDataSyncSummary() {
-    return 'Last backup: ${_formatBackupTime(_lastBackupTime)}';
   }
 
   Widget _buildInfoRow(String label, String value) {

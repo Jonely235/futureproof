@@ -17,9 +17,13 @@ class AppLogger {
   static final _analyticsUI = Logger('AnalyticsUI');
   static final _provider = Logger('Provider');
   static final _widgets = Logger('Widgets');
+  static final _vaults = Logger('Vaults');
 
   /// Get UI logger for screen/widget related logs
   static Logger get ui => _ui;
+
+  /// Get Vaults logger for vault operations
+  static Logger get vaults => _vaults;
 
   /// Get Database logger for storage operations
   static Logger get database => _database;

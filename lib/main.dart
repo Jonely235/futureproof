@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'providers/transaction_provider.dart';
 import 'providers/gamification_provider.dart';
@@ -10,12 +9,12 @@ import 'providers/ai_provider.dart';
 import 'providers/anti_fragile_wallet_provider.dart';
 import 'providers/settings_expansion_provider.dart';
 import 'providers/financial_goals_provider.dart';
+import 'providers/vault_provider.dart';
 import 'data/repositories/transaction_repository_impl.dart';
 import 'data/repositories/budget_repository_impl.dart';
 import 'data/repositories/gamification_repository_impl.dart';
 import 'data/repositories/anti_fragile_settings_repository_impl.dart';
-import 'data/repositories/firebase_backup_repository_impl.dart';
-import 'domain/repositories/cloud_backup_repository.dart';
+import 'data/repositories/file_vault_repository_impl.dart';
 import 'domain/services/streak_calculator_service.dart';
 import 'domain/services/achievement_service.dart';
 import 'domain/services/budget_comparison_service.dart';
@@ -66,8 +65,8 @@ void main() async {
   final gamificationRepository = GamificationRepositoryImpl();
   final antiFragileSettingsRepository = AntiFragileSettingsRepositoryImpl();
 
-  // Firebase Cloud Backup is initialized lazily when user configures it
-  // Don't create it here to avoid Firebase errors on web/mobile
+  // Initialize multi-vault system
+  final vaultRepository = FileVaultRepositoryImpl();
 
   // Initialize domain services
   final streakCalculatorService = StreakCalculatorService();
@@ -81,6 +80,7 @@ void main() async {
     budgetRepository: budgetRepository,
     gamificationRepository: gamificationRepository,
     antiFragileSettingsRepository: antiFragileSettingsRepository,
+    vaultRepository: vaultRepository,
     streakCalculatorService: streakCalculatorService,
     achievementService: achievementService,
     budgetComparisonService: budgetComparisonService,
@@ -94,6 +94,7 @@ class FutureProofApp extends StatefulWidget {
   final BudgetRepositoryImpl budgetRepository;
   final GamificationRepositoryImpl gamificationRepository;
   final AntiFragileSettingsRepositoryImpl antiFragileSettingsRepository;
+  final FileVaultRepositoryImpl vaultRepository;
   final StreakCalculatorService streakCalculatorService;
   final AchievementService achievementService;
   final BudgetComparisonService budgetComparisonService;
@@ -106,6 +107,7 @@ class FutureProofApp extends StatefulWidget {
     required this.budgetRepository,
     required this.gamificationRepository,
     required this.antiFragileSettingsRepository,
+    required this.vaultRepository,
     required this.streakCalculatorService,
     required this.achievementService,
     required this.budgetComparisonService,
@@ -121,6 +123,13 @@ class _FutureProofAppState extends State<FutureProofApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // NEW: Vault provider - manages multi-vault system
+        ChangeNotifierProvider(
+          create: (_) => VaultProvider(
+            vaultRepository: widget.vaultRepository,
+          )..initialize(),
+        ),
+
         // Existing provider (will be refactored later to use repository)
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
 

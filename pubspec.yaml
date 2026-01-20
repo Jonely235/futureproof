@@ -20,9 +20,9 @@ dependencies:
   # Utilities
   intl: ^0.18.1
   uuid: ^4.3.3
-  logging: ^1.2.0
+  logging: ^1.1.0
 
-  # Data Persistence (Phase 1: SQLite - MVP without Firebase)
+  # Data Persistence (SQLite with multi-vault support)
   # PINNED to 2.3.3 - 2.4.2+ requires Dart 3.7+ (Flutter 3.27.0 uses Dart 3.6)
   sqflite: 2.3.3
   sqflite_common_ffi: 2.3.3
@@ -30,11 +30,9 @@ dependencies:
   path_provider: ^2.1.1
   shared_preferences: ^2.2.2
 
-  # Cloud Sync (Firebase)
-  firebase_core: ^3.6.0
-  cloud_firestore: ^5.4.0
-  firebase_auth: ^5.3.0
-  device_info_plus: ^10.1.0
+  # Cloud Sync (iCloud via CloudKit - iOS only)
+  # Native iOS integration via CloudKit
+  # No additional Flutter packages needed for basic sync
 
   # AI/ML - On-Device Llama Integration
   ffi: ^2.1.0
