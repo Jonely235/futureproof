@@ -58,3 +58,22 @@ Desktop.ini
 *.swp
 *~.nib
 build/
+
+# Build artifacts (root level)
+*.ipa
+*.apk
+*.aab
+
+# Build logs
+build_log.txt
+full_log.txt
+flutter_analyze_output.txt
+output.txt
+
+# Temp directories
+tmpclaude-*/
+nul
+
+# Monitor scripts (optional - remove if needed in repo)
+monitor_*.ps1
+monitor_*.sh
