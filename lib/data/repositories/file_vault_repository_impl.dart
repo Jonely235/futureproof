@@ -132,6 +132,9 @@ class FileVaultRepositoryImpl implements VaultRepository {
       // Save vault metadata
       await _fileService.saveVaultMetadata(vault);
 
+      // Add vault to index (CRITICAL: without this, vault won't appear in getAllVaults)
+      await _fileService.addVaultToIndex(vault);
+
       // Invalidate cache
       _invalidateCache();
 

@@ -234,7 +234,10 @@ class VaultFileService {
   }
 
   /// Update vault index with new vault
-  Future<void> _addVaultToIndex(VaultEntity vault) async {
+  ///
+  /// Adds a vault to the vault_index.json registry file.
+  /// This is required for the vault to appear in getAllVaults().
+  Future<void> addVaultToIndex(VaultEntity vault) async {
     if (kIsWeb) return;
 
     final indexFile = await _getVaultIndexFile();
