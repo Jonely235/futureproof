@@ -17,8 +17,7 @@ import 'vault_edit_screen.dart';
 
 /// Vault management screen - advanced vault operations
 ///
-/// Features: search, filter, sort, drag-to-reorder,
-/// swipe-to-delete, edit vault.
+/// Features: search, filter, sort, swipe-to-delete, edit vault.
 class VaultManagementScreen extends StatefulWidget {
   const VaultManagementScreen({super.key});
 
@@ -43,7 +42,7 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
             elevation: 0,
             backgroundColor: Colors.white,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.close, size: 24),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
@@ -194,35 +193,16 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
                 );
               }
 
-              // Use ReorderableListView for drag-to-reorder
+              // Use SliverList for vault display
               return SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                sliver: ReorderableListView(
-                  onReorder: (oldIndex, newIndex) async {
-                    if (oldIndex != newIndex) {
-                      await provider.reorderVaults(oldIndex, newIndex);
-                    }
-                  },
-                  proxyDecorator: (child, index, animation) {
-                    return AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, animatedChild) {
-                        return ReorderableDelayedDragStartListener(
-                          index: index,
-                          key: ValueKey(displayVaults[index].id),
-                          child: animatedChild ?? child,
-                        );
-                      },
-                      child: _buildDraggableCard(
-                        displayVaults[index],
-                        provider,
-                      ),
-                    );
-                  },
-                  children: [
-                    for (int index = 0; index < displayVaults.length; index++)
-                      _buildVaultCard(displayVaults[index], provider, index),
-                  ],
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return _buildVaultCard(displayVaults[index], provider, index);
+                    },
+                    childCount: displayVaults.length,
+                  ),
                 ),
               );
             },
@@ -233,73 +213,50 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
   }
 
   Widget _buildVaultCard(VaultEntity vault, VaultProvider provider, int index) {
-    return ReorderableDelayedDragStartListener(
+    return Dismissible(
       key: ValueKey(vault.id),
-      index: index,
-      child: Dismissible(
-        key: ValueKey(vault.id),
-        background: Container(
-          color: AppColors.danger.withOpacity(0.1),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.delete, color: AppColors.danger, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                'Delete Vault',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.danger,
-                ),
+      background: Container(
+        color: AppColors.danger.withOpacity(0.1),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.delete, color: AppColors.danger, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              'Delete Vault',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.danger,
               ),
-            ],
-          ),
-        ),
-        onDismissed: (direction) async {
-          if (direction == DismissDirection.endToStart) {
-            await _showDeleteDialog(context, vault, provider);
-          }
-        },
-        child: VaultCardWidget(
-          vault: vault,
-          isActive: vault.isActive,
-          enableGestures: true,
-          reorderKey: ValueKey(vault.id),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            // Just a tap, don't activate (go to edit instead)
-            _showVaultOptions(context, vault, provider);
-          },
-          onLongPress: () {
-            HapticFeedback.mediumImpact();
-            _showVaultOptions(context, vault, provider);
-          },
-          onDelete: vault.isActive
-              ? null
-              : () => _showDeleteDialog(context, vault, provider),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDraggableCard(VaultEntity vault, VaultProvider provider) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.fintechTeal.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(16),
-      ),
+      onDismissed: (direction) async {
+        if (direction == DismissDirection.endToStart) {
+          await _showDeleteDialog(context, vault, provider);
+        }
+      },
       child: VaultCardWidget(
         vault: vault,
         isActive: vault.isActive,
-        enableGestures: false, // Gestures handled by parent
+        enableGestures: true,
         reorderKey: ValueKey(vault.id),
         onTap: () {
           HapticFeedback.lightImpact();
+          // Just a tap, don't activate (go to edit instead)
           _showVaultOptions(context, vault, provider);
         },
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          _showVaultOptions(context, vault, provider);
+        },
+        onDelete: vault.isActive
+            ? null
+            : () => _showDeleteDialog(context, vault, provider),
       ),
     );
   }

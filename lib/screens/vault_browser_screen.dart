@@ -139,6 +139,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const VaultManagementScreen(),
+                            fullscreenDialog: true,
                           ),
                         );
                       },
@@ -318,6 +319,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => const VaultManagementScreen(),
+                fullscreenDialog: true,
               ),
             );
           },
@@ -467,6 +469,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const VaultManagementScreen(),
+                      fullscreenDialog: true,
                     ),
                   );
                 },
@@ -505,6 +508,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const VaultManagementScreen(),
+                    fullscreenDialog: true,
                   ),
                 );
               },

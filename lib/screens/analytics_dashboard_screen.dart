@@ -19,7 +19,7 @@ import '../widgets/ui_helpers.dart';
 
 /// Analytics Dashboard Screen
 ///
-/// Complete financial intelligence dashboard with:
+/// Refined, monochromatic financial intelligence dashboard with:
 /// - Spending overview and stats
 /// - Category breakdown (pie chart)
 /// - Monthly trends (bar chart)
@@ -189,22 +189,23 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                   backgroundColor: Colors.white,
                   child: CustomScrollView(
                     slivers: [
-                      // App Bar
+                      // App Bar - Minimal, clean
                       SliverAppBar(
-                        expandedHeight: 140,
+                        expandedHeight: 100,
                         floating: false,
                         pinned: true,
                         elevation: 0,
                         backgroundColor: Colors.white,
                         flexibleSpace: FlexibleSpaceBar(
                           titlePadding:
-                              const EdgeInsets.only(left: 16, bottom: 12),
+                              const EdgeInsets.only(left: 20, bottom: 12),
                           title: Text(
                             'Analytics',
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.black,
+                              letterSpacing: -0.3,
                             ),
                           ),
                         ),
@@ -215,9 +216,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Overview Cards
+                            // Overview Cards - Refined
                             _buildOverviewSection(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 32),
 
                             // Spend Velocity Chart
                             if (_analysis!.monthlyTrends.length >= 2)
@@ -250,33 +251,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.black,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Financial Overview',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
-            ],
-          ),
+        // Section Header - Refined
+        const RefinedSectionHeader(
+          title: 'Financial Overview',
         ),
 
-        // Stats Grid
+        // Stats Grid - Minimal monochrome cards
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -284,7 +264,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
               Row(
                 children: [
                   Expanded(
-                    child: _buildModernStatCard(
+                    child: RefinedStatCard(
                       'Total Spending',
                       '\$${_analysis!.totalSpending.toStringAsFixed(0)}',
                       Icons.account_balance_wallet_outlined,
@@ -292,8 +272,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildModernStatCard(
-                      'Average/Month',
+                    child: RefinedStatCard(
+                      'Monthly Average',
                       '\$${_analysis!.averageMonthlySpending.toStringAsFixed(0)}',
                       Icons.calendar_month_outlined,
                     ),
@@ -304,20 +284,18 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
               Row(
                 children: [
                   Expanded(
-                    child: _buildModernStatCard(
+                    child: RefinedStatCard(
                       'Savings',
                       '\$${_quickStats!['savings'].toStringAsFixed(0)}',
                       Icons.savings_outlined,
-                      isPositive: _quickStats!['isOnTrack'] ?? false,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildModernStatCard(
+                    child: RefinedStatCard(
                       'Savings Rate',
                       '${_quickStats!['savingsRate'].toStringAsFixed(1)}%',
                       Icons.percent_outlined,
-                      isPositive: _quickStats!['savingsRate'] >= 20,
                     ),
                   ),
                 ],
@@ -333,29 +311,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.black,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Spend Velocity',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
-            ],
-          ),
+        const RefinedSectionHeader(
+          title: 'Spend Velocity',
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -364,37 +321,6 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildModernStatCard(
-    String title,
-    String value,
-    IconData icon, {
-    bool isPositive = true,
-  }) {
-    // Use different gradient for each card based on title
-    final gradients = {
-      'Total Spending': [AppColors.fintechTeal, AppColors.fintechTealLight],
-      'Average/Month': [AppColors.fintechNavy, AppColors.fintechIndigo],
-      'Savings': [AppColors.fintechTrust, AppColors.fintechGrowth],
-      'Savings Rate': [AppColors.fintechTeal, AppColors.fintechIndigo],
-    };
-
-    final cardGradient = gradients[title] ?? [
-      AppColors.fintechTeal,
-      AppColors.fintechTealLight
-    ];
-
-    return FadeInWidget(
-      delay: const Duration(milliseconds: 100),
-      child: FintechStatCard(
-        title: title,
-        value: value,
-        icon: icon,
-        gradientColors: cardGradient.map((c) => c).toList(),
-        isPositive: isPositive,
-      ),
     );
   }
 
@@ -408,31 +334,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.black,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Spending by Category',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
-            ],
-          ),
+        const RefinedSectionHeader(
+          title: 'Spending by Category',
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         // Interactive donut chart
         Center(
           child: InteractiveDonutChart(
@@ -452,7 +357,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
         const SizedBox(height: 24),
         // Category legend
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: CategoryLegendWidget(
             categorySpending: _analysis!.byCategory,
             totalSpending: totalSpending,
@@ -468,7 +373,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
             },
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         // Horizontal bar chart
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -478,9 +383,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
               Text(
                 'Category Breakdown',
                 style: GoogleFonts.spaceGrotesk(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.black,
+                  color: AppColors.gray700,
+                  letterSpacing: 0.3,
                 ),
               ),
               const SizedBox(height: 12),
@@ -559,31 +465,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.black,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'AI Insights',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
-            ],
-          ),
+        const RefinedSectionHeader(
+          title: 'AI Insights',
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         ...topInsights.map((insight) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -614,8 +499,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                   ),
                 );
               },
-              icon: const Icon(Icons.arrow_forward),
+              icon: const Icon(Icons.arrow_forward, size: 18),
               label: const Text('View All Insights'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.charcoal,
+              ),
             ),
           ),
       ],
