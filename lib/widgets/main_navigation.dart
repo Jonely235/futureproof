@@ -8,8 +8,6 @@ import '../screens/analytics_dashboard_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/transaction_history_screen.dart';
-import '../screens/ai_advisor_screen.dart';
-import '../screens/ai_settings_screen.dart';
 
 /// Main Navigation Widget
 ///
@@ -28,7 +26,6 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomeScreen(),
     const TransactionHistoryScreen(),
     const AnalyticsDashboardScreen(),
-    const AIAdvisorScreen(),
     const SettingsScreen(),
   ];
 
@@ -66,10 +63,6 @@ class _MainNavigationState extends State<MainNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
             label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy),
-            label: 'AI Advisor',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

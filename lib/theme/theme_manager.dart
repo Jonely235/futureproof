@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages theme selection and persistence
-class ThemeManager {
+class ThemeManager extends ChangeNotifier {
   static const String _themeKey = 'selected_theme';
 
   // Available themes
@@ -16,6 +16,7 @@ class ThemeManager {
     AppTheme.cherryBlossom,
     AppTheme.goldenHour,
     AppTheme.arcticFrost,
+    AppTheme.obsidianDark,
   ];
 
   // Current theme
@@ -46,6 +47,8 @@ class ThemeManager {
     } catch (e) {
       // Silently fail - theme will still work, just won't persist
     }
+    // Notify listeners to rebuild UI
+    notifyListeners();
   }
 
   /// Get theme data for current theme
@@ -69,6 +72,8 @@ class ThemeManager {
         return _buildGoldenHourTheme();
       case AppTheme.arcticFrost:
         return _buildArcticFrostTheme();
+      case AppTheme.obsidianDark:
+        return _buildObsidianDarkTheme();
     }
   }
 
@@ -412,6 +417,52 @@ class ThemeManager {
       ),
     );
   }
+
+  /// Obsidian Dark theme - true dark mode with vibrant accents
+  ThemeData _buildObsidianDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF00E5FF),
+        onPrimary: Color(0xFF000000),
+        primaryContainer: Color(0xFF00B8CC),
+        onPrimaryContainer: Color(0xFF000000),
+        secondary: Color(0xFF7C4DFF),
+        onSecondary: Color(0xFFFFFFFF),
+        surface: Color(0xFF121212),
+        onSurface: Color(0xFFE0E0E0),
+        error: Color(0xFFFF5252),
+        onError: Color(0xFF000000),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0A0A0A),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        elevation: 0,
+        backgroundColor: Color(0xFF1A1A1A),
+        foregroundColor: Color(0xFF00E5FF),
+        iconTheme: IconThemeData(color: Color(0xFF00E5FF)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFFE0E0E0),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        color: const Color(0xFF1E1E1E),
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFF1A1A1A),
+        selectedItemColor: Color(0xFF00E5FF),
+        unselectedItemColor: Color(0xFF757575),
+      ),
+    );
+  }
 }
 
 /// Available themes enum
@@ -424,7 +475,8 @@ enum AppTheme {
   midnightBlue,
   cherryBlossom,
   goldenHour,
-  arcticFrost;
+  arcticFrost,
+  obsidianDark;
 
   String get displayName {
     switch (this) {
@@ -446,6 +498,8 @@ enum AppTheme {
         return 'Golden Hour';
       case arcticFrost:
         return 'Arctic Frost';
+      case obsidianDark:
+        return 'Obsidian Dark';
     }
   }
 
@@ -469,6 +523,8 @@ enum AppTheme {
         return 'Warm gold and orange, sunny feel';
       case arcticFrost:
         return 'White and icy blue, fresh and clean';
+      case obsidianDark:
+        return 'True dark mode with cyan and purple accents';
     }
   }
 
@@ -492,6 +548,8 @@ enum AppTheme {
         return const Color(0xFFFF6F00);
       case arcticFrost:
         return const Color(0xFF00BCD4);
+      case obsidianDark:
+        return const Color(0xFF00E5FF);
     }
   }
 }

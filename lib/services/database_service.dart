@@ -21,6 +21,20 @@ class DatabaseService {
   static final _databases = <String, Database>{};
   static final _log = Logger('DatabaseService');
 
+  /// Sanitize vault ID to prevent path traversal attacks
+  static String _sanitizeVaultId(String vaultId) {
+    // Remove any path separators and special characters
+    final sanitized = vaultId.replaceAll(RegExp(r'[\\/<>:"|?*]'), '');
+    if (sanitized.isEmpty) {
+      throw const AppError(
+        type: AppErrorType.validation,
+        message: 'Invalid vault ID',
+        technicalDetails: 'Vault ID cannot be empty or contain only special characters',
+      );
+    }
+    return sanitized;
+  }
+
   // Default database for backward compatibility (used when no vault is active)
   static Database? _defaultDatabase;
 
@@ -119,9 +133,12 @@ class DatabaseService {
       );
     }
 
+    // Sanitize vault ID to prevent path traversal
+    final sanitizedVaultId = _sanitizeVaultId(vaultId);
+
     // Get vault directory from app documents
     final appDocDir = await getApplicationDocumentsDirectory();
-    final vaultsDir = Directory('${appDocDir.path}/vaults/$vaultId');
+    final vaultsDir = Directory('${appDocDir.path}/vaults/$sanitizedVaultId');
 
     // Create vault directory if it doesn't exist
     if (!await vaultsDir.exists()) {
@@ -163,6 +180,7 @@ class DatabaseService {
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    // Transactions table
     await db.execute('''
       CREATE TABLE transactions(
         id TEXT PRIMARY KEY,
@@ -174,6 +192,53 @@ class DatabaseService {
         updated_at INTEGER NOT NULL
       )
     ''');
+
+    // User profiles table for behavioral insights personalization
+    await db.execute('''
+      CREATE TABLE user_profiles(
+        id TEXT PRIMARY KEY,
+        personality_type TEXT NOT NULL DEFAULT 'spender',
+        life_stage TEXT NOT NULL DEFAULT 'earlyCareer',
+        stress_level TEXT NOT NULL DEFAULT 'medium',
+        enabled_categories TEXT NOT NULL DEFAULT '',
+        preferred_time TEXT NOT NULL DEFAULT '08:00',
+        max_insights_per_day INTEGER NOT NULL DEFAULT 5,
+        cooldown_hours INTEGER NOT NULL DEFAULT 4,
+        war_mode_enabled INTEGER NOT NULL DEFAULT 0,
+        location_alerts_enabled INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Behavioral insights table
+    await db.execute('''
+      CREATE TABLE behavioral_insights(
+        id TEXT PRIMARY KEY,
+        rule_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        priority INTEGER NOT NULL,
+        action_label TEXT,
+        action_deep_link TEXT,
+        metadata TEXT,
+        generated_at INTEGER NOT NULL,
+        expires_at INTEGER,
+        is_dismissed INTEGER NOT NULL DEFAULT 0,
+        display_count INTEGER NOT NULL DEFAULT 0,
+        last_displayed_at INTEGER,
+        action_performed INTEGER NOT NULL DEFAULT 0,
+        action_performed_at INTEGER
+      )
+    ''');
+
+    // Create indexes for performance
+    await db.execute('CREATE INDEX idx_insights_category ON behavioral_insights(category)');
+    await db.execute('CREATE INDEX idx_insights_priority ON behavioral_insights(priority)');
+    await db.execute('CREATE INDEX idx_insights_generated_at ON behavioral_insights(generated_at)');
+    await db.execute('CREATE INDEX idx_insights_rule_id ON behavioral_insights(rule_id)');
   }
 
   /// Get web transactions for a vault

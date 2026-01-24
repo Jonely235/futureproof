@@ -13,8 +13,8 @@ class CloudKitService {
 
     private init() {
         // Initialize CloudKit container
-        // Note: Replace "iCloud.com.yourcompany.futureproof" with your actual container ID
-        self.container = CKContainer(identifier: "iCloud.com.yourcompany.futureproof")
+        // Note: Replace "iCloud.com.example.futureproof" with your actual container ID
+        self.container = CKContainer(identifier: "iCloud.com.example.futureproof")
         self.privateDatabase = container.privateCloudDatabase
     }
 

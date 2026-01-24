@@ -8,16 +8,15 @@ import '../design/design_tokens.dart';
 import '../providers/settings_expansion_provider.dart';
 import '../providers/financial_goals_provider.dart';
 import '../providers/vault_provider.dart';
-import '../providers/ai_provider.dart';
 import '../widgets/financial_goals_form_widget.dart';
 import '../widgets/settings/anti_fragile_settings_widget.dart';
 import '../widgets/vault_switcher_widget.dart';
 import '../widgets/settings/settings_accordion.dart';
 import '../widgets/theme_picker_widget.dart';
+import '../theme/theme_manager.dart';
 import '../widgets/ui_helpers.dart';
 import '../widgets/backup_sync_widget.dart';
 import 'debug/error_history_screen.dart';
-import 'ai_settings_screen.dart';
 import 'vault_browser_screen.dart';
 
 /// Settings Screen
@@ -198,51 +197,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ========== AI SETTINGS SECTION (SIMPLIFIED) ==========
-                    FadeInWidget(
-                      delay: const Duration(milliseconds: 400),
-                      child: SettingsAccordionSection(
-                        sectionId: 'ai',
-                        icon: Icons.smart_toy,
-                        title: 'AI Advisor',
-                        summary: _buildAISummary(),
-                        iconColor: AppColors.fintechIndigo,
-                        isExpanded: expansionProvider.isExpanded('ai'),
-                        children: [
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.settings),
-                            title: Text(
-                              'AI Configuration',
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.black,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Manage AI model & settings',
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 12,
-                                color: AppColors.gray700,
-                              ),
-                            ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const AISettingsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
                     // ========== ABOUT SECTION ==========
                     FadeInWidget(
                       delay: const Duration(milliseconds: 500),
@@ -333,14 +287,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// Build appearance section summary
   String _buildAppearanceSummary() {
-    return 'Theme: System | Accent: Teal';
-  }
-
-  /// Build AI section summary
-  String _buildAISummary() {
-    final aiProvider = context.read<AIProvider>();
-    final isReady = aiProvider.isReady;
-    return isReady ? 'Ready' : 'Not Setup';
+    final themeManager = context.read<ThemeManager>();
+    final themeName = themeManager.currentTheme.displayName;
+    return 'Theme: $themeName';
   }
 
   Widget _buildInfoRow(String label, String value) {
