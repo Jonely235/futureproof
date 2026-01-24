@@ -10,10 +10,14 @@ import '../providers/insight_provider.dart';
 import '../providers/anti_fragile_wallet_provider.dart';
 import '../widgets/virtual_vault_widget.dart';
 import '../widgets/vault_details_dialog.dart';
+import '../widgets/home/days_until_payday_widget.dart';
+import '../widgets/home/daily_spending_limit_widget.dart';
+import '../widgets/home/monthly_savings_progress_widget.dart';
 import '../services/finance_calculator.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import 'transaction_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -127,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
         title: Row(
           children: [
             Text(
@@ -146,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _status!.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: DesignTokens.borderRadiusSm,
               ),
               child: Text(
                 _status!.message,
@@ -224,13 +228,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
+      backgroundColor: DesignTokens.scaffoldBackground,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         title: Text(
           'FutureProof',
-          style: GoogleFonts.playfairDisplay(
-            fontWeight: FontWeight.w600,
-          ),
+          style: DesignTokens.heading2(),
         ),
+        iconTheme: const IconThemeData(color: AppColors.black),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -238,37 +244,32 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
+              const SizedBox(height: DesignTokens.spacingXl),
 
               // Hero Section - Financial Health Status
               _buildHeroSection(context),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: DesignTokens.spacingXxl),
 
               // NEW: Smart Insights Section (prominent placement)
               _buildInsightsSection(context),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: DesignTokens.spacingXxl),
 
               // Monthly Overview Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: DesignTokens.paddingHorizontalLg,
                 child: Text(
                   'MONTHLY OVERVIEW',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.1,
-                    color: AppColors.gray700,
-                  ),
+                  style: DesignTokens.sectionHeader(),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: DesignTokens.spacingLg),
 
               // Quick Stats Cards
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: DesignTokens.paddingHorizontalMd,
                 child: Column(
                   children: [
                     Row(
@@ -338,25 +339,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 32),
 
+              // NEW: Motivating Widgets Row
+              Padding(
+                padding: DesignTokens.paddingHorizontalMd,
+                child: Column(
+                  children: [
+                    // Days Until Payday + Monthly Savings
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DaysUntilPaydayWidget(),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: MonthlySavingsProgressWidget(
+                            monthlyIncome: _monthlyIncome,
+                            totalSpent: provider.totalExpenses.abs(),
+                            savingsGoal: _savingsGoal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Daily Spending Limit (full width)
+                    DailySpendingLimitWidget(
+                      dailyLimit: (_monthlyIncome - _savingsGoal) / 30,
+                      spentToday: _getTodaySpending(provider.transactions),
+                      daysRemainingInMonth: DateTime(DateTime.now().year, DateTime.now().month + 1, 0)
+                          .difference(DateTime.now()).inDays,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
               // Monthly Breakdown & Motivation
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'MONTHLY INSIGHTS',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.1,
-                            color: AppColors.gray700,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'MONTHLY INSIGHTS',
+                      style: DesignTokens.sectionHeader(),
                     ),
                     const SizedBox(height: 16),
 
@@ -474,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 3,
             decoration: BoxDecoration(
               color: status?.color ?? Colors.grey,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
             ),
           ),
           const SizedBox(height: 32),
@@ -488,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: AppColors.gray100,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusXxl),
                 ),
                 child: Column(
                   children: [
@@ -548,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.danger.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
             border: Border.all(color: AppColors.danger.withOpacity(0.3)),
           ),
           child: Text(
@@ -610,7 +637,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: insightColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: insightColor.withOpacity(0.2),
           width: 1,
@@ -623,7 +650,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 40,
             decoration: BoxDecoration(
               color: insightColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: DesignTokens.borderRadiusMd,
             ),
             child: Center(
               child: Text(
@@ -687,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: AppColors.border,
           width: 1,
@@ -749,7 +776,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: AppColors.border,
           width: 1,
@@ -799,7 +826,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
             child: LinearProgressIndicator(
               value: percentage / 100,
               backgroundColor: AppColors.border,
@@ -919,7 +946,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: color.withOpacity(0.1),
           width: 1,
@@ -958,7 +985,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1040,7 +1067,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: color.withOpacity(0.2),
           width: 1,
@@ -1171,7 +1198,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: AppColors.border,
           width: 1,
@@ -1239,7 +1266,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 4,
           decoration: BoxDecoration(
             color: AppColors.border,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -1247,12 +1274,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.black,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
               ),
             ),
           ),
         ),
       ],
     );
+  }
+
+  /// Calculate today's spending from transactions
+  double _getTodaySpending(List<Transaction> transactions) {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+
+    return transactions
+        .where((t) => t.date.isAfter(startOfDay) && t.amount < 0)
+        .fold(0.0, (sum, t) => sum + t.amount.abs());
   }
 }

@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
-import '../providers/ai_provider.dart';
-import '../services/ai/ai_service.dart';
-import '../config/app_colors.dart';
-import '../domain/entities/budget_entity.dart';
-import '../domain/entities/streak_entity.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-/// AI Financial Advisor Screen
-/// Allows users to have conversational interactions about their finances
+import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
+import '../providers/ai_provider.dart';
+import '../services/ai/ai_service.dart';
+import '../domain/entities/budget_entity.dart';
+import '../domain/entities/streak_entity.dart';
+import '../widgets/home/daily_spending_limit_widget.dart';
+import '../providers/transaction_provider.dart';
+import '../providers/financial_goals_provider.dart';
+
+/// AI Financial Advisor - Modern Chat UI
+///
+/// Clean, modern chat interface with:
+/// - Card-based message bubbles
+/// - Quick action chips
+/// - Financial context banner
+/// - Minimal welcome message
 class AIAdvisorScreen extends StatefulWidget {
   const AIAdvisorScreen({super.key});
 
@@ -37,15 +48,7 @@ class _AIAdvisorScreenState extends State<AIAdvisorScreen> {
   void _addWelcomeMessage() {
     setState(() {
       _messages.add(ChatMessage(
-        text: '''Hi! I'm your AI financial advisor. 👋
-
-I can help you with:
-• Understanding your spending patterns
-• Answering "can I afford this?" questions
-• Analyzing "what-if" scenarios
-• Personalized financial advice
-
-Try asking: "Can I afford a new laptop this month?"''',
+        text: 'How can I help with your finances today?',
         isUser: false,
         timestamp: DateTime.now(),
       ));
@@ -72,12 +75,10 @@ Try asking: "Can I afford a new laptop this month?"''',
       final aiProvider = context.read<AIProvider>();
 
       if (!aiProvider.isReady) {
-        throw Exception('AI service not ready. Please download a model in settings.');
+        throw Exception('AI not ready. Download a model in Settings > AI Advisor.');
       }
 
-      // Build financial context
       final contextData = _buildFinancialContext();
-
       final response = await aiProvider.chat(text, contextData);
 
       setState(() {
@@ -107,17 +108,22 @@ Try asking: "Can I afford a new laptop this month?"''',
 
   FinancialContext _buildFinancialContext() {
     final aiProvider = context.read<AIProvider>();
+    final transactionProvider = context.read<TransactionProvider>();
+    final goalsProvider = context.read<FinancialGoalsProvider>();
     final now = DateTime.now();
 
-    // This is a simplified context - in a real app, you'd pass actual transaction data
+    final monthlyIncome = goalsProvider.monthlyIncome;
+    final savingsGoal = goalsProvider.monthlySavingsTarget;
+    final totalSpent = transactionProvider.totalExpenses.abs();
+
     return FinancialContext(
-      transactions: const [],
-      budget: const BudgetEntity(
-        monthlyIncome: 3000,
-        savingsGoal: 500,
-        dailyBudget: 83.33,
-        weeklyBudget: 625,
-        monthlyBudget: 2500,
+      transactions: [],
+      budget: BudgetEntity(
+        monthlyIncome: monthlyIncome,
+        savingsGoal: savingsGoal,
+        dailyBudget: (monthlyIncome - savingsGoal) / 30,
+        weeklyBudget: (monthlyIncome - savingsGoal) / 4,
+        monthlyBudget: monthlyIncome - savingsGoal,
       ),
       streak: StreakEntity(
         currentStreak: 5,
@@ -125,11 +131,11 @@ Try asking: "Can I afford a new laptop this month?"''',
         streakStartDate: now.subtract(const Duration(days: 5)),
         lastBrokenDate: now.subtract(const Duration(days: 15)),
       ),
-      categoryBreakdown: const {},
-      monthlySpending: 1200,
-      dailyAverage: 40,
-      daysRemainingInMonth: 12,
-      budgetRemaining: 800,
+      categoryBreakdown: {},
+      monthlySpending: totalSpent,
+      dailyAverage: totalSpent / DateTime.now().day,
+      daysRemainingInMonth: DateTime(now.year, now.month + 1, 0).difference(now).inDays,
+      budgetRemaining: monthlyIncome - totalSpent,
     );
   }
 
@@ -148,82 +154,234 @@ Try asking: "Can I afford a new laptop this month?"''',
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('AI Financial Advisor'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
+      backgroundColor: DesignTokens.scaffoldBackground,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            _buildHeader(),
+
+            // Financial Context Banner
+            _buildFinancialContextBanner(),
+
+            // Chat messages
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                itemCount: _messages.length + (_isTyping ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < _messages.length) {
+                    return _buildMessageBubble(_messages[index]);
+                  } else {
+                    return _buildTypingIndicator();
+                  }
+                },
+              ),
+            ),
+
+            // Quick action chips
+            _buildQuickActions(),
+
+            // Message input
+            _buildMessageInput(),
+          ],
+        ),
       ),
-      body: Column(
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+      child: Row(
         children: [
-          // Chat messages
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < _messages.length) {
-                  return _buildMessageBubble(_messages[index]);
-                } else {
-                  return _buildTypingIndicator();
-                }
-              },
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.fintechTeal, Color(0xFF00A896)],
+              ),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+            ),
+            child: const Icon(
+              Icons.smart_toy,
+              color: Colors.white,
+              size: 22,
             ),
           ),
-
-          // Quick action buttons
-          _buildQuickActions(),
-
-          // Message input
-          _buildMessageInput(),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'AI Advisor',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.black,
+                ),
+              ),
+              Text(
+                'Ask anything about your finances',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 13,
+                  color: AppColors.gray700,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildFinancialContextBanner() {
+    return Consumer2<TransactionProvider, FinancialGoalsProvider>(
+      builder: (context, transactionProvider, goalsProvider, _) {
+        final monthlyIncome = goalsProvider.monthlyIncome;
+        final savingsGoal = goalsProvider.monthlySavingsTarget;
+        final totalSpent = transactionProvider.totalExpenses.abs();
+        final remaining = monthlyIncome - totalSpent;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.fintechTeal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+            border: Border.all(
+              color: AppColors.fintechTeal.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.account_balance_wallet,
+                color: AppColors.fintechTeal,
+                size: 18,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'This Month',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 11,
+                        color: AppColors.gray700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '\$${remaining.toStringAsFixed(0)} left of \$${monthlyIncome.toStringAsFixed(0)}',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+                ),
+                child: Text(
+                  '\$${totalSpent.abs().toStringAsFixed(0)} spent',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.gray700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildMessageBubble(ChatMessage message) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: message.isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!message.isUser) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.fintechTeal, Color(0xFF00A896)],
+                ),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+              ),
+              child: const Icon(
+                Icons.smart_toy,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              constraints: const BoxConstraints(minWidth: 60),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? AppColors.primary
+                    ? AppColors.black
                     : message.isError
-                        ? Colors.red[50]
-                        : Colors.grey[100],
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomLeft: message.isUser ? const Radius.circular(16) : Radius.zero,
-                  bottomRight: message.isUser ? Radius.zero : const Radius.circular(16),
+                        ? const Color(0xFFFEE2E2)
+                        : Colors.white,
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXxl - 6).copyWith(
+                  bottomLeft: message.isUser
+                      ? const Radius.circular(18)
+                      : const Radius.circular(4),
+                  bottomRight: message.isUser
+                      ? const Radius.circular(4)
+                      : const Radius.circular(18),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     message.text,
-                    style: TextStyle(
+                    style: GoogleFonts.spaceGrotesk(
                       color: message.isUser
                           ? Colors.white
                           : message.isError
-                              ? Colors.red[900]
-                              : Colors.black87,
+                              ? const Color(0xFFDC2626)
+                              : const Color(0xFF1F2937),
                       fontSize: 15,
                       height: 1.4,
                     ),
@@ -231,11 +389,12 @@ Try asking: "Can I afford a new laptop this month?"''',
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.timestamp),
-                    style: TextStyle(
+                    style: GoogleFonts.spaceGrotesk(
                       color: message.isUser
-                          ? Colors.white70
-                          : Colors.grey[600],
-                      fontSize: 11,
+                          ? Colors.white54
+                          : AppColors.gray500,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -243,11 +402,19 @@ Try asking: "Can I afford a new laptop this month?"''',
             ),
           ),
           if (message.isUser) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.accent,
-              child: const Icon(Icons.person, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.gray200,
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+              ),
+              child: const Icon(
+                Icons.person,
+                color: AppColors.gray700,
+                size: 18,
+              ),
             ),
           ],
         ],
@@ -257,52 +424,49 @@ Try asking: "Can I afford a new laptop this month?"''',
 
   Widget _buildTypingIndicator() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppColors.primary,
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+      padding: const EdgeInsets.only(bottom: 16, left: 52),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(18),
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.zero,
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDot(),
-                const SizedBox(width: 4),
-                _buildDot(delay: const Duration(milliseconds: 200)),
-                const SizedBox(width: 4),
-                _buildDot(delay: const Duration(milliseconds: 400)),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDot(),
+            const SizedBox(width: 6),
+            _buildDot(delay: const Duration(milliseconds: 160)),
+            const SizedBox(width: 6),
+            _buildDot(delay: const Duration(milliseconds: 320)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDot({Duration? delay}) {
     return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
       tween: Tween(begin: 0.3, end: 1.0),
       builder: (context, value, child) {
         return Container(
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: Colors.grey[600]?.withOpacity(value),
+            color: AppColors.gray700.withOpacity(value),
             shape: BoxShape.circle,
           ),
         );
@@ -314,33 +478,53 @@ Try asking: "Can I afford a new laptop this month?"''',
     final actions = [
       'Can I afford a laptop?',
       'Am I on track?',
-      'Top spending category?',
+      'Top spending?',
       'Save \$100/month?',
     ];
 
     return Container(
-      height: 50,
+      height: 44,
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: actions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          return OutlinedButton(
-            onPressed: () {
-              _messageController.text = actions[index];
-              _sendMessage();
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            child: Text(actions[index]),
-          );
+          return _buildActionChip(actions[index]);
         },
+      ),
+    );
+  }
+
+  Widget _buildActionChip(String text) {
+    return GestureDetector(
+      onTap: () {
+        _messageController.text = text;
+        _sendMessage();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.gray700,
+          ),
+        ),
       ),
     );
   }
@@ -348,49 +532,80 @@ Try asking: "Can I afford a new laptop this month?"''',
   Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+        border: Border(
+          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXxl),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Ask about your finances...',
+                        hintStyle: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          color: AppColors.gray500,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 12,
+                        ),
+                      ),
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 15,
+                        color: AppColors.black,
+                      ),
+                      textCapitalization: TextCapitalization.sentences,
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _isTyping ? null : _sendMessage,
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.fintechTeal, Color(0xFF00A896)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.fintechTeal.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
           ),
         ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                decoration: InputDecoration(
-                  hintText: 'Ask about your finances...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                ),
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _sendMessage(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton.filled(
-              onPressed: _isTyping ? null : _sendMessage,
-              icon: const Icon(Icons.send),
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -399,15 +614,10 @@ Try asking: "Can I afford a new laptop this month?"''',
     final now = DateTime.now();
     final difference = now.difference(time);
 
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${difference.inDays}d ago';
-    }
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m';
+    if (difference.inHours < 24) return '${difference.inHours}h';
+    return '${difference.inDays}d';
   }
 }
 

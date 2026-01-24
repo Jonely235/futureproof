@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../config/app_colors.dart';
 
 /// Trend Indicator Widget
 ///
@@ -22,9 +25,9 @@ class TrendIndicator extends StatelessWidget {
     final isDown = percentage < 0;
 
     Color getColor() {
-      if (isUp) return Colors.red; // Spending up = bad
-      if (isDown) return Colors.green; // Spending down = good
-      return Colors.grey;
+      if (isUp) return AppColors.danger; // Spending up = bad
+      if (isDown) return AppColors.success; // Spending down = good
+      return AppColors.gray500;
     }
 
     IconData getIcon() {
@@ -37,7 +40,7 @@ class TrendIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: getColor().withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         border: Border.all(
           color: getColor(),
           width: 1.5,
@@ -57,19 +60,19 @@ class TrendIndicator extends StatelessWidget {
           if (label != null) ...[
             Text(
               label!,
-              style: TextStyle(
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: AppColors.gray700,
               ),
             ),
             const SizedBox(width: 4),
           ],
           Text(
             '${percentage.abs().toStringAsFixed(1)}%',
-            style: TextStyle(
+            style: GoogleFonts.spaceGrotesk(
               fontSize: 14,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: getColor(),
             ),
           ),
@@ -108,15 +111,15 @@ class MiniTrendIndicator extends StatelessWidget {
         Icon(
           isUp ? Icons.arrow_upward : Icons.arrow_downward,
           size: 16,
-          color: isGood() ? Colors.green : Colors.red,
+          color: isGood() ? AppColors.success : AppColors.danger,
         ),
         const SizedBox(width: 4),
         Text(
           '${percentage.abs().toStringAsFixed(1)}%',
-          style: TextStyle(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isGood() ? Colors.green : Colors.red,
+            color: isGood() ? AppColors.success : AppColors.danger,
           ),
         ),
       ],
@@ -145,10 +148,10 @@ class BudgetHealthIndicator extends StatelessWidget {
     final isOverBudget = spent > budget;
 
     Color getStatusColor() {
-      if (isOverBudget) return Colors.red;
-      if (percentage > 80) return Colors.orange;
-      if (percentage > 60) return Colors.yellow;
-      return Colors.green;
+      if (isOverBudget) return AppColors.danger;
+      if (percentage > 80) return AppColors.gold;
+      if (percentage > 60) return const Color(0xFFFFC107); // Yellow
+      return AppColors.success;
     }
 
     String getStatusText() {
@@ -164,9 +167,9 @@ class BudgetHealthIndicator extends StatelessWidget {
         if (label != null)
           Text(
             label!,
-            style: TextStyle(
+            style: GoogleFonts.spaceGrotesk(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: AppColors.gray700,
             ),
           ),
         Row(
@@ -179,7 +182,7 @@ class BudgetHealthIndicator extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               getStatusText(),
-              style: TextStyle(
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: getStatusColor(),
@@ -188,9 +191,9 @@ class BudgetHealthIndicator extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               '${percentage.toStringAsFixed(0)}%',
-              style: TextStyle(
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: AppColors.gray700,
               ),
             ),
           ],
@@ -198,10 +201,10 @@ class BudgetHealthIndicator extends StatelessWidget {
         const SizedBox(height: 6),
         // Progress bar
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
           child: LinearProgressIndicator(
             value: (percentage / 100).clamp(0.0, 1.0),
-            backgroundColor: Colors.grey[200],
+            backgroundColor: AppColors.gray200,
             valueColor: AlwaysStoppedAnimation<Color>(getStatusColor()),
             minHeight: 8,
           ),
@@ -209,9 +212,9 @@ class BudgetHealthIndicator extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           '\$${spent.toStringAsFixed(0)} of \$${budget.toStringAsFixed(0)}',
-          style: TextStyle(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 12,
-            color: Colors.grey[500],
+            color: AppColors.gray500,
           ),
         ),
       ],

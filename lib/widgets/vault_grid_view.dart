@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 import '../widgets/vault_card_widget.dart';
 
@@ -124,7 +125,7 @@ class _VaultGridViewState extends State<VaultGridView>
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         gradient: vault.isActive
             ? LinearGradient(
                 colors: [
@@ -149,7 +150,7 @@ class _VaultGridViewState extends State<VaultGridView>
         margin: EdgeInsets.zero,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: DesignTokens.borderRadiusLg,
           side: vault.isActive
               ? BorderSide(
                   color: AppColors.fintechTeal.withOpacity(0.5),
@@ -160,7 +161,7 @@ class _VaultGridViewState extends State<VaultGridView>
         child: InkWell(
           onTap: () => widget.onTap(vault),
           onLongPress: () => widget.onLongPress(vault),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: DesignTokens.borderRadiusLg,
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 12 : 16),
             child: Column(
@@ -188,7 +189,7 @@ class _VaultGridViewState extends State<VaultGridView>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                       ),
                       child: Center(
                         child: Text(
@@ -215,7 +216,7 @@ class _VaultGridViewState extends State<VaultGridView>
                                   Color(0xFF00A896),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                             ),
                             child: Text(
                               'ACTIVE',
@@ -356,7 +357,7 @@ class _VaultGridViewState extends State<VaultGridView>
         color = AppColors.fintechTeal;
       } else if (syncAge < const Duration(hours: 1)) {
         icon = Icons.cloud_queue;
-        color = Colors.orange;
+        color = AppColors.gold;
       } else {
         icon = Icons.sync_problem;
         color = AppColors.gray700;

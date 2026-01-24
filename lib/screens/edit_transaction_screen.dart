@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../config/app_strings.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
@@ -249,7 +250,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
         title: Text(
           'Delete Transaction?',
           style: GoogleFonts.playfairDisplay(
@@ -282,7 +283,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               backgroundColor: AppColors.danger,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: DesignTokens.borderRadiusSm,
               ),
             ),
             child: Text(
@@ -373,7 +374,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -426,7 +427,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.black.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                             border: Border.all(
                               color: AppColors.border,
                               width: 1,
@@ -522,7 +523,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: AppColors.gray100,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -545,7 +546,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                                     color: _isExpense
                                         ? AppColors.white
                                         : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                                     boxShadow: _isExpense
                                         ? [
                                             BoxShadow(
@@ -601,7 +602,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                                     color: !_isExpense
                                         ? AppColors.white
                                         : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                                     boxShadow: !_isExpense
                                         ? [
                                             BoxShadow(
@@ -653,7 +654,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: DesignTokens.borderRadiusLg,
                               border: Border.all(
                                 color: AppColors.border,
                                 width: 1.5,
@@ -706,7 +707,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.all(16),
@@ -748,7 +749,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                       disabledBackgroundColor: AppColors.border,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: DesignTokens.borderRadiusLg,
                       ),
                       elevation: 0,
                     ),
@@ -798,7 +799,7 @@ class _CategoryBottomSheet extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXxl)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -810,7 +811,7 @@ class _CategoryBottomSheet extends StatelessWidget {
             height: 4,
             decoration: BoxDecoration(
               color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
             ),
           ),
 
@@ -862,7 +863,7 @@ class _CategoryBottomSheet extends StatelessWidget {
                     color: isSelected
                         ? color.withOpacity(0.15)
                         : AppColors.offWhite,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: DesignTokens.borderRadiusLg,
                     border: Border.all(
                       color: isSelected ? color : AppColors.border,
                       width: isSelected ? 2 : 1,

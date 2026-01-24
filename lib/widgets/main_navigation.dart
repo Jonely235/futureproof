@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../screens/add_expense_screen.dart';
 import '../screens/analytics_dashboard_screen.dart';
 import '../screens/home_screen.dart';
@@ -39,6 +41,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: DesignTokens.scaffoldBackground,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -89,8 +92,8 @@ class _MainNavigationState extends State<MainNavigation> {
           // Refresh by rebuilding
           _refreshCurrentScreen();
         },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: AppColors.fintechTeal,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

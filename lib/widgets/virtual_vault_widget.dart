@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/virtual_vault_entity.dart';
 import '../domain/entities/war_mode_entity.dart';
 
@@ -26,7 +27,7 @@ class VirtualVaultWidget extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DesignTokens.borderRadiusLg,
         border: Border.all(
           color: availableColor.withOpacity(0.3),
           width: 2,
@@ -53,7 +54,7 @@ class VirtualVaultWidget extends StatelessWidget {
                   color: warMode.level.colorCode != '#4CAF50'
                       ? _parseColor(warMode.level.colorCode).withOpacity(0.1)
                       : AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -109,7 +110,7 @@ class VirtualVaultWidget extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.black.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                   ),
                   child: Column(
                     children: [
@@ -143,7 +144,7 @@ class VirtualVaultWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
             child: LinearProgressIndicator(
               value: (vault.availablePercentage / 100).clamp(0.0, 1.0),
               backgroundColor: AppColors.border,
@@ -160,9 +161,9 @@ class VirtualVaultWidget extends StatelessWidget {
     if (!vault.isHealthy) {
       return AppColors.danger;
     } else if (vault.isInDangerZone) {
-      return const Color(0xFFFF9800); // Orange
+      return AppColors.gold;
     } else if (vault.availablePercentage < 25) {
-      return const Color(0xFFFF9800); // Orange
+      return AppColors.gold;
     } else {
       return AppColors.success;
     }

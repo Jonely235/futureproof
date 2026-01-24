@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_manager.dart';
 import '../utils/app_logger.dart';
+import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 
 /// Theme Picker Widget
 ///
@@ -29,7 +31,7 @@ class ThemePickerWidget extends StatelessWidget {
               'Choose a theme',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 13,
-                color: const Color(0xFF6B6B6B),
+                color: AppColors.gray700,
               ),
             ),
             const SizedBox(height: 16),
@@ -48,7 +50,7 @@ class ThemePickerWidget extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: theme.previewColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                       border: Border.all(
                         color: isSelected
                             ? theme.previewColor
@@ -63,7 +65,7 @@ class ThemePickerWidget extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             color: theme.previewColor,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: DesignTokens.borderRadiusSm,
                           ),
                           child: isSelected
                               ? const Icon(
@@ -83,7 +85,7 @@ class ThemePickerWidget extends StatelessWidget {
                                 style: GoogleFonts.spaceGrotesk(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0A0A0A),
+                                  color: AppColors.black,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -91,7 +93,7 @@ class ThemePickerWidget extends StatelessWidget {
                                 theme.description,
                                 style: GoogleFonts.spaceGrotesk(
                                   fontSize: 12,
-                                  color: const Color(0xFF6B6B6B),
+                                  color: AppColors.gray700,
                                 ),
                               ),
                             ],
@@ -106,7 +108,7 @@ class ThemePickerWidget extends StatelessWidget {
                         else
                           const Icon(
                             Icons.radio_button_unchecked,
-                            color: Color(0xFFBDBDBD),
+                            color: AppColors.gray300,
                             size: 24,
                           ),
                       ],

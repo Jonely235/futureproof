@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../providers/settings_expansion_provider.dart';
 import '../providers/financial_goals_provider.dart';
 import '../providers/vault_provider.dart';
@@ -14,6 +15,7 @@ import '../widgets/vault_switcher_widget.dart';
 import '../widgets/settings/settings_accordion.dart';
 import '../widgets/theme_picker_widget.dart';
 import '../widgets/ui_helpers.dart';
+import '../widgets/backup_sync_widget.dart';
 import 'debug/error_history_screen.dart';
 import 'ai_settings_screen.dart';
 import 'vault_browser_screen.dart';
@@ -45,12 +47,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           // App Bar
           SliverAppBar(
-            expandedHeight: 140,
+            expandedHeight: 120,
             floating: false,
             pinned: true,
             elevation: 0,
@@ -76,7 +78,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     const SizedBox(height: 16),
 
-                    // ========== VAULTS SECTION (Expanded by default) ==========
+                    // ========== VAULTS SECTION ==========
                     FadeInWidget(
                       delay: const Duration(milliseconds: 100),
                       child: SettingsAccordionSection(
@@ -87,7 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         iconColor: AppColors.fintechTeal,
                         isExpanded: expansionProvider.isExpanded('vaults'),
                         children: [
-                          // Active vault switcher
                           VaultSwitcherWidget(
                             currentVault: vaultProvider.activeVault,
                             onVaultSwitch: (vault) async {
@@ -103,7 +104,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-                          // Vault management button
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.folder),
@@ -138,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ========== FINANCE SECTION (Expanded by default) ==========
+                    // ========== FINANCE SECTION ==========
                     FadeInWidget(
                       delay: const Duration(milliseconds: 200),
                       child: SettingsAccordionSection(
@@ -158,7 +158,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ========== APPEARANCE SECTION (Expanded by default) ==========
+                    // ========== BACKUP & SYNC SECTION (NEW) ==========
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 250),
+                      child: SettingsAccordionSection(
+                        sectionId: 'backup',
+                        icon: Icons.cloud_sync,
+                        title: 'Backup & Sync',
+                        summary: 'iCloud, Export, Import',
+                        iconColor: AppColors.fintechTeal,
+                        isExpanded: expansionProvider.isExpanded('backup'),
+                        children: const [
+                          BackupSyncWidget(),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ========== APPEARANCE SECTION ==========
                     FadeInWidget(
                       delay: const Duration(milliseconds: 300),
                       child: SettingsAccordionSection(
@@ -180,13 +198,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ========== AI SETTINGS SECTION (Expanded by default) ==========
+                    // ========== AI SETTINGS SECTION (SIMPLIFIED) ==========
                     FadeInWidget(
                       delay: const Duration(milliseconds: 400),
                       child: SettingsAccordionSection(
                         sectionId: 'ai',
                         icon: Icons.smart_toy,
-                        title: 'AI Settings',
+                        title: 'AI Advisor',
                         summary: _buildAISummary(),
                         iconColor: AppColors.fintechIndigo,
                         isExpanded: expansionProvider.isExpanded('ai'),
@@ -203,7 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                             subtitle: Text(
-                              'Manage AI model & features',
+                              'Manage AI model & settings',
                               style: GoogleFonts.spaceGrotesk(
                                 fontSize: 12,
                                 color: AppColors.gray700,
@@ -219,38 +237,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               );
                             },
                           ),
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.psychology),
-                            title: Text(
-                              'About AI Features',
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.black,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Learn how AI helps you',
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 12,
-                                color: AppColors.gray700,
-                              ),
-                            ),
-                            trailing: const Icon(Icons.info_outline),
-                            onTap: () {
-                              _showAIDialog();
-                            },
-                          ),
                         ],
                       ),
                     ),
 
                     const SizedBox(height: 16),
 
-                    // ========== ABOUT SECTION (Collapsed by default) ==========
+                    // ========== ABOUT SECTION ==========
                     FadeInWidget(
-                      delay: const Duration(milliseconds: 600),
+                      delay: const Duration(milliseconds: 500),
                       child: SettingsAccordionSection(
                         sectionId: 'about',
                         icon: Icons.info,
@@ -266,10 +261,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
 
-                    // ========== ADVANCED SECTION (Collapsed by default, debug only) ==========
+                    // ========== ADVANCED SECTION (debug only) ==========
                     if (kDebugMode)
                       FadeInWidget(
-                        delay: const Duration(milliseconds: 700),
+                        delay: const Duration(milliseconds: 600),
                         child: SettingsAccordionSection(
                           sectionId: 'advanced',
                           icon: Icons.bug_report,
@@ -280,8 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.bug_report,
-                                  color: Colors.red),
+                              leading: const Icon(Icons.bug_report, color: Colors.red),
                               title: Text(
                                 'Error History',
                                 style: GoogleFonts.spaceGrotesk(
@@ -302,8 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ErrorHistoryScreen(),
+                                    builder: (context) => const ErrorHistoryScreen(),
                                   ),
                                 );
                               },
@@ -347,7 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _buildAISummary() {
     final aiProvider = context.read<AIProvider>();
     final isReady = aiProvider.isReady;
-    return isReady ? 'Model: Ready' : 'Model: Not Setup';
+    return isReady ? 'Ready' : 'Not Setup';
   }
 
   Widget _buildInfoRow(String label, String value) {
@@ -374,94 +367,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  void _showAIDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.smart_toy, color: AppColors.fintechTeal),
-            const SizedBox(width: 8),
-            const Text('AI Financial Advisor'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'FutureProof uses Llama-3.2-3B-Instruct, an advanced AI that runs completely on your device.',
-                style: GoogleFonts.spaceGrotesk(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              _buildFeatureItem(
-                '💬 Natural Input',
-                'Type expenses naturally like "Lunch at Chipotle \$18"',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                '🤖 Smart Insights',
-                'Get personalized financial advice instead of generic tips',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                '🔐 100% Private',
-                'All AI processing happens on your device. No data leaves.',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                '📱 Works Offline',
-                'No internet connection needed after setup',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AISettingsScreen(),
-                ),
-              );
-            },
-            child: const Text('Setup AI'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(String title, String description) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          description,
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 12,
-            color: AppColors.gray700,
-          ),
-        ),
-      ],
     );
   }
 }

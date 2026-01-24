@@ -133,10 +133,10 @@ class SmartInsightsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: DesignTokens.paddingMd,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: DesignTokens.radiusMd,
         border: Border.all(
           color: color.withValues(alpha: 0.2),
           width: 1,
@@ -179,10 +179,10 @@ class SmartInsightsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: DesignTokens.paddingMd,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: DesignTokens.radiusMd,
         border: Border.all(
           color: color.withValues(alpha: 0.2),
           width: 1,
@@ -230,10 +230,10 @@ class SmartInsightsWidget extends StatelessWidget {
 
   Widget _buildTipCard({required String tip}) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: DesignTokens.paddingMd,
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: DesignTokens.radiusMd,
         border: Border.all(
           color: AppColors.gold,
           width: 1,
@@ -267,10 +267,10 @@ class SmartInsightsWidget extends StatelessWidget {
     required double amount,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: DesignTokens.paddingMd,
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: DesignTokens.radiusMd,
         border: Border.all(
           color: AppColors.danger,
           width: 1,

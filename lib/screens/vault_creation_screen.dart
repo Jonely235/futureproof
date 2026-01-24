@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 import '../providers/vault_provider.dart';
 import '../widgets/vault_card_widget.dart';
@@ -113,7 +114,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXxl)),
       ),
       child: Column(
         children: [
@@ -125,7 +126,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
               height: 4,
               decoration: BoxDecoration(
                 color: AppColors.gray300,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
               ),
             ),
           ),
@@ -145,7 +146,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close, color: AppColors.black),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -203,7 +204,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
                         side: BorderSide(color: AppColors.gray300),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                         ),
                       ),
                       child: Text(
@@ -225,7 +226,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                         ),
                       ),
                       child: Text(
@@ -299,7 +300,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
                 color: AppColors.gray500,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 borderSide: BorderSide(color: AppColors.gray200),
               ),
               filled: true,
@@ -361,7 +362,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
                   HapticFeedback.lightImpact();
                   setState(() => _selectedColor = color);
                 },
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                 child: Container(
                   width: 40,
                   height: 40,
@@ -420,13 +421,13 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
                   HapticFeedback.lightImpact();
                   setState(() => _selectedIcon = icon);
                 },
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 child: Container(
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.fintechTeal.withOpacity(0.1)
                         : AppColors.gray100,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                     border: Border.all(
                       color: isSelected ? AppColors.fintechTeal : Colors.transparent,
                       width: isSelected ? 2 : 1,
@@ -476,7 +477,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
               hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.gray500),
               prefixText: '\$ ',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 borderSide: BorderSide(color: AppColors.gray200),
               ),
               filled: true,
@@ -509,7 +510,7 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
               hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.gray500),
               prefixText: '\$ ',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 borderSide: BorderSide(color: AppColors.gray200),
               ),
               filled: true,
@@ -535,14 +536,14 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.gray100,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         border: Border.all(color: AppColors.gray200),
       ),
       child: Column(
         children: [
           InkWell(
             onTap: onTap,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusMd)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(

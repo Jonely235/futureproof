@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import 'edit_transaction_screen.dart';
@@ -128,7 +129,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     final filtered = _filteredTransactions(transactions);
 
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           // App Bar with Search
@@ -177,7 +178,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           )
                         : null,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
@@ -322,7 +323,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                             decoration: BoxDecoration(
                                               color: AppColors.black,
                                               borderRadius:
-                                                  BorderRadius.circular(2),
+                                                  BorderRadius.circular(DesignTokens.radiusXs),
                                             ),
                                           ),
                                           const SizedBox(width: 12),
@@ -412,7 +413,7 @@ class _TimelineTransactionCard extends StatelessWidget {
           builder: (BuildContext context) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: DesignTokens.borderRadiusLg,
               ),
               title: Text(
                 'Delete Transaction?',
@@ -542,7 +543,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: DesignTokens.borderRadiusLg,
                     border: Border.all(
                       color: AppColors.border,
                       width: 1,
@@ -563,7 +564,7 @@ class _TimelineTransactionCard extends StatelessWidget {
                         height: 52,
                         decoration: BoxDecoration(
                           color: AppColors.gray100,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                         ),
                         child: Center(
                           child: Text(

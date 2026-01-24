@@ -29,6 +29,7 @@ dependencies:
   path: ^1.8.3
   path_provider: ^2.1.1
   shared_preferences: ^2.2.2
+  share_plus: ^10.0.0
 
   # Cloud Sync (iCloud via CloudKit - iOS only)
   # Native iOS integration via CloudKit

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/ai_provider.dart';
 import '../services/ai/llama_model_manager.dart';
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 
@@ -38,17 +40,24 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: DesignTokens.scaffoldBackground,
       appBar: AppBar(
-        title: const Text('AI Settings'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        title: Text(
+          'AI Settings',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
+          ),
+        ),
         elevation: 0,
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: AppColors.black),
       ),
       body: Consumer<AIProvider>(
         builder: (context, aiProvider, child) {
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             children: [
               // Status card
               _buildStatusCard(aiProvider),
@@ -92,66 +101,78 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     final isInitializing = aiProvider.isInitializing;
     final hasError = aiProvider.errorMessage != null;
 
+    Color cardColor;
+    Color borderColor;
+    IconData iconData;
+    Color iconColor;
+    String statusText;
+    String messageText;
+
+    if (isReady) {
+      cardColor = AppColors.success.withOpacity(0.1);
+      borderColor = AppColors.success.withOpacity(0.3);
+      iconData = Icons.check_circle;
+      iconColor = AppColors.success;
+      statusText = 'AI Ready';
+      messageText = 'Your AI advisor is ready to help!';
+    } else if (hasError) {
+      cardColor = AppColors.danger.withOpacity(0.1);
+      borderColor = AppColors.danger.withOpacity(0.3);
+      iconData = Icons.error;
+      iconColor = AppColors.danger;
+      statusText = 'AI Error';
+      messageText = aiProvider.errorMessage ?? 'Unknown error';
+    } else if (isInitializing) {
+      cardColor = AppColors.fintechTeal.withOpacity(0.1);
+      borderColor = AppColors.fintechTeal.withOpacity(0.3);
+      iconData = Icons.downloading;
+      iconColor = AppColors.fintechTeal;
+      statusText = 'Initializing...';
+      messageText = 'Please wait while we set up AI...';
+    } else {
+      cardColor = AppColors.gray200;
+      borderColor = AppColors.gray400;
+      iconData = Icons.info;
+      iconColor = AppColors.gray700;
+      statusText = 'AI Not Ready';
+      messageText = 'Download a model to get started';
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isReady
-            ? Colors.green[50]
-            : hasError
-                ? Colors.red[50]
-                : Colors.blue[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isReady
-              ? Colors.green[200]!
-              : hasError
-                  ? Colors.red[200]!
-                  : Colors.blue[200]!,
-          width: 2,
-        ),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        border: Border.all(color: borderColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Icon(
-            isReady
-                ? Icons.check_circle
-                : hasError
-                    ? Icons.error
-                    : isInitializing
-                        ? Icons.downloading
-                        : Icons.info,
+            iconData,
             size: 48,
-            color: isReady
-                ? Colors.green[700]
-                : hasError
-                    ? Colors.red[700]
-                    : Colors.blue[700],
+            color: iconColor,
           ),
           const SizedBox(height: 12),
           Text(
-            isReady
-                ? 'AI Ready'
-                : hasError
-                    ? 'AI Error'
-                    : isInitializing
-                        ? 'Initializing...'
-                        : 'AI Not Ready',
-            style: const TextStyle(
+            statusText,
+            style: GoogleFonts.spaceGrotesk(
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
+              color: AppColors.black,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            isReady
-                ? 'Your AI advisor is ready to help!'
-                : hasError
-                    ? aiProvider.errorMessage ?? 'Unknown error'
-                    : isInitializing
-                        ? 'Please wait while we set up AI...'
-                        : 'Download a model to get started',
-            style: TextStyle(
-              color: Colors.grey[700],
+            messageText,
+            style: GoogleFonts.spaceGrotesk(
+              color: AppColors.gray700,
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
@@ -162,13 +183,21 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Text(
                 aiProvider.currentModel!.name,
-                style: const TextStyle(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.gray700,
                 ),
               ),
             ),
@@ -181,10 +210,10 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey[800],
+      style: GoogleFonts.spaceGrotesk(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: AppColors.black,
       ),
     );
   }
@@ -205,23 +234,69 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
 
         return Column(
           children: models.map((model) {
-            return Card(
+            return Container(
               margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: DesignTokens.borderRadiusLg,
+                border: Border.all(color: AppColors.border, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primary,
-                  child: const Icon(Icons.model_training, color: Colors.white),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.fintechTeal.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                  ),
+                  child: const Icon(
+                    Icons.model_training,
+                    color: AppColors.fintechTeal,
+                    size: 20,
+                  ),
                 ),
-                title: Text(model.name),
-                subtitle: Text(model.fileSizeFormatted),
+                title: Text(
+                  model.name,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.black,
+                  ),
+                ),
+                subtitle: Text(
+                  model.fileSizeFormatted,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 13,
+                    color: AppColors.gray700,
+                  ),
+                ),
                 trailing: model.recommended
-                    ? Chip(
-                        label: const Text('In Use'),
-                        backgroundColor: Colors.green[100],
-                        labelStyle: TextStyle(color: Colors.green[900]),
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                        ),
+                        child: Text(
+                          'In Use',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.success,
+                          ),
+                        ),
                       )
                     : IconButton(
-                        icon: const Icon(Icons.delete),
+                        icon: const Icon(Icons.delete, color: AppColors.danger),
                         onPressed: () => _confirmDeleteModel(model, aiProvider),
                       ),
               ),
@@ -236,25 +311,32 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.gray100,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
         children: [
-          Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
+          Icon(
+            Icons.cloud_off,
+            size: 64,
+            color: AppColors.gray500,
+          ),
           const SizedBox(height: 16),
           Text(
             'No Model Downloaded',
-            style: TextStyle(
+            style: GoogleFonts.playfairDisplay(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              fontWeight: FontWeight.w600,
+              color: AppColors.black,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Download a model below to enable AI features',
-            style: TextStyle(color: Colors.grey[600]),
+            style: GoogleFonts.spaceGrotesk(
+              color: AppColors.gray700,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -267,8 +349,20 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
       final model = entry.value;
       final isRecommended = model.recommended;
 
-      return Card(
+      return Container(
         margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -284,9 +378,10 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                           children: [
                             Text(
                               model.name,
-                              style: const TextStyle(
+                              style: GoogleFonts.spaceGrotesk(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.black,
                               ),
                             ),
                             if (isRecommended) ...[
@@ -297,15 +392,17 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accent,
-                                  borderRadius: BorderRadius.circular(10),
+                                  gradient: const LinearGradient(
+                                    colors: [AppColors.fintechTeal, Color(0xFF00A896)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'RECOMMENDED',
-                                  style: TextStyle(
+                                  style: GoogleFonts.spaceGrotesk(
                                     color: Colors.white,
                                     fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -315,9 +412,9 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                         const SizedBox(height: 4),
                         Text(
                           '${model.fileSizeFormatted} • ${model.contextLength} tokens',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                          style: GoogleFonts.spaceGrotesk(
+                            color: AppColors.gray700,
+                            fontSize: 13,
                           ),
                         ),
                       ],
@@ -329,9 +426,17 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
               if (_isDownloading && _downloadStatus.contains(model.id))
                 Column(
                   children: [
-                    LinearProgressIndicator(value: _downloadProgress),
+                    LinearProgressIndicator(
+                      value: _downloadProgress,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.fintechTeal,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text(_downloadStatus, style: TextStyle(fontSize: 12)),
+                    Text(
+                      _downloadStatus,
+                      style: GoogleFonts.spaceGrotesk(fontSize: 12),
+                    ),
                   ],
                 )
               else
@@ -340,9 +445,19 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                   child: FilledButton.icon(
                     onPressed: () => _downloadModel(model),
                     icon: const Icon(Icons.download),
-                    label: const Text('Download Model'),
+                    label: Text(
+                      'Download Model',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.fintechTeal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      ),
                     ),
                   ),
                 ),
@@ -360,7 +475,19 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         final storageUsed = snapshot.data ?? 0;
         final storageFormatted = _formatBytes(storageUsed);
 
-        return Card(
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -371,17 +498,18 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                   children: [
                     Text(
                       'Storage Used',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 13,
+                        color: AppColors.gray700,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       storageFormatted,
-                      style: const TextStyle(
+                      style: GoogleFonts.jetBrainsMono(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.black,
                       ),
                     ),
                   ],
@@ -389,9 +517,14 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                 TextButton.icon(
                   onPressed: () => _confirmClearAll(),
                   icon: const Icon(Icons.delete_sweep),
-                  label: const Text('Clear All'),
+                  label: Text(
+                    'Clear All',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.red[700],
+                    foregroundColor: AppColors.danger,
                   ),
                 ),
               ],
@@ -403,13 +536,37 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
   }
 
   Widget _buildTroubleshooting(AIProvider aiProvider) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.refresh),
-            title: const Text('Reset AI Service'),
-            subtitle: const Text('Restart AI if experiencing issues'),
+            leading: const Icon(Icons.refresh, color: AppColors.gray700),
+            title: Text(
+              'Reset AI Service',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+                color: AppColors.black,
+              ),
+            ),
+            subtitle: Text(
+              'Restart AI if experiencing issues',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                color: AppColors.gray700,
+              ),
+            ),
             trailing: aiProvider.isInitializing
                 ? const SizedBox(
                     width: 20,
@@ -421,11 +578,23 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
                 ? null
                 : () => _resetAIService(aiProvider),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: AppColors.border),
           ListTile(
-            leading: const Icon(Icons.help_outline),
-            title: const Text('Build Instructions'),
-            subtitle: const Text('How to compile llama.cpp'),
+            leading: const Icon(Icons.help_outline, color: AppColors.gray700),
+            title: Text(
+              'Build Instructions',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+                color: AppColors.black,
+              ),
+            ),
+            subtitle: Text(
+              'How to compile llama.cpp',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                color: AppColors.gray700,
+              ),
+            ),
             onTap: () => _showBuildInstructions(),
           ),
         ],
@@ -464,8 +633,12 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${model.name} downloaded successfully!'),
-            backgroundColor: Colors.green[700],
+            content: Text(
+              '${model.name} downloaded successfully!',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -473,8 +646,12 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Download failed: ${e.toString()}'),
-            backgroundColor: Colors.red[700],
+            content: Text(
+              'Download failed: ${e.toString()}',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -489,17 +666,41 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Model?'),
-        content: Text('Are you sure you want to delete ${model.name}?'),
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+        title: Text(
+          'Delete Model?',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete ${model.name}?',
+          style: GoogleFonts.spaceGrotesk(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red[700]),
-            child: const Text('Delete'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              shape: RoundedRectangleBorder(
+                borderRadius: DesignTokens.borderRadiusSm,
+              ),
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -511,8 +712,12 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
         setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${model.name} deleted'),
-            backgroundColor: Colors.green[700],
+            content: Text(
+              '${model.name} deleted',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -523,17 +728,40 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear All Models?'),
-        content: const Text('This will delete all downloaded AI models. AI features will be unavailable until you download a new model.'),
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+        title: Text(
+          'Clear All Models?',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
+          ),
+        ),
+        content: const Text(
+          'This will delete all downloaded AI models. AI features will be unavailable until you download a new model.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red[700]),
-            child: const Text('Clear All'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              shape: RoundedRectangleBorder(
+                borderRadius: DesignTokens.borderRadiusSm,
+              ),
+            ),
+            child: Text(
+              'Clear All',
+              style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -544,9 +772,13 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
       if (mounted) {
         setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('All models cleared'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'All models cleared',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -557,9 +789,13 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     await aiProvider.reset();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('AI service reset'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text(
+            'AI service reset',
+            style: GoogleFonts.spaceGrotesk(),
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -569,8 +805,16 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Build llama.cpp'),
-        content: const SingleChildScrollView(
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+        title: Text(
+          'Build llama.cpp',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
+          ),
+        ),
+        content: SingleChildScrollView(
           child: Text(
             'To build llama.cpp for your platform:\n\n'
             '1. See LLAMA_CPP_BUILD_GUIDE.md in the project root\n'
@@ -580,12 +824,18 @@ class _AISettingsScreenState extends State<AISettingsScreen> {
             '- Download pre-built libraries from llama.cpp releases\n'
             '- Place in ios/libs/ or android/jniLibs/arm64-v8a/\n\n'
             'For detailed instructions, check the build guide.',
+            style: GoogleFonts.spaceGrotesk(fontSize: 14),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),

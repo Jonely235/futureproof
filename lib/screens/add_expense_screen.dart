@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../config/app_strings.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
@@ -119,7 +120,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       context: context,
       barrierDismissible: false, // User must make a choice
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
         title: Row(
           children: [
             const Text('⚠️', style: TextStyle(fontSize: 28)),
@@ -143,7 +144,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppColors.danger.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: DesignTokens.borderRadiusSm,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +202,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               backgroundColor: AppColors.danger,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: DesignTokens.borderRadiusSm,
               ),
             ),
             child: Text(
@@ -358,7 +359,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -475,7 +476,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: DesignTokens.borderRadiusLg,
                           border: Border.all(
                             color: AppColors.border,
                             width: 1.5,
@@ -528,7 +529,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: DesignTokens.borderRadiusMd,
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.all(16),
@@ -569,7 +570,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     disabledBackgroundColor: AppColors.border,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: DesignTokens.borderRadiusLg,
                     ),
                     elevation: 0,
                   ),
@@ -619,7 +620,7 @@ class _CategoryBottomSheet extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXxl)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -631,7 +632,7 @@ class _CategoryBottomSheet extends StatelessWidget {
             height: 4,
             decoration: BoxDecoration(
               color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
             ),
           ),
 
@@ -683,7 +684,7 @@ class _CategoryBottomSheet extends StatelessWidget {
                     color: isSelected
                         ? color.withOpacity(0.15)
                         : AppColors.offWhite,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: DesignTokens.borderRadiusLg,
                     border: Border.all(
                       color: isSelected ? color : AppColors.border,
                       width: isSelected ? 2 : 1,

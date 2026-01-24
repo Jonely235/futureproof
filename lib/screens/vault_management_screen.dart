@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 import '../models/vault_sort_option.dart';
 import '../models/vault_view_mode.dart';
@@ -32,7 +33,7 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           // App bar with search
@@ -42,7 +43,7 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
             elevation: 0,
             backgroundColor: Colors.white,
             leading: IconButton(
-              icon: const Icon(Icons.close, size: 24),
+              icon: const Icon(Icons.close, size: 24, color: AppColors.black),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
@@ -306,7 +307,7 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXxl)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -318,7 +319,7 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: AppColors.gray300,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
                 ),
               ),
               ListTile(
@@ -362,7 +363,7 @@ class _VaultManagementScreenState extends State<VaultManagementScreen> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
           ),
           title: Text(
             'Delete Vault',

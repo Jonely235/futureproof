@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 import '../models/vault_sort_option.dart';
 import '../models/vault_view_mode.dart';
@@ -53,7 +54,7 @@ class _VaultListScreenState extends State<VaultListScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           // App Bar with search and actions
@@ -307,7 +308,7 @@ class _VaultListScreenState extends State<VaultListScreen>
                 ],
               )
             : null,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: vault.isActive
@@ -322,7 +323,7 @@ class _VaultListScreenState extends State<VaultListScreen>
         margin: EdgeInsets.zero,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
           side: vault.isActive
               ? BorderSide(color: AppColors.fintechTeal, width: 2)
               : BorderSide.none,
@@ -333,7 +334,7 @@ class _VaultListScreenState extends State<VaultListScreen>
             HapticFeedback.mediumImpact();
             _showVaultOptions(vault, provider);
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -354,7 +355,7 @@ class _VaultListScreenState extends State<VaultListScreen>
                               AppColors.gray300,
                             ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: DesignTokens.borderRadiusLg,
                   ),
                   child: Center(
                     child: Text(
@@ -397,7 +398,7 @@ class _VaultListScreenState extends State<VaultListScreen>
                                     Color(0xFF00A896),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: DesignTokens.borderRadiusXl,
                               ),
                               child: Text(
                                 'ACTIVE',
@@ -640,7 +641,7 @@ class _VaultListScreenState extends State<VaultListScreen>
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXxl)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -652,7 +653,7 @@ class _VaultListScreenState extends State<VaultListScreen>
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: AppColors.gray300,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusXs),
                 ),
               ),
               ListTile(
@@ -696,7 +697,7 @@ class _VaultListScreenState extends State<VaultListScreen>
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
           ),
           title: Text(
             'Delete Vault',
@@ -750,7 +751,7 @@ class _VaultListScreenState extends State<VaultListScreen>
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
           ),
           title: Text(
             'Sort Vaults',

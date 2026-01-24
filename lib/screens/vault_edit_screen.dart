@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 import '../providers/vault_provider.dart';
 
@@ -132,7 +133,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
           ),
           title: Text(
             'Archive Vault',
@@ -182,7 +183,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
           ),
           title: Text(
             'Export Vault Data',
@@ -230,12 +231,12 @@ class _VaultEditScreenState extends State<VaultEditScreen>
           ),
         );
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.gray200),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         ),
         child: Row(
           children: [
@@ -272,12 +273,12 @@ class _VaultEditScreenState extends State<VaultEditScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close, color: AppColors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -326,7 +327,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
                 hintText: 'Enter vault name',
                 hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.gray500),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -360,7 +361,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
                 hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.gray500),
                 prefixText: '\$ ',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -384,7 +385,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
                 hintStyle: GoogleFonts.spaceGrotesk(color: AppColors.gray500),
                 prefixText: '\$ ',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -451,7 +452,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
           margin: const EdgeInsets.only(bottom: 8),
           child: InkWell(
             onTap: () => setState(() => _selectedType = type),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -462,7 +463,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
                   color: isSelected ? AppColors.fintechTeal : AppColors.gray200,
                   width: isSelected ? 2 : 1,
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
               child: Row(
                 children: [
@@ -501,7 +502,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         border: Border.all(color: AppColors.gray200),
       ),
       child: Column(
@@ -523,7 +524,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
               final isSelected = _selectedColor.value == color.value;
               return InkWell(
                 onTap: () => setState(() => _selectedColor = color),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                 child: Container(
                   width: 40,
                   height: 40,
@@ -563,7 +564,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         border: Border.all(color: AppColors.gray200),
       ),
       child: Column(
@@ -585,7 +586,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
               final isSelected = _selectedIcon == icon;
               return InkWell(
                 onTap: () => setState(() => _selectedIcon = icon),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                 child: Container(
                   width: 48,
                   height: 48,
@@ -597,7 +598,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
                       color: isSelected ? AppColors.fintechTeal : AppColors.gray200,
                       width: isSelected ? 2 : 1,
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                   ),
                   child: Center(
                     child: Text(
@@ -632,7 +633,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
               side: BorderSide(color: AppColors.gray300),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
             ),
           ),
@@ -653,7 +654,7 @@ class _VaultEditScreenState extends State<VaultEditScreen>
               side: BorderSide(color: AppColors.fintechTeal),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
             ),
           ),

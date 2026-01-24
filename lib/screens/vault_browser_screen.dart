@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 import '../providers/vault_provider.dart';
 import '../widgets/vault_card_widget.dart';
@@ -27,7 +28,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: DesignTokens.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           // Clean app bar - just title and back button
@@ -37,7 +38,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
             elevation: 0,
             backgroundColor: Colors.white,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back, color: AppColors.black),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
@@ -122,7 +123,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                           vertical: 14,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                         ),
                       ),
                     ),
@@ -160,7 +161,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                           vertical: 12,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
                         ),
                       ),
                     ),
@@ -297,7 +298,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                 ],
               )
             : null,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         boxShadow: [
           BoxShadow(
             color: vault.isActive
@@ -323,7 +324,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
               ),
             );
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
           child: Container(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -344,7 +345,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                               AppColors.gray300,
                             ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: DesignTokens.borderRadiusLg,
                   ),
                   child: Center(
                     child: Text(
@@ -388,7 +389,7 @@ class _VaultBrowserScreenState extends State<VaultBrowserScreen> {
                                     Color(0xFF00A896),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                               ),
                               child: Text(
                                 'ACTIVE',

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
 
 /// Vault card widget - displays vault information
@@ -105,9 +106,9 @@ class _VaultCardWidgetState extends State<VaultCardWidget>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: EdgeInsets.symmetric(horizontal: DesignTokens.spacingMd, vertical: DesignTokens.spacingSm),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: DesignTokens.borderRadiusLg,
             gradient: widget.isActive
                 ? LinearGradient(
                     colors: [
@@ -137,7 +138,7 @@ class _VaultCardWidgetState extends State<VaultCardWidget>
             margin: EdgeInsets.zero,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: DesignTokens.borderRadiusLg,
               side: widget.isActive
                   ? BorderSide(
                       color: AppColors.fintechTeal.withOpacity(0.5),
@@ -150,7 +151,7 @@ class _VaultCardWidgetState extends State<VaultCardWidget>
             ),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: DesignTokens.borderRadiusLg,
                 border: widget.isActive
                     ? Border.all(
                         color: AppColors.fintechTeal,
@@ -167,7 +168,7 @@ class _VaultCardWidgetState extends State<VaultCardWidget>
                     : null,
               ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: DesignTokens.paddingMd,
                 child: Row(
                   children: [
                     // Vault icon with gradient background
@@ -261,7 +262,7 @@ class _VaultCardWidgetState extends State<VaultCardWidget>
                       Color(0xFF00A896),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.fintechTeal.withOpacity(0.3),
@@ -367,7 +368,7 @@ class _VaultCardWidgetState extends State<VaultCardWidget>
         color = AppColors.fintechTeal;
       } else if (syncAge < const Duration(hours: 1)) {
         icon = Icons.cloud_queue;
-        color = Colors.orange;
+        color = AppColors.gold;
       } else {
         icon = Icons.sync_problem;
         color = AppColors.gray700;
