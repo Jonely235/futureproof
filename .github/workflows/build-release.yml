@@ -87,9 +87,10 @@ jobs:
           sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
           sed -i.bak "s/platform :ios,.*/platform :ios, '15.0'/" Podfile
 
-          # Add modular headers if not present
+          # Add modular headers if not present (cross-platform compatible)
           if ! grep -q "use_modular_headers" Podfile; then
-            sed -i.bak '2 a use_modular_headers!' Podfile
+            # Use awk for cross-platform compatibility
+            awk 'NR==2 {print; print "use_modular_headers!"; next} 1' Podfile > Podfile.tmp && mv Podfile.tmp Podfile
           fi
           cd ..
 
