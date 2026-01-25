@@ -7,6 +7,7 @@ import '../config/app_colors.dart';
 import '../design/design_tokens.dart';
 import '../providers/settings_expansion_provider.dart';
 import '../providers/financial_goals_provider.dart';
+import '../providers/anti_fragile_wallet_provider.dart';
 import '../providers/vault_provider.dart';
 import '../widgets/financial_goals_form_widget.dart';
 import '../widgets/settings/anti_fragile_settings_widget.dart';
@@ -71,8 +72,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Content with Accordion
           SliverToBoxAdapter(
-            child: Consumer3<SettingsExpansionProvider, FinancialGoalsProvider, VaultProvider>(
-              builder: (context, expansionProvider, goalsProvider, vaultProvider, child) {
+            child: Consumer4<SettingsExpansionProvider, FinancialGoalsProvider, AntiFragileWalletProvider, VaultProvider>(
+              builder: (context, expansionProvider, goalsProvider, walletProvider, vaultProvider, child) {
                 return SettingsAccordion(
                   children: [
                     const SizedBox(height: 16),
@@ -144,11 +145,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         sectionId: 'finance',
                         icon: Icons.account_balance_wallet,
                         title: 'Finance',
-                        summary: _buildFinanceSummary(goalsProvider),
+                        summary: _buildFinanceSummary(goalsProvider, walletProvider),
                         iconColor: AppColors.fintechTeal,
                         isExpanded: expansionProvider.isExpanded('finance'),
                         children: [
                           const FinancialGoalsFormWidget(),
+
+                          // Visual divider between Growth and Security sections
+                          const SizedBox(height: 24),
+                          _buildSectionDivider(),
+
                           const SizedBox(height: 16),
                           const AntiFragileSettingsWidget(),
                         ],
@@ -229,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: const Icon(Icons.bug_report, color: Colors.red),
+                              leading: const Icon(Icons.bug_report, color: AppColors.danger),
                               title: Text(
                                 'Error History',
                                 style: GoogleFonts.spaceGrotesk(
@@ -278,11 +284,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Build finance section summary
-  String _buildFinanceSummary(FinancialGoalsProvider provider) {
-    if (provider.isLoading) {
+  String _buildFinanceSummary(
+    FinancialGoalsProvider goalsProvider,
+    AntiFragileWalletProvider walletProvider,
+  ) {
+    if (goalsProvider.isLoading) {
       return 'Loading...';
     }
-    return 'Income: ${provider.formattedIncome} | Reserve: \$500';
+    final reserve = walletProvider.settings?.minimumReserve ?? 500;
+    return 'Income: ${goalsProvider.formattedIncome} | Reserve: \$$reserve';
   }
 
   /// Build appearance section summary
@@ -290,6 +300,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final themeManager = context.read<ThemeManager>();
     final themeName = themeManager.currentTheme.displayName;
     return 'Theme: $themeName';
+  }
+
+  /// Build visual section divider
+  Widget _buildSectionDivider() {
+    return Column(
+      children: [
+        Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.gray200,
+                AppColors.fintechTeal.withOpacity(0.3),
+                AppColors.fintechIndigo.withOpacity(0.3),
+                AppColors.gray200,
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.gray100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '• • •',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 12,
+                letterSpacing: 4,
+                color: AppColors.gray500,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
   }
 
   Widget _buildInfoRow(String label, String value) {

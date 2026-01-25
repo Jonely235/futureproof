@@ -4,14 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../models/app_error.dart';
 import '../utils/app_logger.dart';
 import '../utils/error_display.dart';
 
 /// Financial Goals Form Widget
 ///
-/// A self-contained form widget for managing monthly income and savings goals.
-/// Handles loading, validation, saving, and resetting of financial settings.
+/// A self-contained form widget for managing monthly income and savings targets.
+/// Refactored with clear semantic distinction between "Growth/Budgeting" concepts.
+///
 /// Uses SharedPreferences for persistence and provides haptic feedback.
 class FinancialGoalsFormWidget extends StatefulWidget {
   const FinancialGoalsFormWidget({super.key});
@@ -26,6 +28,10 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
   final _savingsController = TextEditingController();
   bool _isLoading = true;
   bool _isSaving = false;
+
+  // Slider values (synced with text controllers)
+  double _incomeSliderValue = 5000.0;
+  double _savingsSliderValue = 1000.0;
 
   @override
   void initState() {
@@ -52,6 +58,8 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
       setState(() {
         _incomeController.text = monthlyIncome.toStringAsFixed(0);
         _savingsController.text = savingsGoal.toStringAsFixed(0);
+        _incomeSliderValue = monthlyIncome;
+        _savingsSliderValue = savingsGoal;
         _isLoading = false;
       });
     } catch (e, st) {
@@ -69,6 +77,14 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
         ErrorDisplay.showErrorSnackBar(context, error);
       }
     }
+  }
+
+  /// Calculate savings rate as percentage
+  double _getSavingsRate() {
+    final income = double.tryParse(_incomeController.text) ?? 0;
+    final savings = double.tryParse(_savingsController.text) ?? 0;
+    if (income <= 0) return 0.0;
+    return (savings / income * 100).clamp(0, 100);
   }
 
   Future<void> _saveSettings() async {
@@ -102,7 +118,7 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
         context,
         const AppError(
           type: AppErrorType.validation,
-          message: 'Please enter a valid savings goal',
+          message: 'Please enter a valid savings target',
         ),
       );
       return;
@@ -132,7 +148,7 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
           });
           ErrorDisplay.showSuccessSnackBar(
             context,
-            'Settings saved successfully',
+            'Financial goals saved successfully',
           );
         }
       } else {
@@ -164,19 +180,36 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset to Defaults?'),
-        content: const Text(
-            'This will reset all settings to default values. Continue?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Reset to Defaults?',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+            'This will reset your income and savings target to default values. Continue?',
+            style: GoogleFonts.spaceGrotesk()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.spaceGrotesk(
+                color: AppColors.gray700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Reset',
-              style: TextStyle(color: AppColors.danger),
+              style: GoogleFonts.spaceGrotesk(
+                color: AppColors.danger,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -237,53 +270,354 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSettingCard(
-          icon: Icons.account_balance_wallet_outlined,
-          title: 'Monthly Income',
-          subtitle: 'Your total monthly household income',
-          child: TextField(
-            controller: _incomeController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Income',
-              prefixText: '\$',
-              border: InputBorder.none,
-              filled: true,
-            ),
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+        // Section Header
+        _buildSectionHeader(
+          icon: Icons.trending_up,
+          title: 'PRIMARY FINANCIAL GOALS',
+          subtitle: 'Growth & Accumulation',
+          color: AppColors.fintechTeal,
+        ),
+
+        const SizedBox(height: DesignTokens.spacingMd),
+
+        // Income Card
+        _buildIncomeCard(),
+
+        const SizedBox(height: DesignTokens.spacingMd),
+
+        // Savings Target Card
+        _buildSavingsTargetCard(),
+
+        const SizedBox(height: DesignTokens.spacingXl),
+
+        // Action Buttons
+        _buildActionButtons(),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
           ),
         ),
-        const SizedBox(height: 12),
-        _buildSettingCard(
-          icon: Icons.savings_outlined,
-          title: 'Savings Goal',
-          subtitle: 'How much you want to save each month',
-          child: TextField(
-            controller: _savingsController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Goal',
-              prefixText: '\$',
-              border: InputBorder.none,
-              filled: true,
-            ),
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                  color: color,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.gray700,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildIncomeCard() {
+    return _buildGrowthCard(
+      icon: Icons.arrow_downward,
+      iconColor: AppColors.fintechTeal,
+      title: 'Total Monthly Income',
+      subtitle: 'Net take-home pay from all sources',
+      value: _incomeController.text,
+      prefix: '\$',
+      controller: _incomeController,
+      sliderValue: _incomeSliderValue,
+      minSliderValue: 0,
+      maxSliderValue: 20000,
+      sliderStep: 100,
+      tooltipMessage:
+          'Your total monthly household income after taxes. This is used to calculate your savings rate and daily budget.',
+      onSliderChanged: (value) {
+        setState(() {
+          _incomeSliderValue = value;
+          _incomeController.text = value.toStringAsFixed(0);
+        });
+      },
+      onTextChanged: (value) {
+        final parsed = double.tryParse(value);
+        if (parsed != null) {
+          setState(() {
+            _incomeSliderValue = parsed;
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildSavingsTargetCard() {
+    final savingsRate = _getSavingsRate();
+
+    return _buildGrowthCard(
+      icon: Icons.savings,
+      iconColor: AppColors.fintechGrowth,
+      title: 'Monthly Savings Target',
+      subtitle: 'Amount to set aside each month for accumulation',
+      value: _savingsController.text,
+      prefix: '\$',
+      controller: _savingsController,
+      sliderValue: _savingsSliderValue,
+      minSliderValue: 0,
+      maxSliderValue: 5000,
+      sliderStep: 50,
+      tooltipMessage:
+          'The amount you aim to save each month. This is tracked in your financial health analytics and helps measure your savings progress.',
+      onSliderChanged: (value) {
+        setState(() {
+          _savingsSliderValue = value;
+          _savingsController.text = value.toStringAsFixed(0);
+        });
+      },
+      onTextChanged: (value) {
+        final parsed = double.tryParse(value);
+        if (parsed != null) {
+          setState(() {
+            _savingsSliderValue = parsed;
+          });
+        }
+      },
+      trailingWidget: _buildSavingsRateBadge(savingsRate),
+    );
+  }
+
+  Widget _buildSavingsRateBadge(double rate) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.fintechGrowth.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.fintechGrowth.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.percent,
+            size: 12,
+            color: AppColors.fintechGrowth,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${rate.toStringAsFixed(1)}% of income',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.fintechGrowth,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGrowthCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required String value,
+    required String prefix,
+    required TextEditingController controller,
+    required double sliderValue,
+    required double minSliderValue,
+    required double maxSliderValue,
+    required double sliderStep,
+    required String tooltipMessage,
+    required ValueChanged<double> onSliderChanged,
+    required ValueChanged<String> onTextChanged,
+    Widget? trailingWidget,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: iconColor.withOpacity(0.2),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 11,
+                        color: AppColors.gray700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Info tooltip
+              InkWell(
+                onTap: () => _showTooltipDialog(context, title, tooltipMessage),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: AppColors.gray500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Slider
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              activeTrackColor: iconColor,
+              inactiveTrackColor: iconColor.withOpacity(0.2),
+              thumbColor: iconColor,
+              overlayColor: iconColor.withOpacity(0.15),
+              trackShape: const RoundedRectSliderTrackShape(),
+            ),
+            child: Slider(
+              value: sliderValue.clamp(minSliderValue, maxSliderValue),
+              min: minSliderValue,
+              max: maxSliderValue,
+              divisions: ((maxSliderValue - minSliderValue) / sliderStep).round(),
+              label: '$prefix${sliderValue.toStringAsFixed(0)}',
+              onChanged: (value) => onSliderChanged(value),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Text input with trailing badge
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: onTextChanged,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: iconColor.withOpacity(0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    prefixText: prefix,
+                    prefixStyle: GoogleFonts.jetBrainsMono(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: iconColor,
+                    ),
+                  ),
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: iconColor,
+                  ),
+                ),
+              ),
+              if (trailingWidget != null) ...[
+                const SizedBox(width: 12),
+                trailingWidget,
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        // Save Button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: _isSaving ? null : _saveSettings,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.black,
-              foregroundColor: AppColors.white,
+              backgroundColor: AppColors.fintechTeal,
+              foregroundColor: Colors.white,
               disabledBackgroundColor: AppColors.border,
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
@@ -297,37 +631,44 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
                     width: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.black),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Text(
-                    'Save Settings',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Save Financial Goals',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ),
         const SizedBox(height: 12),
+        // Reset Button
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
             onPressed: _resetToDefaults,
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.danger,
+              foregroundColor: AppColors.gray700,
+              side: BorderSide(color: AppColors.gray300),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              side: const BorderSide(color: AppColors.danger),
             ),
             child: Text(
               'Reset to Defaults',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -336,68 +677,55 @@ class _FinancialGoalsFormWidgetState extends State<FinancialGoalsFormWidget> {
     );
   }
 
-  Widget _buildSettingCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Widget child,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+  Future<void> _showTooltipDialog(
+    BuildContext context,
+    String title,
+    String message,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.gray100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.black,
-                size: 20,
-              ),
+            Icon(
+              Icons.lightbulb_outline,
+              color: AppColors.fintechTeal,
+              size: 24,
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 12,
-                      color: AppColors.gray700,
-                    ),
-                  ),
-                ],
+              child: Text(
+                title,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.offWhite,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1,
+        content: Text(
+          message,
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 14,
+            height: 1.5,
+            color: AppColors.gray700,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Got it',
+              style: GoogleFonts.spaceGrotesk(
+                color: AppColors.fintechTeal,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          child: child,
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
