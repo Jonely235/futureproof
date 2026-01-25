@@ -100,6 +100,9 @@ enum AppErrorType {
   /// Import/export backup operations
   backup,
 
+  /// iCloud Drive operations
+  icloud,
+
   /// Catch-all for unexpected errors
   unknown,
 }

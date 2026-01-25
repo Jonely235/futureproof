@@ -11,6 +11,7 @@ import '../models/transaction.dart';
 import '../providers/vault_provider.dart';
 import '../providers/transaction_provider.dart';
 import 'database_service.dart';
+import 'icloud_drive_service.dart';
 
 /// Backup Service
 ///
@@ -197,13 +198,14 @@ class BackupService {
   /// Get iCloud sync status
   Future<SyncStatus> getiCloudSyncStatus() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastSync = prefs.getString('icloud_last_sync');
+      final isAvailable = ICloudDriveService.isAvailable;
+      final isEnabled = await ICloudDriveService.instance.isEnabled();
+      final lastSyncTime = await ICloudDriveService.instance.getLastSyncTime();
 
       return SyncStatus(
-        isEnabled: true,
-        isAvailable: true, // TODO: Check actual availability
-        lastSyncTime: lastSync != null ? DateTime.parse(lastSync) : null,
+        isEnabled: isEnabled,
+        isAvailable: isAvailable,
+        lastSyncTime: lastSyncTime,
       );
     } catch (e) {
       return SyncStatus(
@@ -213,16 +215,49 @@ class BackupService {
     }
   }
 
-  /// Trigger iCloud sync
-  Future<bool> triggeriCloudSync() async {
+  /// Trigger iCloud sync - saves vaults to iCloud Drive
+  Future<bool> triggeriCloudSync({
+    required VaultProvider vaultProvider,
+    required Map<String, TransactionProvider> transactionProviders,
+  }) async {
     try {
-      // Delegate to CloudKitService
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('icloud_last_sync', DateTime.now().toIso8601String());
-      return true;
+      // Export vaults data
+      final data = await exportAllVaults(
+        vaultProvider: vaultProvider,
+        transactionProviders: transactionProviders,
+      );
+
+      // Save to iCloud Drive
+      final result = await ICloudDriveService.instance.saveVaults(data);
+      return result.isSuccess;
     } catch (e) {
       return false;
     }
+  }
+
+  /// Restore vaults from iCloud Drive
+  Future<BackupData?> restoreFromiCloudDrive() async {
+    try {
+      final result = await ICloudDriveService.instance.loadVaults();
+      if (result.isFailure) {
+        return null;
+      }
+
+      final jsonString = jsonEncode(result.data);
+      return await validateBackup(jsonString);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Check if iCloud backup exists
+  Future<bool> iCloudBackupExists() async {
+    return ICloudDriveService.instance.vaultsExist();
+  }
+
+  /// Enable or disable iCloud sync
+  Future<void> setICloudSyncEnabled(bool enabled) async {
+    await ICloudDriveService.instance.setEnabled(enabled);
   }
 
   /// Get Google Drive sync status (placeholder)
