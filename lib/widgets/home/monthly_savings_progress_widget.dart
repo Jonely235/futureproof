@@ -94,12 +94,7 @@ class MonthlySavingsProgressWidget extends StatelessWidget {
             children: [
               Text(
                 savedFormatted,
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: progressColor,
-                  letterSpacing: -1,
-                ),
+                style: DesignTokens.currencyMedium(color: progressColor),
               ),
               const SizedBox(width: 6),
               Padding(

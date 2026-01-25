@@ -22,6 +22,8 @@ class ErrorDisplay {
         return Icons.error_outline;
       case AppErrorType.backup:
         return Icons.backup;
+      case AppErrorType.icloud:
+        return Icons.cloud;
       case AppErrorType.unknown:
         return Icons.warning;
     }
@@ -230,6 +232,8 @@ class ErrorDisplay {
       case AppErrorType.validation:
         return AppLogger.ui;
       case AppErrorType.backup:
+        return AppLogger.backup;
+      case AppErrorType.icloud:
         return AppLogger.backup;
       case AppErrorType.unknown:
         return AppLogger.general;

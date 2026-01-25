@@ -287,12 +287,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
           const SizedBox(height: DesignTokens.spacingSm),
           Text(
             '\$${_analysis!.totalSpending.toStringAsFixed(0)}',
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 42,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: -2,
-            ),
+            style: DesignTokens.currencyLarge(color: Colors.white),
           ),
         ],
       ),
@@ -341,12 +336,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
           const SizedBox(height: DesignTokens.spacingXxs),
           Text(
             value,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.black,
-              letterSpacing: -0.5,
-            ),
+            style: DesignTokens.currencyMedium(),
           ),
         ],
       ),
@@ -401,11 +391,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                       ),
                       Text(
                         '\$${trend.amount.toStringAsFixed(0)}',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.black,
-                        ),
+                        style: DesignTokens.currencySmall(),
                       ),
                     ],
                   ),

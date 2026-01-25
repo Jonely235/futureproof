@@ -223,7 +223,16 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   Future<void> _triggeriCloudSync() async {
     setState(() => _isSyncing = true);
     try {
-      await BackupService.instance.triggeriCloudSync();
+      final vaultProvider = context.read<VaultProvider>();
+      final transactionProviders = {
+        for (final vault in vaultProvider.vaults)
+          vault.id: context.read<TransactionProvider>()
+      };
+
+      await BackupService.instance.triggeriCloudSync(
+        vaultProvider: vaultProvider,
+        transactionProviders: transactionProviders,
+      );
       await _loadSyncStatus();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

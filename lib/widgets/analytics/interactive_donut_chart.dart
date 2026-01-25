@@ -83,9 +83,7 @@ class _InteractiveDonutChartState extends State<InteractiveDonutChart>
                 const SizedBox(height: 4),
                 Text(
                   '\$${widget.totalSpending.toStringAsFixed(0)}',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                  style: DesignTokens.currencyMedium(
                     color: _selectedCategory != null
                         ? AppColors.categoryColors[_selectedCategory] ?? AppColors.fintechTeal
                         : AppColors.fintechTeal,

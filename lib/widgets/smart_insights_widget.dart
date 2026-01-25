@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/app_colors.dart';
+import '../design/design_tokens.dart';
 import '../services/analytics_service.dart';
 import '../utils/app_logger.dart';
 
@@ -153,11 +154,7 @@ class SmartInsightsWidget extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
+            style: DesignTokens.currencyMedium(color: color),
           ),
           const SizedBox(height: 2),
           Text(
@@ -204,11 +201,7 @@ class SmartInsightsWidget extends StatelessWidget {
                 Center(
                   child: Text(
                     '${(value * 100).toInt()}%',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+                    style: DesignTokens.labelSmall(color: color),
                   ),
                 ),
               ],

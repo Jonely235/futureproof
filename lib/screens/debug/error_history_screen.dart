@@ -157,6 +157,8 @@ class _ErrorListItem extends StatelessWidget {
         return Icons.error_outline;
       case AppErrorType.backup:
         return Icons.backup;
+      case AppErrorType.icloud:
+        return Icons.cloud;
       case AppErrorType.unknown:
         return Icons.warning;
     }

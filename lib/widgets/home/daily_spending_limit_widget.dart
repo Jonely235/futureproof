@@ -84,11 +84,7 @@ class DailySpendingLimitWidget extends StatelessWidget {
               ),
               Text(
                 '\$${dailyLimit.toStringAsFixed(0)}',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
+                style: DesignTokens.currencySmall(),
               ),
             ],
           ),

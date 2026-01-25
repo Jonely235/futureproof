@@ -735,11 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              color: AppColors.black,
-            ),
+            style: DesignTokens.currencyMedium(),
           ),
           const SizedBox(height: 8),
           Row(
@@ -810,11 +806,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 32,
-              fontWeight: FontWeight.w500,
-              color: AppColors.black,
-            ),
+            style: DesignTokens.currencyLarge(),
           ),
           const SizedBox(height: 8),
           Text(
@@ -874,9 +866,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   transaction.formattedAmount,
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                  style: DesignTokens.currencySmall(
                     color: transaction.amount < 0
                         ? AppColors.black
                         : AppColors.gray700,
@@ -934,127 +924,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String value,
-    Color? valueColor,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: DesignTokens.borderRadiusLg,
-        border: Border.all(
-          color: color.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: valueColor ?? color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransactionTile(BuildContext context, Transaction transaction) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: transaction.amount < 0
-              ? Colors.grey[200]
-              : Colors.grey[900],
-          child: Text(
-            transaction.categoryEmoji,
-            style: const TextStyle(fontSize: 20),
-          ),
-        ),
-        title: Text(
-          transaction.category,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          '${transaction.date.month}/${transaction.date.day}/${transaction.date.year}',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        trailing: Text(
-          transaction.formattedAmount,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: transaction.amount < 0 ? Colors.grey[900] : Colors.grey[600],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyTransactions(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.receipt_long,
-            size: 48,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'No transactions yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Add your first expense to get started',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildMotivationalCard({
     required IconData icon,
@@ -1094,11 +963,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
+            style: DesignTokens.currencySmall(color: color),
           ),
           const SizedBox(height: 2),
           Text(
@@ -1253,11 +1118,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Text(
               '\$${amount.toStringAsFixed(0)}',
-              style: GoogleFonts.jetBrainsMono(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.black,
-              ),
+              style: DesignTokens.currencySmall(),
             ),
           ],
         ),

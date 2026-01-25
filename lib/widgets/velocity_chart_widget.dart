@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../design/design_tokens.dart';
 import '../models/spending_analysis.dart';
 
 /// Spend Velocity Chart Widget
@@ -232,11 +233,7 @@ class _VelocityChartPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: '\$${value.toStringAsFixed(0)}',
-        style: GoogleFonts.jetBrainsMono(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF0A0A0A),
-        ),
+        style: DesignTokens.labelSmall(color: const Color(0xFF0A0A0A)),
       ),
       textDirection: TextDirection.ltr,
     );
