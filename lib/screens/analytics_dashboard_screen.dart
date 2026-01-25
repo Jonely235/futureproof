@@ -170,11 +170,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                           titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
                           title: Text(
                             'Analytics',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.black,
-                              letterSpacing: -0.5,
                             ),
                           ),
                         ),
