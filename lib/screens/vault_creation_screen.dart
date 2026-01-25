@@ -9,6 +9,7 @@ import '../domain/entities/vault_entity.dart';
 import '../providers/vault_provider.dart';
 import '../widgets/vault_card_widget.dart';
 import '../widgets/vault_type_card_selector.dart';
+import '../utils/validators.dart';
 
 /// Vault creation screen - redesigned modal with live preview
 ///
@@ -91,6 +92,16 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
       return;
     }
 
+    // Validate financial amounts
+    if (_monthlyIncome < 0) {
+      _showError('Monthly income cannot be negative');
+      return;
+    }
+    if (_savingsGoal < 0) {
+      _showError('Savings goal cannot be negative');
+      return;
+    }
+
     final vaultProvider = context.read<VaultProvider>();
 
     final vault = await vaultProvider.createVault(
@@ -106,6 +117,15 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
     if (vault != null && mounted) {
       Navigator.pop(context, vault);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.danger,
+      ),
+    );
   }
 
   @override

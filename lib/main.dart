@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -31,10 +32,8 @@ import 'domain/services/rules/cash_flow_forecast_rule.dart';
 import 'domain/services/rules/goal_progress_rule.dart';
 import 'domain/services/rules/subscription_cluster_rule.dart';
 import 'domain/services/rules/scenario_based_alerts_rule.dart';
-import 'domain/services/insight_personalization_service.dart';
 import 'theme/theme_manager.dart';
 import 'widgets/main_navigation.dart';
-import 'utils/app_logger.dart';
 
 String _getEmojiForLevel(Level level) {
   if (level >= Level.SEVERE) return '❌';
@@ -45,8 +44,12 @@ String _getEmojiForLevel(Level level) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Logger.root.level = Level.INFO;
+  // Only enable verbose logging in debug mode
+  Logger.root.level = kDebugMode ? Level.INFO : Level.WARNING;
   Logger.root.onRecord.listen((record) {
+    // Only print logs in debug builds
+    if (!kDebugMode) return;
+
     final emoji = _getEmojiForLevel(record.level);
     final timestamp = record.time.toIso8601String().substring(11, 23);
     final message =

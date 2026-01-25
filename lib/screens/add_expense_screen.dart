@@ -10,6 +10,7 @@ import '../config/app_strings.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/anti_fragile_wallet_provider.dart';
+import '../utils/validators.dart';
 
 /// Add Expense Screen - Number-First Experience
 ///
@@ -220,17 +221,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   void _saveExpense() async {
     _focusNode.unfocus(); // Dismiss keyboard before saving
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
+
+    // Validate amount with proper bounds checking
+    final validation = MoneyValidator.validate(_amountController.text);
+    if (!validation.isValid) {
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid amount'),
+        SnackBar(
+          content: Text(validation.errorMessage ?? 'Invalid amount'),
           backgroundColor: AppColors.danger,
         ),
       );
       return;
     }
+
+    final amount = validation.value!;
 
     setState(() {
       _isSaving = true;
