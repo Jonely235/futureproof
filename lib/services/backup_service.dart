@@ -261,8 +261,8 @@ class BackupService {
   }
 
   /// Get Google Drive sync status (placeholder)
-  Future<SyncStatus> getGoogleDriveStatus() async {
-    return SyncStatus(
+  Future<ICloudSyncStatus> getGoogleDriveStatus() async {
+    return ICloudSyncStatus(
       isEnabled: false,
       isAvailable: true,
       lastSyncTime: null,

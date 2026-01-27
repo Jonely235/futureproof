@@ -36,7 +36,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
 
   // iCloud sync manager status
   StreamSubscription<sync_mgr.SyncStatus>? _syncStatusSubscription;
-  sync_mgr.SyncStatus _icloudManagerStatus = sync_mgr.sync_mgr.SyncStatus.idle;
+  sync_mgr.SyncStatus _icloudManagerStatus = sync_mgr.SyncStatus.idle;
 
   @override
   void initState() {
@@ -56,13 +56,13 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
       if (mounted) {
         setState(() {
           _icloudManagerStatus = status;
-          _isSyncing = status == sync_mgr.sync_mgr.SyncStatus.syncing;
+          _isSyncing = status == sync_mgr.SyncStatus.syncing;
         });
 
         // Show toast for terminal states
-        if (status == sync_mgr.sync_mgr.SyncStatus.success) {
+        if (status == sync_mgr.SyncStatus.success) {
           _showSyncSnackBar('Synced to iCloud', AppColors.success);
-        } else if (status == sync_mgr.sync_mgr.SyncStatus.error) {
+        } else if (status == sync_mgr.SyncStatus.error) {
           _showSyncSnackBar('Sync failed - check diagnostic', AppColors.danger);
         }
       }
@@ -99,7 +99,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
     return Column(
       children: [
         // Sync status indicator (shows when active)
-        if (_icloudManagerStatus != sync_mgr.sync_mgr.SyncStatus.idle)
+        if (_icloudManagerStatus != sync_mgr.SyncStatus.idle)
           _buildSyncStatusIndicator(),
 
         // iCloud Sync
