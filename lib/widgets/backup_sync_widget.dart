@@ -10,7 +10,7 @@ import '../providers/vault_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/backup_service.dart';
 import '../services/icloud_drive_service.dart';
-import '../services/icloud_sync_manager.dart';
+import '../services/icloud_sync_manager.dart' as sync_mgr;
 import '../utils/app_logger.dart';
 
 /// Backup & Sync Widget
@@ -31,12 +31,12 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   bool _isExporting = false;
   bool _isImporting = false;
   bool _isSyncing = false;
-  SyncStatus? _iCloudStatus;
-  SyncStatus? _googleDriveStatus;
+  ICloudSyncStatus? _iCloudStatus;
+  ICloudSyncStatus? _googleDriveStatus;
 
   // iCloud sync manager status
-  StreamSubscription<SyncStatus>? _syncStatusSubscription;
-  SyncStatus _icloudManagerStatus = SyncStatus.idle;
+  StreamSubscription<sync_mgr.SyncStatus>? _syncStatusSubscription;
+  sync_mgr.SyncStatus _icloudManagerStatus = sync_mgr.sync_mgr.SyncStatus.idle;
 
   @override
   void initState() {
@@ -52,17 +52,17 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   }
 
   void _listenToSyncStatus() {
-    _syncStatusSubscription = ICloudSyncManager.instance.statusStream.listen((status) {
+    _syncStatusSubscription = sync_mgr.ICloudSyncManager.instance.statusStream.listen((status) {
       if (mounted) {
         setState(() {
           _icloudManagerStatus = status;
-          _isSyncing = status == SyncStatus.syncing;
+          _isSyncing = status == sync_mgr.sync_mgr.SyncStatus.syncing;
         });
 
         // Show toast for terminal states
-        if (status == SyncStatus.success) {
+        if (status == sync_mgr.sync_mgr.SyncStatus.success) {
           _showSyncSnackBar('Synced to iCloud', AppColors.success);
-        } else if (status == SyncStatus.error) {
+        } else if (status == sync_mgr.sync_mgr.SyncStatus.error) {
           _showSyncSnackBar('Sync failed - check diagnostic', AppColors.danger);
         }
       }
@@ -99,7 +99,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
     return Column(
       children: [
         // Sync status indicator (shows when active)
-        if (_icloudManagerStatus != SyncStatus.idle)
+        if (_icloudManagerStatus != sync_mgr.sync_mgr.SyncStatus.idle)
           _buildSyncStatusIndicator(),
 
         // iCloud Sync
@@ -122,7 +122,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
           subtitle: 'Check if iCloud is working',
           isLoading: false,
           onTap: _diagnoseICloud,
-          color: AppColors.purple,
+          color: AppColors.categoryEntertainment,
         ),
 
         const SizedBox(height: 8),
@@ -292,7 +292,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
     };
 
     // Use ICloudSyncManager for debounced sync (or force sync for manual trigger)
-    await ICloudSyncManager.instance.forceSync(
+    await sync_mgr.ICloudSyncManager.instance.forceSync(
       vaultProvider: vaultProvider,
       transactionProviders: transactionProviders,
     );
@@ -719,7 +719,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
 
   String _getSyncSubtitle() {
     // Show manager status if active
-    if (_icloudManagerStatus != SyncStatus.idle) {
+    if (_icloudManagerStatus != sync_mgr.SyncStatus.idle) {
       return _icloudManagerStatus.displayName;
     }
     // Otherwise show last sync time
@@ -727,37 +727,37 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   }
 
   Widget _buildSyncStatusIndicator() {
-    Color backgroundColor;
-    Color iconColor;
-    IconData icon;
-    String text;
+    late Color backgroundColor;
+    late Color iconColor;
+    late IconData icon;
+    late String text;
 
     switch (_icloudManagerStatus) {
-      case SyncStatus.scheduled:
+      case sync_mgr.SyncStatus.scheduled:
         backgroundColor = AppColors.gray100;
         iconColor = AppColors.gray700;
         icon = Icons.schedule;
         text = 'Sync scheduled...';
         break;
-      case SyncStatus.syncing:
+      case sync_mgr.SyncStatus.syncing:
         backgroundColor = AppColors.fintechTeal.withOpacity(0.1);
         iconColor = AppColors.fintechTeal;
         icon = Icons.cloud_sync;
         text = 'Syncing to iCloud...';
         break;
-      case SyncStatus.success:
+      case sync_mgr.SyncStatus.success:
         backgroundColor = AppColors.success.withOpacity(0.1);
         iconColor = AppColors.success;
         icon = Icons.check_circle;
         text = 'Synced to iCloud';
         break;
-      case SyncStatus.error:
+      case sync_mgr.SyncStatus.error:
         backgroundColor = AppColors.danger.withOpacity(0.1);
         iconColor = AppColors.danger;
         icon = Icons.error;
         text = 'Sync failed - tap to diagnose';
         break;
-      case SyncStatus.idle:
+      case sync_mgr.SyncStatus.idle:
         return const SizedBox.shrink();
     }
 
@@ -775,7 +775,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (_icloudManagerStatus == SyncStatus.syncing)
+          if (_icloudManagerStatus == sync_mgr.SyncStatus.syncing)
             SizedBox(
               width: 14,
               height: 14,
@@ -795,7 +795,7 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
               color: iconColor,
             ),
           ),
-          if (_icloudManagerStatus == SyncStatus.error) ...[
+          if (_icloudManagerStatus == sync_mgr.SyncStatus.error) ...[
             const SizedBox(width: 8),
             GestureDetector(
               onTap: _diagnoseICloud,

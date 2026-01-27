@@ -196,19 +196,19 @@ class BackupService {
   // ============================================
 
   /// Get iCloud sync status
-  Future<SyncStatus> getiCloudSyncStatus() async {
+  Future<ICloudSyncStatus> getiCloudSyncStatus() async {
     try {
       final isAvailable = ICloudDriveService.isAvailable;
       final isEnabled = await ICloudDriveService.instance.isEnabled();
       final lastSyncTime = await ICloudDriveService.instance.getLastSyncTime();
 
-      return SyncStatus(
+      return ICloudSyncStatus(
         isEnabled: isEnabled,
         isAvailable: isAvailable,
         lastSyncTime: lastSyncTime,
       );
     } catch (e) {
-      return SyncStatus(
+      return ICloudSyncStatus(
         isEnabled: false,
         isAvailable: false,
       );
@@ -308,12 +308,12 @@ class VaultBackupData {
   });
 }
 
-class SyncStatus {
+class ICloudSyncStatus {
   final bool isEnabled;
   final bool isAvailable;
   final DateTime? lastSyncTime;
 
-  SyncStatus({
+  ICloudSyncStatus({
     required this.isEnabled,
     required this.isAvailable,
     this.lastSyncTime,

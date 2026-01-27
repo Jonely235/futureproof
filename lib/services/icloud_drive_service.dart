@@ -111,12 +111,12 @@ class ICloudDriveService {
       }
     } on PlatformException catch (e) {
       // Log full error for debugging
-      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      AppLogger.services.warning('iCloud PlatformException: ${e.message}');
       // Return user-friendly message
       return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
       // Log full error for debugging
-      AppLogger.service.severe('iCloud unexpected error during save', e);
+      AppLogger.services.severe('iCloud unexpected error during save', e);
       // Return user-friendly message
       return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
@@ -155,12 +155,12 @@ class ICloudDriveService {
       return ICloudResult.failureWithString('No data found in iCloud Drive');
     } on PlatformException catch (e) {
       // Log full error for debugging
-      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      AppLogger.services.warning('iCloud PlatformException: ${e.message}');
       // Return user-friendly message
       return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
       // Log full error for debugging
-      AppLogger.service.severe('iCloud unexpected error during load', e);
+      AppLogger.services.severe('iCloud unexpected error during load', e);
       // Return user-friendly message
       return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
@@ -214,10 +214,10 @@ class ICloudDriveService {
 
       return ICloudResult.failureWithString('Failed to delete from iCloud Drive');
     } on PlatformException catch (e) {
-      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      AppLogger.services.warning('iCloud PlatformException: ${e.message}');
       return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
-      AppLogger.service.severe('iCloud unexpected error during delete', e);
+      AppLogger.services.severe('iCloud unexpected error during delete', e);
       return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
   }
@@ -240,10 +240,10 @@ class ICloudDriveService {
 
       return ICloudResult.failureWithString('Failed to list iCloud Drive files');
     } on PlatformException catch (e) {
-      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      AppLogger.services.warning('iCloud PlatformException: ${e.message}');
       return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
-      AppLogger.service.severe('iCloud unexpected error during list', e);
+      AppLogger.services.severe('iCloud unexpected error during list', e);
       return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
   }
@@ -285,7 +285,7 @@ class ICloudDriveService {
 
     // Test 2: Check if enabled
     try {
-      result['enabled'] = await isEnabled();
+      result['enabled'] = await instance.isEnabled();
     } catch (e) {
       result['enabled'] = false;
       result['enabledError'] = e.toString();
