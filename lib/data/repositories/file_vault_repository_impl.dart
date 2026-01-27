@@ -369,6 +369,13 @@ class FileVaultRepositoryImpl implements VaultRepository {
     _cachedVaults = null;
   }
 
+  /// Dispose of the stream controllers.
+  ///
+  /// NOTE: This repository is typically created as a singleton in main.dart
+  /// and lives for the app's lifetime, so dispose() may never be called.
+  /// The use of broadcast streams allows multiple listeners and prevents
+  /// the "Bad state: Cannot add new events after closing" error.
+  /// For testing or dynamic repository creation, call dispose() when done.
   void dispose() {
     _vaultsController.close();
     _activeVaultController.close();

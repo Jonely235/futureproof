@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +9,9 @@ import '../design/design_tokens.dart';
 import '../providers/vault_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/backup_service.dart';
+import '../services/icloud_drive_service.dart';
+import '../services/icloud_sync_manager.dart';
+import '../utils/app_logger.dart';
 
 /// Backup & Sync Widget
 ///
@@ -29,10 +34,53 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   SyncStatus? _iCloudStatus;
   SyncStatus? _googleDriveStatus;
 
+  // iCloud sync manager status
+  StreamSubscription<SyncStatus>? _syncStatusSubscription;
+  SyncStatus _icloudManagerStatus = SyncStatus.idle;
+
   @override
   void initState() {
     super.initState();
     _loadSyncStatus();
+    _listenToSyncStatus();
+  }
+
+  @override
+  void dispose() {
+    _syncStatusSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _listenToSyncStatus() {
+    _syncStatusSubscription = ICloudSyncManager.instance.statusStream.listen((status) {
+      if (mounted) {
+        setState(() {
+          _icloudManagerStatus = status;
+          _isSyncing = status == SyncStatus.syncing;
+        });
+
+        // Show toast for terminal states
+        if (status == SyncStatus.success) {
+          _showSyncSnackBar('Synced to iCloud', AppColors.success);
+        } else if (status == SyncStatus.error) {
+          _showSyncSnackBar('Sync failed - check diagnostic', AppColors.danger);
+        }
+      }
+    });
+  }
+
+  void _showSyncSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.spaceGrotesk(),
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _loadSyncStatus() async {
@@ -50,15 +98,31 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Sync status indicator (shows when active)
+        if (_icloudManagerStatus != SyncStatus.idle)
+          _buildSyncStatusIndicator(),
+
         // iCloud Sync
         _buildSyncTile(
           icon: Icons.cloud,
           title: 'iCloud Sync',
-          subtitle: _iCloudStatus?.lastSyncFormatted ?? 'Loading...',
+          subtitle: _getSyncSubtitle(),
           isEnabled: _iCloudStatus?.isEnabled ?? false,
           isAvailable: _iCloudStatus?.isAvailable ?? false,
           isLoading: _isSyncing,
           onTap: _iCloudStatus?.isAvailable == true ? _triggeriCloudSync : null,
+        ),
+
+        const SizedBox(height: 8),
+
+        // Debug/Diagnose
+        _buildActionButton(
+          icon: Icons.bug_report,
+          title: 'Diagnose iCloud',
+          subtitle: 'Check if iCloud is working',
+          isLoading: false,
+          onTap: _diagnoseICloud,
+          color: AppColors.purple,
         ),
 
         const SizedBox(height: 8),
@@ -221,49 +285,19 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
   }
 
   Future<void> _triggeriCloudSync() async {
-    setState(() => _isSyncing = true);
-    try {
-      final vaultProvider = context.read<VaultProvider>();
-      final transactionProviders = {
-        for (final vault in vaultProvider.vaults)
-          vault.id: context.read<TransactionProvider>()
-      };
+    final vaultProvider = context.read<VaultProvider>();
+    final transactionProviders = {
+      for (final vault in vaultProvider.vaults)
+        vault.id: context.read<TransactionProvider>()
+    };
 
-      await BackupService.instance.triggeriCloudSync(
-        vaultProvider: vaultProvider,
-        transactionProviders: transactionProviders,
-      );
-      await _loadSyncStatus();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Synced to iCloud',
-              style: GoogleFonts.spaceGrotesk(),
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Sync failed: ${e.toString()}',
-              style: GoogleFonts.spaceGrotesk(),
-            ),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-      }
-    }
+    // Use ICloudSyncManager for debounced sync (or force sync for manual trigger)
+    await ICloudSyncManager.instance.forceSync(
+      vaultProvider: vaultProvider,
+      transactionProviders: transactionProviders,
+    );
+
+    await _loadSyncStatus();
   }
 
   Future<void> _exportBackup() async {
@@ -299,11 +333,13 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
         );
       }
     } catch (e) {
+      // Log detailed error for debugging
+      AppLogger.ui.severe('Export backup failed', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Export failed: ${e.toString()}',
+              'Export failed. Please try again.',
               style: GoogleFonts.spaceGrotesk(),
             ),
             backgroundColor: AppColors.danger,
@@ -450,5 +486,332 @@ class _BackupSyncWidgetState extends State<BackupSyncWidget> {
         setState(() => _isImporting = false);
       }
     }
+  }
+
+  Future<void> _diagnoseICloud() async {
+    // Show loading dialog
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+        title: Text(
+          'Diagnosing iCloud...',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Checking iCloud availability and configuration'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final result = await ICloudDriveService.diagnose();
+
+      if (!mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show results dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+          title: Text(
+            'iCloud Diagnostic Results',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Basic info
+                _buildDiagnosticSection('Platform Information', [
+                  _buildDiagnosticRow('Platform', result['platform']?.toString() ?? 'Unknown'),
+                  _buildDiagnosticRow('iOS Available', result['isIOS'] == true ? 'Yes' : 'No'),
+                  _buildDiagnosticRow('iCloud Available', result['isAvailable'] == true ? 'Yes' : 'No'),
+                ]),
+
+                // Native method check
+                _buildDiagnosticSection('Native Code', [
+                  _buildDiagnosticRow(
+                    'Native Method',
+                    result['nativeMethodAvailable'] == true ? 'Working' : 'Not Working',
+                    isSuccess: result['nativeMethodAvailable'] == true,
+                    isError: result['nativeMethodAvailable'] == false,
+                  ),
+                  if (result['nativeMethodError'] != null)
+                    _buildDiagnosticRow('Error', result['nativeMethodError'].toString(), isError: true),
+                ]),
+
+                // Swift diagnostics
+                if (result['swiftDiagnostics'] != null) ...[
+                  _buildDiagnosticSection('iCloud Container', [
+                    _buildDiagnosticRow('Container ID', result['swiftDiagnostics']['containerIdentifier']?.toString() ?? 'Unknown'),
+                    _buildDiagnosticRow(
+                      'Ubiquity Container',
+                      result['swiftDiagnostics']['ubiquityContainerAvailable'] == true ? 'Available' : 'Not Available',
+                      isSuccess: result['swiftDiagnostics']['ubiquityContainerAvailable'] == true,
+                      isError: result['swiftDiagnostics']['ubiquityContainerAvailable'] == false,
+                    ),
+                    if (result['swiftDiagnostics']['ubiquityContainerURL'] != null)
+                      _buildDiagnosticRow('Container URL', result['swiftDiagnostics']['ubiquityContainerURL'].toString()),
+                    _buildDiagnosticRow(
+                      'Documents Directory',
+                      result['swiftDiagnostics']['documentsExists'] == true ? 'Exists' : 'Not Found',
+                      isSuccess: result['swiftDiagnostics']['documentsExists'] == true,
+                    ),
+                    _buildDiagnosticRow('Account Status', result['swiftDiagnostics']['accountStatus']?.toString() ?? 'Unknown'),
+                    if (result['swiftDiagnostics']['fileCount'] != null)
+                      _buildDiagnosticRow('Files Found', '${result['swiftDiagnostics']['fileCount']} file(s)'),
+                  ]),
+                ],
+
+                // File operations
+                _buildDiagnosticSection('File Operations', [
+                  _buildDiagnosticRow(
+                    'List Files',
+                    result['listFilesSuccess'] == true ? 'Success' : 'Failed',
+                    isSuccess: result['listFilesSuccess'] == true,
+                    isError: result['listFilesSuccess'] == false,
+                  ),
+                  if (result['files'] != null && (result['files'] as List).isNotEmpty)
+                    _buildDiagnosticRow('Files', (result['files'] as List).join(', ')),
+                  _buildDiagnosticRow(
+                    'Vaults File',
+                    result['vaultsFileExists'] == true ? 'Exists' : 'Not Found',
+                    isSuccess: result['vaultsFileExists'] == true,
+                  ),
+                  if (result['listFilesError'] != null)
+                    _buildDiagnosticRow('List Files Error', result['listFilesError'].toString(), isError: true),
+                  if (result['listFilesException'] != null)
+                    _buildDiagnosticRow('List Files Exception', result['listFilesException'].toString(), isError: true),
+                ]),
+
+                // Errors section
+                if (result['error'] != null || result['swiftDiagnosticsError'] != null)
+                  _buildDiagnosticSection('Errors', [
+                    if (result['error'] != null)
+                      _buildDiagnosticRow('General Error', result['error'].toString(), isError: true),
+                    if (result['swiftDiagnosticsError'] != null)
+                      _buildDiagnosticRow('Swift Diagnostics Error', result['swiftDiagnosticsError'].toString(), isError: true),
+                  ]),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Close',
+                style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close loading dialog if still open
+      Navigator.pop(context);
+
+      // Log detailed error for debugging
+      AppLogger.ui.severe('iCloud diagnostic failed', e);
+
+      // Show user-friendly error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+          title: Text(
+            'Diagnostic Failed',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Text(
+            'Unable to run iCloud diagnostic. Please check your internet connection and try again.',
+            style: GoogleFonts.spaceGrotesk(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Close',
+                style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildDiagnosticSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Text(
+            title,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.gray700,
+            ),
+          ),
+        ),
+        ...children,
+        const Divider(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildDiagnosticRow(String label, String value, {bool isError = false, bool isSuccess = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.gray700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                color: isSuccess ? AppColors.success : (isError ? AppColors.danger : AppColors.black),
+                fontWeight: isSuccess || isError ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getSyncSubtitle() {
+    // Show manager status if active
+    if (_icloudManagerStatus != SyncStatus.idle) {
+      return _icloudManagerStatus.displayName;
+    }
+    // Otherwise show last sync time
+    return _iCloudStatus?.lastSyncFormatted ?? 'Loading...';
+  }
+
+  Widget _buildSyncStatusIndicator() {
+    Color backgroundColor;
+    Color iconColor;
+    IconData icon;
+    String text;
+
+    switch (_icloudManagerStatus) {
+      case SyncStatus.scheduled:
+        backgroundColor = AppColors.gray100;
+        iconColor = AppColors.gray700;
+        icon = Icons.schedule;
+        text = 'Sync scheduled...';
+        break;
+      case SyncStatus.syncing:
+        backgroundColor = AppColors.fintechTeal.withOpacity(0.1);
+        iconColor = AppColors.fintechTeal;
+        icon = Icons.cloud_sync;
+        text = 'Syncing to iCloud...';
+        break;
+      case SyncStatus.success:
+        backgroundColor = AppColors.success.withOpacity(0.1);
+        iconColor = AppColors.success;
+        icon = Icons.check_circle;
+        text = 'Synced to iCloud';
+        break;
+      case SyncStatus.error:
+        backgroundColor = AppColors.danger.withOpacity(0.1);
+        iconColor = AppColors.danger;
+        icon = Icons.error;
+        text = 'Sync failed - tap to diagnose';
+        break;
+      case SyncStatus.idle:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+        border: Border.all(
+          color: iconColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_icloudManagerStatus == SyncStatus.syncing)
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: iconColor,
+              ),
+            )
+          else
+            Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: iconColor,
+            ),
+          ),
+          if (_icloudManagerStatus == SyncStatus.error) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: _diagnoseICloud,
+              child: Text(
+                'Diagnose',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.fintechTeal,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

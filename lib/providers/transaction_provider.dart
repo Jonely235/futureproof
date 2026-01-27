@@ -107,12 +107,17 @@ class TransactionProvider extends ChangeNotifier {
   ///
   /// Returns true if successful, false otherwise.
   /// Updates the transaction list after adding.
-  Future<bool> addTransaction(Transaction transaction) async {
+  /// [onCompleted] optional callback called after successful addition.
+  Future<bool> addTransaction(
+    Transaction transaction, {
+    void Function(Transaction)? onCompleted,
+  }) async {
     try {
       await _db.addTransaction(transaction);
       // Clear analytics cache
       _analyticsService.refresh();
       await loadTransactions();
+      onCompleted?.call(transaction);
       return true;
     } catch (e, st) {
       _error = e is AppError
@@ -134,13 +139,18 @@ class TransactionProvider extends ChangeNotifier {
   ///
   /// Returns true if successful, false otherwise.
   /// Updates the transaction list after updating.
-  Future<bool> updateTransaction(Transaction transaction) async {
+  /// [onCompleted] optional callback called after successful update.
+  Future<bool> updateTransaction(
+    Transaction transaction, {
+    void Function(Transaction)? onCompleted,
+  }) async {
     try {
       final success = await _db.updateTransaction(transaction);
       if (success) {
         // Clear analytics cache
         _analyticsService.refresh();
         await loadTransactions();
+        onCompleted?.call(transaction);
       }
       return success;
     } catch (e, st) {
@@ -164,13 +174,18 @@ class TransactionProvider extends ChangeNotifier {
   ///
   /// Returns true if successful, false otherwise.
   /// Updates the transaction list after deleting.
-  Future<bool> deleteTransaction(String id) async {
+  /// [onCompleted] optional callback called after successful deletion.
+  Future<bool> deleteTransaction(
+    String id, {
+    void Function(String)? onCompleted,
+  }) async {
     try {
       final success = await _db.deleteTransaction(id);
       if (success) {
         // Clear analytics cache
         _analyticsService.refresh();
         await loadTransactions();
+        onCompleted?.call(id);
       }
       return success;
     } catch (e, st) {
@@ -194,7 +209,7 @@ class TransactionProvider extends ChangeNotifier {
   Transaction? getTransactionById(String id) {
     try {
       return _transactions.firstWhere((t) => t.id == id);
-    } catch (e) {
+    } on StateError {
       return null;
     }
   }
