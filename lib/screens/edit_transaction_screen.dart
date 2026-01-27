@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../config/app_colors.dart';
 import '../design/design_tokens.dart';
 import '../config/app_strings.dart';
 import '../models/transaction.dart';
-import '../services/database_service.dart';
+import '../providers/transaction_provider.dart';
+import '../providers/vault_provider.dart';
+import '../services/icloud_sync_manager.dart';
 
 /// Edit Transaction Screen
 ///
@@ -179,18 +182,42 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         createdAt: widget.transaction.createdAt,
       );
 
-      // Update in local database
-      final dbService = DatabaseService();
-      await dbService.updateTransaction(updatedTransaction);
+      final provider = context.read<TransactionProvider>();
+      final vaultProvider = context.read<VaultProvider>();
 
-      // Note: Cloud sync removed in MVP (Phase 1)
+      final success = await provider.updateTransaction(
+        updatedTransaction,
+        onCompleted: (t) {
+          // Trigger debounced iCloud sync after transaction is updated
+          final activeVault = vaultProvider.activeVault;
+          if (activeVault != null) {
+            final transactionProviders = <String, TransactionProvider>{
+              activeVault.id: provider,
+            };
+
+            ICloudSyncManager.instance.scheduleSync(
+              reason: SyncReason.transactionUpdated,
+              vaultProvider: vaultProvider,
+              transactionProviders: transactionProviders,
+              detail: '\$${t.amount.toStringAsFixed(2)}',
+            );
+          }
+        },
+      );
+
+      if (!success) {
+        throw Exception(provider.error ?? 'Failed to update transaction');
+      }
 
       HapticFeedback.lightImpact();
 
       if (mounted) {
-        final category = _categories.firstWhere(
+        final categoryIndex = _categories.indexWhere(
           (c) => c['name'] == _selectedCategory,
         );
+        final category = categoryIndex >= 0
+            ? _categories[categoryIndex]
+            : _categories.first; // Fallback to first category
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -301,11 +328,31 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       HapticFeedback.mediumImpact();
 
       try {
-        // Delete from local database
-        final dbService = DatabaseService();
-        await dbService.deleteTransaction(widget.transaction.id);
+        final provider = context.read<TransactionProvider>();
+        final vaultProvider = context.read<VaultProvider>();
 
-        // Note: Cloud sync removed in MVP (Phase 1)
+        final success = await provider.deleteTransaction(
+          widget.transaction.id,
+          onCompleted: (id) {
+            // Trigger debounced iCloud sync after transaction is deleted
+            final activeVault = vaultProvider.activeVault;
+            if (activeVault != null) {
+              final transactionProviders = <String, TransactionProvider>{
+                activeVault.id: provider,
+              };
+
+              ICloudSyncManager.instance.scheduleSync(
+                reason: SyncReason.transactionDeleted,
+                vaultProvider: vaultProvider,
+                transactionProviders: transactionProviders,
+              );
+            }
+          },
+        );
+
+        if (!success) {
+          throw Exception(provider.error ?? 'Failed to delete transaction');
+        }
 
         HapticFeedback.lightImpact();
 
@@ -369,9 +416,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedCategoryData = _categories.firstWhere(
+    final categoryIndex = _categories.indexWhere(
       (c) => c['name'] == _selectedCategory,
     );
+    final selectedCategoryData = categoryIndex >= 0
+        ? _categories[categoryIndex]
+        : _categories.firstOrNull ?? {'name': 'Other', 'emoji': '📦', 'color': '6B7280'};
 
     return Scaffold(
       backgroundColor: DesignTokens.scaffoldBackground,
@@ -852,9 +902,7 @@ class _CategoryBottomSheet extends StatelessWidget {
             itemBuilder: (context, index) {
               final category = categories[index];
               final isSelected = category['name'] == selectedCategory;
-              final color = Color(
-                int.parse('0xFF${category["color"]}'),
-              );
+              final color = _parseCategoryColor(category);
 
               return GestureDetector(
                 onTap: () => onSelect(category['name']!),
@@ -897,5 +945,19 @@ class _CategoryBottomSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Safely parse category color hex string.
+  /// Returns a fallback gray color if parsing fails.
+  Color _parseCategoryColor(Map<String, String> category) {
+    final colorHex = category["color"];
+    if (colorHex == null || colorHex.length != 6) {
+      return AppColors.gray700;
+    }
+    try {
+      return Color(int.parse('0xFF$colorHex'));
+    } on FormatException {
+      return AppColors.gray700;
+    }
   }
 }

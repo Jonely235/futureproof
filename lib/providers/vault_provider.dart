@@ -129,10 +129,13 @@ class VaultProvider extends ChangeNotifier {
   /// Create a new vault
   ///
   /// Returns the created vault if successful, null otherwise.
+  /// [onCreated] optional callback called after successful vault creation (before return).
+  /// This can be used to trigger side effects like iCloud sync.
   Future<VaultEntity?> createVault({
     required String name,
     required VaultType type,
     VaultSettings? settings,
+    void Function(VaultEntity)? onCreated,
   }) async {
     _isLoading = true;
     _error = null;
@@ -158,6 +161,10 @@ class VaultProvider extends ChangeNotifier {
       }
 
       AppLogger.vaults.info('✅ Created vault: ${vault.name} (${vault.id})');
+
+      // Call the onCreated callback for side effects (e.g., iCloud sync)
+      onCreated?.call(vault);
+
       return vault;
     } catch (e, st) {
       _error = e is AppError
@@ -338,11 +345,8 @@ class VaultProvider extends ChangeNotifier {
 
   /// Get vault by ID
   VaultEntity? getVaultById(String id) {
-    try {
-      return _vaults.firstWhere((v) => v.id == id);
-    } catch (e) {
-      return null;
-    }
+    final index = _vaults.indexWhere((v) => v.id == id);
+    return index >= 0 ? _vaults[index] : null;
   }
 
   /// Reload vaults from repository

@@ -10,6 +10,8 @@ import '../config/app_strings.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/anti_fragile_wallet_provider.dart';
+import '../providers/vault_provider.dart';
+import '../services/icloud_sync_manager.dart';
 import '../utils/validators.dart';
 
 /// Add Expense Screen - Number-First Experience
@@ -255,7 +257,27 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       );
 
       final provider = context.read<TransactionProvider>();
-      final success = await provider.addTransaction(transaction);
+      final vaultProvider = context.read<VaultProvider>();
+
+      final success = await provider.addTransaction(
+        transaction,
+        onCompleted: (t) {
+          // Trigger debounced iCloud sync after transaction is added
+          final activeVault = vaultProvider.activeVault;
+          if (activeVault != null) {
+            final transactionProviders = <String, TransactionProvider>{
+              activeVault.id: provider,
+            };
+
+            ICloudSyncManager.instance.scheduleSync(
+              reason: SyncReason.transactionAdded,
+              vaultProvider: vaultProvider,
+              transactionProviders: transactionProviders,
+              detail: '\$${t.amount.toStringAsFixed(2)}',
+            );
+          }
+        },
+      );
 
       if (!success) {
         throw Exception(provider.error ?? 'Failed to save transaction');
@@ -264,9 +286,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       HapticFeedback.lightImpact();
 
       if (mounted) {
-        final category = _categories.firstWhere(
+        final categoryIndex = _categories.indexWhere(
           (c) => c['name'] == _selectedCategory,
         );
+        final category = categoryIndex >= 0
+            ? _categories[categoryIndex]
+            : _categories.first; // Fallback to first category
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -678,9 +703,7 @@ class _CategoryBottomSheet extends StatelessWidget {
             itemBuilder: (context, index) {
               final category = categories[index];
               final isSelected = category['name'] == selectedCategory;
-              final color = Color(
-                int.parse('0xFF${category["color"]}'),
-              );
+              final color = _parseCategoryColor(category);
 
               return GestureDetector(
                 onTap: () => onSelect(category['name']!),
@@ -723,5 +746,19 @@ class _CategoryBottomSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Safely parse category color hex string.
+  /// Returns a fallback gray color if parsing fails.
+  Color _parseCategoryColor(Map<String, String> category) {
+    final colorHex = category["color"];
+    if (colorHex == null || colorHex.length != 6) {
+      return AppColors.gray700;
+    }
+    try {
+      return Color(int.parse('0xFF$colorHex'));
+    } on FormatException {
+      return AppColors.gray700;
+    }
   }
 }
