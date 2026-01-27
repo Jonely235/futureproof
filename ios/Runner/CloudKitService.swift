@@ -15,8 +15,11 @@ class CloudKitService {
 
     // iCloud Drive Documents directory
     private var iCloudDocumentsURL: URL? {
-        FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents")
+        FileManager.default.url(forUbiquityContainerIdentifier: "iCloud.com.example.futureproof")?.appendingPathComponent("Documents")
     }
+
+    // Container identifier (must match entitlements)
+    private let containerIdentifier = "iCloud.com.example.futureproof"
 
     private init() {
         // Initialize CloudKit container
@@ -31,25 +34,39 @@ class CloudKitService {
     // MARK: - iCloud Drive Setup
 
     private func setupICloudDriveDirectory() {
-        guard let documentsURL = iCloudDocumentsURL else { return }
+        NSLog("[CloudKit] Setting up iCloud Drive directory...")
+        NSLog("[CloudKit] Container identifier: \(containerIdentifier)")
+
+        guard let documentsURL = iCloudDocumentsURL else {
+            NSLog("[CloudKit] ERROR: iCloud ubiquity container URL is nil!")
+            NSLog("[CloudKit] Check that: 1) iCloud is enabled in Settings, 2) Container ID matches entitlements, 3) App has iCloud permissions")
+            return
+        }
+
+        NSLog("[CloudKit] Ubiquity container URL: \(documentsURL.path)")
 
         if !FileManager.default.fileExists(atPath: documentsURL.path) {
             do {
                 try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true)
+                NSLog("[CloudKit] Created iCloud Documents directory successfully")
             } catch {
                 // Log error but don't fail - directory will be created on first write
-                NSLog("Failed to create iCloud Documents directory: \(error.localizedDescription)")
+                NSLog("[CloudKit] Failed to create iCloud Documents directory: \(error.localizedDescription)")
             }
+        } else {
+            NSLog("[CloudKit] iCloud Documents directory already exists")
         }
     }
 
     // MARK: - File Name Validation
 
     /// Validate file name to prevent path traversal attacks
+    /// Note: This must match the Dart validation in icloud_drive_service.dart
+    /// Dart regex: ^[a-zA-Z0-9_-]+$ (alphanumeric, underscore, hyphen only)
     private func validateFileName(_ fileName: String) -> Bool {
-        // Only allow alphanumeric, underscore, hyphen, and dot
+        // Only allow alphanumeric, underscore, and hyphen (NO dot - .json is appended separately)
         let allowedCharacters = CharacterSet.alphanumerics
-            .union(CharacterSet(charactersIn: "_.-"))
+            .union(CharacterSet(charactersIn: "_-"))
         return fileName.unicodeScalars.allSatisfy { allowedCharacters.contains($0) }
             && !fileName.isEmpty
             && fileName.count <= 255
@@ -65,62 +82,92 @@ class CloudKitService {
 
     /// Save JSON data to iCloud Drive
     func saveToiCloudDrive(fileName: String, jsonData: Data, completion: @escaping (ICloudDriveResult<String>) -> Void) {
+        NSLog("[CloudKit] saveToiCloudDrive called for file: \(fileName)")
+
         // Validate file name
         guard validateFileName(fileName) else {
+            NSLog("[CloudKit] ERROR: Invalid file name: \(fileName)")
             completion(.failure("Invalid file name"))
             return
         }
 
         guard let documentsURL = iCloudDocumentsURL else {
+            NSLog("[CloudKit] ERROR: iCloud container not available - documentsURL is nil")
+            NSLog("[CloudKit] Check that: 1) iCloud is enabled, 2) Container ID '\(containerIdentifier)' matches entitlements")
             completion(.failure("iCloud container not available"))
             return
         }
 
+        NSLog("[CloudKit] Documents URL: \(documentsURL.path)")
+        NSLog("[CloudKit] JSON data size: \(jsonData.count) bytes")
+
         // Ensure directory exists
         if !FileManager.default.fileExists(atPath: documentsURL.path) {
+            NSLog("[CloudKit] Creating Documents directory...")
             do {
                 try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true)
+                NSLog("[CloudKit] Created iCloud Documents directory")
             } catch {
+                NSLog("[CloudKit] ERROR: Failed to create iCloud Documents directory: \(error.localizedDescription)")
                 completion(.failure("Failed to create iCloud Documents directory"))
                 return
             }
         }
 
         let fileURL = documentsURL.appendingPathComponent("\(fileName).json")
+        NSLog("[CloudKit] Target file path: \(fileURL.path)")
 
         do {
             try jsonData.write(to: fileURL)
+            NSLog("[CloudKit] SUCCESS: File written to \(fileURL.path)")
+
+            // Verify file exists
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+                let fileSize = attributes[.size] as? UInt64 ?? 0
+                NSLog("[CloudKit] Verified file exists, size: \(fileSize) bytes")
+            }
+
             completion(.success(fileURL.path))
         } catch {
-            completion(.failure("Failed to write file"))
+            NSLog("[CloudKit] ERROR: Failed to write file: \(error.localizedDescription)")
+            completion(.failure("Failed to write file: \(error.localizedDescription)"))
         }
     }
 
     /// Read JSON data from iCloud Drive
     func readFromiCloudDrive(fileName: String, completion: @escaping (ICloudDriveResult<Data>) -> Void) {
+        NSLog("[CloudKit] readFromiCloudDrive called for file: \(fileName)")
+
         // Validate file name
         guard validateFileName(fileName) else {
+            NSLog("[CloudKit] ERROR: Invalid file name: \(fileName)")
             completion(.failure("Invalid file name"))
             return
         }
 
         guard let documentsURL = iCloudDocumentsURL else {
+            NSLog("[CloudKit] ERROR: iCloud container not available - documentsURL is nil")
             completion(.failure("iCloud container not available"))
             return
         }
 
         let fileURL = documentsURL.appendingPathComponent("\(fileName).json")
+        NSLog("[CloudKit] Reading from: \(fileURL.path)")
 
         // Check if file exists
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            NSLog("[CloudKit] ERROR: File not found: \(fileURL.path)")
             completion(.failure("File not found"))
             return
         }
 
         do {
             let data = try Data(contentsOf: fileURL)
+            NSLog("[CloudKit] SUCCESS: Read \(data.count) bytes from \(fileName)")
             completion(.success(data))
         } catch {
+            NSLog("[CloudKit] ERROR: Failed to read file: \(error.localizedDescription)")
             completion(.failure("Failed to read file"))
         }
     }
@@ -350,6 +397,75 @@ class CloudKitService {
             @unknown default:
                 completion(false)
             }
+        }
+    }
+
+    // MARK: - Diagnostics
+
+    /// Get detailed diagnostic information
+    func getDiagnostics(completion: @escaping ([String: Any]) -> Void) {
+        var result: [String: Any] = [:]
+
+        // Container info
+        result["containerIdentifier"] = containerIdentifier
+
+        // Check ubiquity container URL
+        if let ubiquityURL = FileManager.default.url(forUbiquityContainerIdentifier: containerIdentifier) {
+            result["ubiquityContainerURL"] = ubiquityURL.path
+            result["ubiquityContainerAvailable"] = true
+            NSLog("[CloudKit] Ubiquity container URL: \(ubiquityURL.path)")
+        } else {
+            result["ubiquityContainerAvailable"] = false
+            result["ubiquityContainerURLError"] = "URL is nil - check container ID matches entitlements"
+            NSLog("[CloudKit] ERROR: Ubiquity container URL is nil")
+        }
+
+        // Check Documents directory
+        if let documentsURL = iCloudDocumentsURL {
+            result["documentsURL"] = documentsURL.path
+            let docsExist = FileManager.default.fileExists(atPath: documentsURL.path)
+            result["documentsExists"] = docsExist
+            NSLog("[CloudKit] Documents URL: \(documentsURL.path), exists: \(docsExist)")
+        } else {
+            result["documentsURL"] = "nil"
+            result["documentsExists"] = false
+            NSLog("[CloudKit] ERROR: Documents URL is nil")
+        }
+
+        // Check account status
+        container.accountStatus { status, error in
+            result["accountStatus"] = self.statusDescription(status)
+            if let error = error {
+                result["accountError"] = error.localizedDescription
+                NSLog("[CloudKit] Account error: \(error.localizedDescription)")
+            } else {
+                NSLog("[CloudKit] Account status: \(self.statusDescription(status))")
+            }
+
+            // List files if Documents directory exists
+            if let docsURL = self.iCloudDocumentsURL {
+                do {
+                    let files = try FileManager.default.contentsOfDirectory(atPath: docsURL.path)
+                    result["files"] = files
+                    result["fileCount"] = files.count
+                    NSLog("[CloudKit] Files in Documents: \(files)")
+                } catch {
+                    result["filesError"] = error.localizedDescription
+                    NSLog("[CloudKit] Error listing files: \(error.localizedDescription)")
+                }
+            }
+
+            completion(result)
+        }
+    }
+
+    private func statusDescription(_ status: CKContainer.AccountStatus) -> String {
+        switch status {
+        case .available: return "available"
+        case .noAccount: return "noAccount"
+        case .restricted: return "restricted"
+        case .temporarilyUnavailable: return "temporarilyUnavailable"
+        @unknown default: return "unknown"
         }
     }
 }

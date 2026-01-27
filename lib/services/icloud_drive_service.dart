@@ -111,9 +111,15 @@ class ICloudDriveService {
         return ICloudResult.failure('Failed to save to iCloud Drive');
       }
     } on PlatformException catch (e) {
-      return ICloudResult.failure('iCloud error: ${e.message}');
+      // Log full error for debugging
+      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      // Return user-friendly message
+      return ICloudResult.failure('iCloud service is unavailable');
     } catch (e) {
-      return ICloudResult.failure('Unexpected error: ${e.toString()}');
+      // Log full error for debugging
+      AppLogger.service.severe('iCloud unexpected error during save', e);
+      // Return user-friendly message
+      return ICloudResult.failure('Failed to complete iCloud operation');
     }
   }
 
@@ -149,9 +155,15 @@ class ICloudDriveService {
 
       return ICloudResult.failure('No data found in iCloud Drive');
     } on PlatformException catch (e) {
-      return ICloudResult.failure('iCloud error: ${e.message}');
+      // Log full error for debugging
+      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      // Return user-friendly message
+      return ICloudResult.failure('iCloud service is unavailable');
     } catch (e) {
-      return ICloudResult.failure('Unexpected error: ${e.toString()}');
+      // Log full error for debugging
+      AppLogger.service.severe('iCloud unexpected error during load', e);
+      // Return user-friendly message
+      return ICloudResult.failure('Failed to complete iCloud operation');
     }
   }
 
@@ -203,9 +215,11 @@ class ICloudDriveService {
 
       return ICloudResult.failure('Failed to delete from iCloud Drive');
     } on PlatformException catch (e) {
-      return ICloudResult.failure('iCloud error: ${e.message}');
+      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      return ICloudResult.failure('iCloud service is unavailable');
     } catch (e) {
-      return ICloudResult.failure('Unexpected error: ${e.toString()}');
+      AppLogger.service.severe('iCloud unexpected error during delete', e);
+      return ICloudResult.failure('Failed to complete iCloud operation');
     }
   }
 
@@ -227,9 +241,11 @@ class ICloudDriveService {
 
       return ICloudResult.failure('Failed to list iCloud Drive files');
     } on PlatformException catch (e) {
-      return ICloudResult.failure('iCloud error: ${e.message}');
+      AppLogger.service.warning('iCloud PlatformException: ${e.message}');
+      return ICloudResult.failure('iCloud service is unavailable');
     } catch (e) {
-      return ICloudResult.failure('Unexpected error: ${e.toString()}');
+      AppLogger.service.severe('iCloud unexpected error during list', e);
+      return ICloudResult.failure('Failed to complete iCloud operation');
     }
   }
 
@@ -241,6 +257,74 @@ class ICloudDriveService {
   /// Load settings from iCloud Drive
   Future<ICloudResult<Map<String, dynamic>>> loadSettings() async {
     return _loadFromFile(_settingsFileName, updateSyncTime: false);
+  }
+
+  /// Diagnostic: Check if native iCloud methods are available
+  static Future<Map<String, dynamic>> diagnose() async {
+    final result = <String, dynamic>{
+      'platform': Platform.operatingSystem,
+      'isIOS': Platform.isIOS,
+      'isWeb': kIsWeb,
+      'isAvailable': isAvailable,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    if (!isAvailable) {
+      result['error'] = 'iCloud Drive is only available on iOS';
+      return result;
+    }
+
+    // Test 1: Method channel response
+    try {
+      final testResult = await _channel.invokeMethod('isAvailable');
+      result['nativeMethodAvailable'] = testResult == true;
+      result['nativeMethodResult'] = testResult;
+    } catch (e) {
+      result['nativeMethodAvailable'] = false;
+      result['nativeMethodError'] = e.toString();
+    }
+
+    // Test 2: Check if enabled
+    try {
+      result['enabled'] = await isEnabled();
+    } catch (e) {
+      result['enabled'] = false;
+      result['enabledError'] = e.toString();
+    }
+
+    // Test 3: Get detailed diagnostics from Swift
+    try {
+      final diagResult = await _channel.invokeMethod('getDiagnostics');
+      if (diagResult is Map && diagResult['success'] == true) {
+        result['swiftDiagnostics'] = diagResult['diagnostics'];
+      }
+    } catch (e) {
+      result['swiftDiagnosticsError'] = e.toString();
+    }
+
+    // Test 4: Try to list files
+    try {
+      final listResult = await instance.listFiles();
+      result['listFilesSuccess'] = listResult.isSuccess;
+      if (listResult.isSuccess) {
+        result['files'] = listResult.data ?? [];
+        result['fileCount'] = listResult.data?.length ?? 0;
+      } else {
+        result['listFilesError'] = listResult.error;
+      }
+    } catch (e) {
+      result['listFilesException'] = e.toString();
+    }
+
+    // Test 5: Check if vaults file exists
+    try {
+      final exists = await instance.vaultsExist();
+      result['vaultsFileExists'] = exists;
+    } catch (e) {
+      result['vaultsFileExistsError'] = e.toString();
+    }
+
+    return result;
   }
 }
 

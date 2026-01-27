@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_colors.dart';
 import '../design/design_tokens.dart';
 import '../domain/entities/vault_entity.dart';
+import '../providers/transaction_provider.dart';
 import '../providers/vault_provider.dart';
+import '../services/backup_service.dart';
+import '../services/icloud_drive_service.dart';
+import '../services/icloud_sync_manager.dart';
 import '../widgets/vault_card_widget.dart';
 import '../widgets/vault_type_card_selector.dart';
 import '../utils/validators.dart';
@@ -70,7 +75,6 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
 
   @override
   void dispose() {
-    _nameController.removeListener(() {});
     _nameController.dispose();
     super.dispose();
   }
@@ -103,6 +107,24 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
     }
 
     final vaultProvider = context.read<VaultProvider>();
+    final transactionProvider = context.read<TransactionProvider>();
+
+    // Check if this is the first vault and show iCloud prompt
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenFirstRunPrompt = prefs.getBool('hasSeenICloudFirstRunPrompt') ?? false;
+    final isFirstVault = vaultProvider.vaults.isEmpty;
+
+    if (isFirstVault && !hasSeenFirstRunPrompt && ICloudDriveService.isAvailable) {
+      // Check if iCloud is available
+      final isAvailable = await ICloudDriveService.isAvailable;
+      if (isAvailable && mounted) {
+        final enableICloud = await _showICloudFirstRunPrompt();
+        if (enableICloud) {
+          await BackupService.instance.setICloudSyncEnabled(true);
+        }
+        await prefs.setBool('hasSeenICloudFirstRunPrompt', true);
+      }
+    }
 
     final vault = await vaultProvider.createVault(
       name: _nameController.text.trim(),
@@ -112,11 +134,126 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
         savingsGoal: _savingsGoal,
         themeIndex: _vaultColors.indexOf(_selectedColor),
       ),
+      onCreated: (createdVault) {
+        // Trigger iCloud sync after vault creation (debounced)
+        final transactionProviders = <String, TransactionProvider>{
+          createdVault.id: transactionProvider,
+        };
+
+        ICloudSyncManager.instance.scheduleSync(
+          reason: SyncReason.vaultCreated,
+          vaultProvider: vaultProvider,
+          transactionProviders: transactionProviders,
+          detail: createdVault.name,
+        );
+      },
     );
 
     if (vault != null && mounted) {
       Navigator.pop(context, vault);
     }
+  }
+
+  Future<bool> _showICloudFirstRunPrompt() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: DesignTokens.borderRadiusLg),
+        title: Row(
+          children: [
+            Icon(Icons.cloud_outlined, color: AppColors.fintechTeal, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Enable iCloud Backup?',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Keep your vaults safe and synced across all your devices with iCloud.',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                color: AppColors.gray700,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildICloudFeature(Icons.sync_alt, 'Automatic backup after every change'),
+            _buildICloudFeature(Icons.devices, 'Sync across iPhone, iPad, and Mac'),
+            _buildICloudFeature(Icons.lock, 'Secure encrypted storage'),
+            const SizedBox(height: 8),
+            Text(
+              'You can change this later in Settings.',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 12,
+                color: AppColors.gray500,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Not Now',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w500,
+                color: AppColors.gray700,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.fintechTeal,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+              ),
+            ),
+            child: Text(
+              'Enable iCloud',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Widget _buildICloudFeature(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.fintechTeal),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 13,
+                color: AppColors.black,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showError(String message) {
@@ -504,8 +641,14 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.all(16),
             ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) return null;
+              final result = MoneyValidator.validateOptional(value);
+              return result.isValid ? null : result.errorMessage;
+            },
             onChanged: (value) {
-              _monthlyIncome = double.tryParse(value) ?? 0.0;
+              final result = MoneyValidator.validateOptional(value);
+              _monthlyIncome = result.value ?? 0.0;
             },
           ),
 
@@ -537,8 +680,14 @@ class _VaultCreationScreenState extends State<VaultCreationScreen>
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.all(16),
             ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) return null;
+              final result = MoneyValidator.validateOptional(value);
+              return result.isValid ? null : result.errorMessage;
+            },
             onChanged: (value) {
-              _savingsGoal = double.tryParse(value) ?? 0.0;
+              final result = MoneyValidator.validateOptional(value);
+              _savingsGoal = result.value ?? 0.0;
             },
           ),
         ],

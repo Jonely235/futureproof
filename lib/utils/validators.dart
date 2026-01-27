@@ -8,11 +8,56 @@ class MoneyValidator {
   // Maximum amount: ~1 billion (prevents overflow issues)
   static const double maxAmount = 999999999.99;
 
-  // Minimum amount: 1 cent
-  static const double minAmount = 0.01;
+  // Minimum amount for transactions: 1 cent
+  static const double minTransactionAmount = 0.01;
+
+  // Minimum amount for optional fields (can be zero)
+  static const double minOptionalAmount = 0.0;
 
   // Maximum decimal places for currency
   static const int maxDecimalPlaces = 2;
+
+  /// Validates an optional monetary amount (can be zero or empty)
+  ///
+  /// Use this for fields like monthly income, savings goal, etc.
+  /// Returns [MoneyValidationResult.success] with the parsed amount if valid,
+  /// or [MoneyValidationResult.failure] with an error message if invalid.
+  static MoneyValidationResult validateOptional(String input) {
+    // Check for empty input (allowed for optional fields)
+    if (input.trim().isEmpty) {
+      return const MoneyValidationResult.success(0.0);
+    }
+
+    // Parse the number
+    final amount = double.tryParse(input);
+    if (amount == null) {
+      return const MoneyValidationResult.failure('Invalid number format');
+    }
+
+    // Check for negative values
+    if (amount < minOptionalAmount) {
+      return const MoneyValidationResult.failure(
+        'Amount cannot be negative',
+      );
+    }
+
+    // Check maximum amount
+    if (amount > maxAmount) {
+      return MoneyValidationResult.failure(
+        'Amount cannot exceed \$${maxAmount.toStringAsFixed(2)}',
+      );
+    }
+
+    // Check decimal places
+    final parts = input.split('.');
+    if (parts.length == 2 && parts[1].length > maxDecimalPlaces) {
+      return MoneyValidationResult.failure(
+        'Maximum $maxDecimalPlaces decimal places allowed',
+      );
+    }
+
+    return MoneyValidationResult.success(amount);
+  }
 
   /// Validates a monetary amount string
   ///
@@ -31,9 +76,9 @@ class MoneyValidator {
     }
 
     // Check minimum amount
-    if (amount < minAmount) {
+    if (amount < minTransactionAmount) {
       return MoneyValidationResult.failure(
-        'Amount must be at least \$${minAmount.toStringAsFixed(2)}',
+        'Amount must be at least \$${minTransactionAmount.toStringAsFixed(2)}',
       );
     }
 
