@@ -104,7 +104,7 @@ class VaultDetailsDialog extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: warMode.level.colorCode != '#4CAF50'
-                    ? Color(int.parse(warMode.level.colorCode.replaceFirst('#', '0xFF')))
+                    ? _parseWarModeColor(warMode.level.colorCode)
                         .withOpacity(0.1)
                     : AppColors.success.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -125,8 +125,7 @@ class VaultDetailsDialog extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.1,
-                          color: Color(int.parse(
-                              warMode.level.colorCode.replaceFirst('#', '0xFF'))),
+                          color: _parseWarModeColor(warMode.level.colorCode),
                         ),
                       ),
                     ],
@@ -201,5 +200,16 @@ class VaultDetailsDialog extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Safely parse war mode color hex string.
+  /// The source (WarModeLevel.colorCode) is controlled and always valid,
+  /// but we add defensive parsing for safety.
+  Color _parseWarModeColor(String colorCode) {
+    try {
+      return Color(int.parse(colorCode.replaceFirst('#', '0xFF')));
+    } on FormatException {
+      return AppColors.gray700; // fallback
+    }
   }
 }

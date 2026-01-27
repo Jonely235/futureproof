@@ -384,9 +384,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedCategoryData = _categories.firstWhere(
+    final categoryIndex = _categories.indexWhere(
       (c) => c['name'] == _selectedCategory,
     );
+    final selectedCategoryData = categoryIndex >= 0
+        ? _categories[categoryIndex]
+        : _categories.first; // Fallback to first category
 
     return Scaffold(
       backgroundColor: DesignTokens.scaffoldBackground,

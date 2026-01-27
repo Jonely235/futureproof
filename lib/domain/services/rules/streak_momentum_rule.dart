@@ -138,7 +138,13 @@ class StreakMomentumRule implements BehavioralRule {
     RuleContext context,
     int streak,
   ) {
-    final nextMilestone = milestones.firstWhere((m) => m > streak);
+    // Find the next milestone after the current streak
+    // This function is only called when _isNearMilestone returns true,
+    // which guarantees streak < milestone. However, we add orElse for safety.
+    final nextMilestone = milestones.firstWhere(
+      (m) => m > streak,
+      orElse: () => milestones.last, // Fallback to max milestone (365)
+    );
     final daysToGo = nextMilestone - streak;
 
     return BehavioralInsightEntity.create(
