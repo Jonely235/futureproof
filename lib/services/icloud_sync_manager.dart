@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 
+import '../config/icloud_config.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/vault_provider.dart';
 import '../utils/app_logger.dart';
@@ -11,6 +12,7 @@ import 'backup_service.dart';
 ///
 /// Manages debounced iCloud sync operations to prevent excessive writes.
 /// Accumulates sync reasons and batches them into a single sync operation.
+/// Implements exponential backoff retry logic for failed syncs.
 ///
 /// Usage:
 /// ```dart
@@ -21,16 +23,15 @@ import 'backup_service.dart';
 /// );
 /// ```
 class ICloudSyncManager {
-  ICloudSyncManager._internal();
-  static final ICloudSyncManager instance = ICloudSyncManager._internal();
+  ICloudSyncManager._internal(this._statusController);
+  static final ICloudSyncManager instance = ICloudSyncManager._internal(
+    StreamController<SyncStatus>.broadcast(
+      onListen: () => 0,
+      onCancel: () => 0,
+    ),
+  );
 
   final _log = Logger('ICloudSyncManager');
-
-  // Debounce delay - wait 2 seconds after last change before syncing
-  static const Duration _debounceDelay = Duration(seconds: 2);
-
-  // Maximum time between syncs (force sync even if more changes come in)
-  static const Duration _maxSyncInterval = Duration(minutes: 5);
 
   Timer? _debounceTimer;
   Timer? _maxSyncTimer;
@@ -41,12 +42,17 @@ class ICloudSyncManager {
   final Set<SyncReason> _pendingReasons = {};
   final List<String> _pendingDetails = [];
 
+  // Retry tracking
+  int _retryCount = 0;
+  DateTime? _lastFailedSyncTime;
+
   // State tracking
   bool _isSyncing = false;
   SyncStatus _status = SyncStatus.idle;
 
-  // Stream controller for status updates
-  final _statusController = StreamController<SyncStatus>.broadcast();
+  // Stream controller for status updates - initialized via factory constructor
+  final StreamController<SyncStatus> _statusController;
+
   Stream<SyncStatus> get statusStream => _statusController.stream;
 
   SyncStatus get currentStatus => _status;
@@ -71,32 +77,34 @@ class ICloudSyncManager {
     // Check if we need to force sync due to max interval
     if (_lastSyncTime != null) {
       final timeSinceLastSync = DateTime.now().difference(_lastSyncTime!);
-      if (timeSinceLastSync > _maxSyncInterval) {
+      if (timeSinceLastSync > ICloudConfig.maxSyncInterval) {
         _log.info('Max sync interval reached, forcing sync');
         _executeSync(vaultProvider, transactionProviders);
         return;
       }
     }
 
-    // Cancel existing timers
+    // Cancel existing timers before creating new ones
     _debounceTimer?.cancel();
     _maxSyncTimer?.cancel();
 
     // Set debounce timer
-    _debounceTimer = Timer(_debounceDelay, () {
+    _debounceTimer = Timer(ICloudConfig.syncDebounceDelay, () {
       _executeSync(vaultProvider, transactionProviders);
     });
 
-    // Set max sync timer as a safety net
-    _maxSyncTimer = Timer(_maxSyncInterval, () {
-      _log.info('Max sync timer fired, forcing sync');
-      _executeSync(vaultProvider, transactionProviders);
-    });
+    // Set max sync timer as a safety net (only if not already syncing)
+    if (!_isSyncing) {
+      _maxSyncTimer = Timer(ICloudConfig.maxSyncInterval, () {
+        _log.info('Max sync timer fired, forcing sync');
+        _executeSync(vaultProvider, transactionProviders);
+      });
+    }
 
     _updateStatus(SyncStatus.scheduled);
   }
 
-  /// Execute the sync operation
+  /// Execute the sync operation with retry logic
   Future<void> _executeSync(
     VaultProvider vaultProvider,
     Map<String, TransactionProvider> transactionProviders,
@@ -106,55 +114,126 @@ class ICloudSyncManager {
       return;
     }
 
-    // Cancel timers
+    // Cancel timers to prevent duplicate syncs
     _debounceTimer?.cancel();
     _maxSyncTimer?.cancel();
 
     _isSyncing = true;
     _updateStatus(SyncStatus.syncing);
 
-    final reasons = _pendingReasons.toList();
+    // Capture pending reasons before clearing
+    final reasons = List<SyncReason>.from(_pendingReasons);
     final details = List<String>.from(_pendingDetails);
     _pendingReasons.clear();
     _pendingDetails.clear();
 
     _log.info('Executing iCloud sync. Reasons: $reasons');
 
+    bool success = false;
+
     try {
-      final success = await BackupService.instance.triggeriCloudSync(
+      // Attempt sync with retry logic
+      success = await _attemptSyncWithRetry(
         vaultProvider: vaultProvider,
         transactionProviders: transactionProviders,
       );
 
-      _lastSyncTime = DateTime.now();
-
       if (success) {
-        _log.info('✅ iCloud sync completed successfully');
+        _lastSyncTime = DateTime.now();
+        _retryCount = 0; // Reset retry count on success
+        _log.info('iCloud sync completed successfully');
         _updateStatus(SyncStatus.success);
         // Reset to idle after a short delay
         _statusResetTimer?.cancel();
-        _statusResetTimer = Timer(const Duration(seconds: 2), () {
+        _statusResetTimer = Timer(ICloudConfig.successStatusResetDelay, () {
           if (!_isSyncing) _updateStatus(SyncStatus.idle);
         });
       } else {
-        _log.warning('⚠️ iCloud sync failed');
-        _updateStatus(SyncStatus.error);
-        // Reset to idle after a longer delay on error
-        _statusResetTimer?.cancel();
-        _statusResetTimer = Timer(const Duration(seconds: 5), () {
-          if (!_isSyncing) _updateStatus(SyncStatus.idle);
-        });
+        _handleSyncFailure(reasons, details, vaultProvider, transactionProviders);
       }
     } catch (e, st) {
       _log.severe('iCloud sync error: $e', e, st);
-      _updateStatus(SyncStatus.error);
-      _statusResetTimer?.cancel();
-      _statusResetTimer = Timer(const Duration(seconds: 5), () {
-        if (!_isSyncing) _updateStatus(SyncStatus.idle);
-      });
+      _handleSyncFailure(reasons, details, vaultProvider, transactionProviders);
     } finally {
       _isSyncing = false;
     }
+  }
+
+  /// Attempt sync with exponential backoff retry
+  Future<bool> _attemptSyncWithRetry({
+    required VaultProvider vaultProvider,
+    required Map<String, TransactionProvider> transactionProviders,
+  }) async {
+    for (int attempt = 0; attempt < ICloudConfig.maxSyncRetries; attempt++) {
+      try {
+        final success = await BackupService.instance.triggeriCloudSync(
+          vaultProvider: vaultProvider,
+          transactionProviders: transactionProviders,
+        );
+
+        if (success) {
+          if (attempt > 0) {
+            _log.info('Sync succeeded on attempt ${attempt + 1}');
+          }
+          return true;
+        }
+
+        // If not successful and not the last attempt, wait before retrying
+        if (attempt < ICloudConfig.maxSyncRetries - 1) {
+          _retryCount = attempt + 1;
+          final delay = _calculateRetryDelay(attempt);
+          _log.warning('Sync failed, retrying in ${delay.inSeconds}s (attempt ${attempt + 1}/${ICloudConfig.maxSyncRetries})');
+          await Future.delayed(delay);
+        }
+      } catch (e) {
+        _log.warning('Sync attempt ${attempt + 1} failed: $e');
+
+        // If this is the last attempt, rethrow the exception
+        if (attempt == ICloudConfig.maxSyncRetries - 1) {
+          rethrow;
+        }
+
+        // Wait before retrying
+        final delay = _calculateRetryDelay(attempt);
+        await Future.delayed(delay);
+      }
+    }
+
+    return false;
+  }
+
+  /// Calculate exponential backoff delay for retries
+  Duration _calculateRetryDelay(int attempt) {
+    final baseDelay = ICloudConfig.baseRetryDelay;
+    final exponentialDelay = baseDelay * (1 << attempt); // 2^attempt multiplier
+    final jitter = Duration(milliseconds: (exponentialDelay.inMilliseconds * 0.1).round());
+    return exponentialDelay + jitter;
+  }
+
+  /// Handle sync failure with appropriate actions
+  void _handleSyncFailure(
+    List<SyncReason> reasons,
+    List<String> details,
+    VaultProvider vaultProvider,
+    Map<String, TransactionProvider> transactionProviders,
+  ) {
+    _lastFailedSyncTime = DateTime.now();
+    _log.warning('iCloud sync failed after ${ICloudConfig.maxSyncRetries} attempts');
+    _updateStatus(SyncStatus.error);
+
+    // Restore pending reasons for potential manual retry
+    _pendingReasons.addAll(reasons);
+    _pendingDetails.addAll(details);
+
+    // Schedule a retry after a longer delay
+    _statusResetTimer?.cancel();
+    _statusResetTimer = Timer(ICloudConfig.errorStatusResetDelay, () {
+      if (!_isSyncing) _updateStatus(SyncStatus.idle);
+    });
+
+    // Note: Automatic retry is handled by _attemptSyncWithRetry
+    // which uses exponential backoff. If all retries fail,
+    // the user can manually trigger sync via the UI.
   }
 
   /// Force an immediate sync (bypasses debounce)
@@ -206,8 +285,14 @@ class ICloudSyncManager {
     _debounceTimer?.cancel();
     _maxSyncTimer?.cancel();
     _statusResetTimer?.cancel();
-    _statusController.close();
+
+    if (!_statusController.isClosed) {
+      _statusController.close();
+    }
   }
+
+  /// Check if the manager has been disposed
+  bool get isDisposed => _statusController.isClosed;
 }
 
 /// Reasons for triggering a sync

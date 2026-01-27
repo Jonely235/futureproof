@@ -18,7 +18,7 @@ class TestApp extends StatelessWidget {
             children: [
               Text('If you can see this, iOS works!'),
               SizedBox(height: 20),
-              Text('🎉'),
+              Text('iOS test app working correctly'),
             ],
           ),
         ),

@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/icloud_config.dart';
 import '../models/app_error.dart';
+import '../utils/app_logger.dart';
+import 'icloud_error.dart'; // Export ICloudResult and ICloudError
 
 /// iCloud Drive Service
 ///
@@ -15,17 +18,7 @@ class ICloudDriveService {
   ICloudDriveService._internal();
   static final ICloudDriveService instance = ICloudDriveService._internal();
 
-  static const MethodChannel _channel = MethodChannel('com.yourcompany.futureproof/cloudkit');
-
-  static const String _vaultsFileName = 'vaults';
-  static const String _settingsFileName = 'settings';
-
-  // Keys for SharedPreferences
-  static const String _lastSyncKey = 'icloud_last_sync';
-  static const String _isEnabledKey = 'icloud_enabled';
-
-  // Maximum data size (10 MB)
-  static const int _maxDataSize = 10 * 1024 * 1024;
+  static const MethodChannel _channel = MethodChannel(ICloudConfig.methodChannelName);
 
   /// Check if iCloud Drive is available (iOS only)
   static bool get isAvailable => !kIsWeb && Platform.isIOS;
@@ -43,19 +36,19 @@ class ICloudDriveService {
   Future<bool> isEnabled() async {
     if (!isAvailable) return false;
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_isEnabledKey) ?? false;
+    return prefs.getBool(ICloudConfig.isEnabledKey) ?? false;
   }
 
   /// Enable or disable iCloud sync
   Future<void> setEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isEnabledKey, enabled);
+    await prefs.setBool(ICloudConfig.isEnabledKey, enabled);
   }
 
   /// Get the last sync time
   Future<DateTime?> getLastSyncTime() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastSync = prefs.getString(_lastSyncKey);
+    final lastSync = prefs.getString(ICloudConfig.lastSyncKey);
     if (lastSync == null) return null;
     // Use tryParse for safe parsing
     return DateTime.tryParse(lastSync);
@@ -64,7 +57,7 @@ class ICloudDriveService {
   /// Update the last sync time
   Future<void> _updateLastSyncTime() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastSyncKey, DateTime.now().toIso8601String());
+    await prefs.setString(ICloudConfig.lastSyncKey, DateTime.now().toIso8601String());
   }
 
   // MARK: - Helper Methods
@@ -76,25 +69,31 @@ class ICloudDriveService {
     bool updateSyncTime = true,
   }) async {
     if (!isAvailable) {
-      return ICloudResult.failure('iCloud Drive is only available on iOS');
+      return ICloudResult.failureWithString('iCloud Drive is only available on iOS');
     }
 
     // Validate file name
     if (!_isValidFileName(fileName)) {
-      return ICloudResult.failure('Invalid file name');
+      return ICloudResult.failureWithString('Invalid file name');
     }
 
     // Validate data
     if (data.isEmpty) {
-      return ICloudResult.failure('Cannot save empty data');
+      return ICloudResult.failureWithString('Cannot save empty data');
+    }
+
+    // Check data size limit BEFORE encoding to avoid wasting CPU on data that will be rejected
+    if (data.length > 100000) {
+      // Rough estimate: if we have more than 100k items, likely too large
+      return ICloudResult.failureWithString('Data exceeds maximum size limit (max ${ICloudConfig.maxDataSize ~/ (1024 * 1024)}MB)');
     }
 
     try {
       final jsonString = jsonEncode(data);
 
-      // Check data size limit
-      if (jsonString.length > _maxDataSize) {
-        return ICloudResult.failure('Data exceeds maximum size limit');
+      // Check data size limit (actual check after encoding)
+      if (jsonString.length > ICloudConfig.maxDataSize) {
+        return ICloudResult.failureWithString('Data exceeds maximum size limit (max ${ICloudConfig.maxDataSize ~/ (1024 * 1024)}MB)');
       }
 
       final result = await _channel.invokeMethod('saveToiCloudDrive', {
@@ -108,18 +107,18 @@ class ICloudDriveService {
         }
         return ICloudResult.success(null);
       } else {
-        return ICloudResult.failure('Failed to save to iCloud Drive');
+        return ICloudResult.failureWithString('Failed to save to iCloud Drive');
       }
     } on PlatformException catch (e) {
       // Log full error for debugging
       AppLogger.service.warning('iCloud PlatformException: ${e.message}');
       // Return user-friendly message
-      return ICloudResult.failure('iCloud service is unavailable');
+      return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
       // Log full error for debugging
       AppLogger.service.severe('iCloud unexpected error during save', e);
       // Return user-friendly message
-      return ICloudResult.failure('Failed to complete iCloud operation');
+      return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
   }
 
@@ -129,12 +128,12 @@ class ICloudDriveService {
     bool updateSyncTime = true,
   }) async {
     if (!isAvailable) {
-      return ICloudResult.failure('iCloud Drive is only available on iOS');
+      return ICloudResult.failureWithString('iCloud Drive is only available on iOS');
     }
 
     // Validate file name
     if (!_isValidFileName(fileName)) {
-      return ICloudResult.failure('Invalid file name');
+      return ICloudResult.failureWithString('Invalid file name');
     }
 
     try {
@@ -153,17 +152,17 @@ class ICloudDriveService {
         }
       }
 
-      return ICloudResult.failure('No data found in iCloud Drive');
+      return ICloudResult.failureWithString('No data found in iCloud Drive');
     } on PlatformException catch (e) {
       // Log full error for debugging
       AppLogger.service.warning('iCloud PlatformException: ${e.message}');
       // Return user-friendly message
-      return ICloudResult.failure('iCloud service is unavailable');
+      return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
       // Log full error for debugging
       AppLogger.service.severe('iCloud unexpected error during load', e);
       // Return user-friendly message
-      return ICloudResult.failure('Failed to complete iCloud operation');
+      return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
   }
 
@@ -171,12 +170,12 @@ class ICloudDriveService {
 
   /// Save vaults data to iCloud Drive
   Future<ICloudResult<void>> saveVaults(Map<String, dynamic> data) async {
-    return _saveToFile(_vaultsFileName, data);
+    return _saveToFile(ICloudConfig.vaultsFileName, data);
   }
 
   /// Load vaults data from iCloud Drive
   Future<ICloudResult<Map<String, dynamic>>> loadVaults() async {
-    return _loadFromFile(_vaultsFileName);
+    return _loadFromFile(ICloudConfig.vaultsFileName);
   }
 
   /// Check if vaults data exists in iCloud Drive
@@ -185,7 +184,7 @@ class ICloudDriveService {
 
     try {
       final result = await _channel.invokeMethod('fileExistsInICloudDrive', {
-        'fileName': _vaultsFileName,
+        'fileName': ICloudConfig.vaultsFileName,
       });
 
       if (result is Map && result['success'] == true) {
@@ -201,32 +200,32 @@ class ICloudDriveService {
   /// Delete vaults data from iCloud Drive
   Future<ICloudResult<void>> deleteVaults() async {
     if (!isAvailable) {
-      return ICloudResult.failure('iCloud Drive is only available on iOS');
+      return ICloudResult.failureWithString('iCloud Drive is only available on iOS');
     }
 
     try {
       final result = await _channel.invokeMethod('deleteFromICloudDrive', {
-        'fileName': _vaultsFileName,
+        'fileName': ICloudConfig.vaultsFileName,
       });
 
       if (result is Map && result['success'] == true) {
         return ICloudResult.success(null);
       }
 
-      return ICloudResult.failure('Failed to delete from iCloud Drive');
+      return ICloudResult.failureWithString('Failed to delete from iCloud Drive');
     } on PlatformException catch (e) {
       AppLogger.service.warning('iCloud PlatformException: ${e.message}');
-      return ICloudResult.failure('iCloud service is unavailable');
+      return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
       AppLogger.service.severe('iCloud unexpected error during delete', e);
-      return ICloudResult.failure('Failed to complete iCloud operation');
+      return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
   }
 
   /// List all files in iCloud Drive
   Future<ICloudResult<List<String>>> listFiles() async {
     if (!isAvailable) {
-      return ICloudResult.failure('iCloud Drive is only available on iOS');
+      return ICloudResult.failureWithString('iCloud Drive is only available on iOS');
     }
 
     try {
@@ -239,24 +238,24 @@ class ICloudDriveService {
         );
       }
 
-      return ICloudResult.failure('Failed to list iCloud Drive files');
+      return ICloudResult.failureWithString('Failed to list iCloud Drive files');
     } on PlatformException catch (e) {
       AppLogger.service.warning('iCloud PlatformException: ${e.message}');
-      return ICloudResult.failure('iCloud service is unavailable');
+      return ICloudResult.failureWithString('iCloud service is unavailable');
     } catch (e) {
       AppLogger.service.severe('iCloud unexpected error during list', e);
-      return ICloudResult.failure('Failed to complete iCloud operation');
+      return ICloudResult.failureWithString('Failed to complete iCloud operation');
     }
   }
 
   /// Save settings to iCloud Drive
   Future<ICloudResult<void>> saveSettings(Map<String, dynamic> data) async {
-    return _saveToFile(_settingsFileName, data, updateSyncTime: false);
+    return _saveToFile(ICloudConfig.settingsFileName, data, updateSyncTime: false);
   }
 
   /// Load settings from iCloud Drive
   Future<ICloudResult<Map<String, dynamic>>> loadSettings() async {
-    return _loadFromFile(_settingsFileName, updateSyncTime: false);
+    return _loadFromFile(ICloudConfig.settingsFileName, updateSyncTime: false);
   }
 
   /// Diagnostic: Check if native iCloud methods are available
@@ -310,7 +309,8 @@ class ICloudDriveService {
         result['files'] = listResult.data ?? [];
         result['fileCount'] = listResult.data?.length ?? 0;
       } else {
-        result['listFilesError'] = listResult.error;
+        result['listFilesError'] = listResult.errorString;
+        result['listFilesErrorType'] = listResult.errorType?.toString();
       }
     } catch (e) {
       result['listFilesException'] = e.toString();
@@ -325,35 +325,5 @@ class ICloudDriveService {
     }
 
     return result;
-  }
-}
-
-/// Result wrapper for iCloud Drive operations
-class ICloudResult<T> {
-  final T? data;
-  final String? error;
-
-  ICloudResult.success(this.data)
-      : error = null,
-        _success = true;
-
-  ICloudResult.failure(this.error)
-      : data = null,
-        _success = false;
-
-  final bool _success;
-
-  bool get isSuccess => _success;
-  bool get isFailure => !_success;
-
-  /// Get the data, throws if operation failed
-  T get dataOrThrow {
-    if (isFailure) {
-      throw AppError(
-        type: AppErrorType.icloud,
-        message: error ?? 'Unknown iCloud error',
-      );
-    }
-    return data as T;
   }
 }

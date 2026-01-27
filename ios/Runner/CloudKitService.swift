@@ -1,6 +1,25 @@
 import CloudKit
 import Foundation
 
+// MARK: - Configuration
+
+/// CloudKit configuration
+///
+/// IMPORTANT: Update these values for production:
+/// 1. CloudKitConfig.containerIdentifier must match your iCloud container ID in Apple Developer Portal
+/// 2. The format is typically: "iCloud." + bundle ID (e.g., "iCloud.com.yourcompany.futureproof")
+/// 3. This value must match the iCloud Containers entitlement in Runner.entitlements
+struct CloudKitConfig {
+    /// The iCloud container identifier
+    /// MUST match: iCloud Containers entitlement in Xcode
+    /// Format: "iCloud." + bundle ID (reversed dots)
+    static let containerIdentifier = "iCloud.com.example.futureproof"
+
+    /// Method channel name for Flutter communication
+    /// MUST match: MethodChannel name in icloud_drive_service.dart
+    static let methodChannelName = "com.yourcompany.futureproof/cloudkit"
+}
+
 /// CloudKit service for vault synchronization
 ///
 /// Manages CloudKit operations for syncing vault metadata and files
@@ -15,16 +34,12 @@ class CloudKitService {
 
     // iCloud Drive Documents directory
     private var iCloudDocumentsURL: URL? {
-        FileManager.default.url(forUbiquityContainerIdentifier: "iCloud.com.example.futureproof")?.appendingPathComponent("Documents")
+        FileManager.default.url(forUbiquityContainerIdentifier: CloudKitConfig.containerIdentifier)?.appendingPathComponent("Documents")
     }
 
-    // Container identifier (must match entitlements)
-    private let containerIdentifier = "iCloud.com.example.futureproof"
-
     private init() {
-        // Initialize CloudKit container
-        // Note: Replace "iCloud.com.example.futureproof" with your actual container ID
-        self.container = CKContainer(identifier: "iCloud.com.example.futureproof")
+        // Initialize CloudKit container with configured identifier
+        self.container = CKContainer(identifier: CKContainer.ID(CloudKitConfig.containerIdentifier))
         self.privateDatabase = container.privateCloudDatabase
 
         // Ensure iCloud Drive directory exists
@@ -35,7 +50,7 @@ class CloudKitService {
 
     private func setupICloudDriveDirectory() {
         NSLog("[CloudKit] Setting up iCloud Drive directory...")
-        NSLog("[CloudKit] Container identifier: \(containerIdentifier)")
+        NSLog("[CloudKit] Container identifier: \(CloudKitConfig.containerIdentifier)")
 
         guard let documentsURL = iCloudDocumentsURL else {
             NSLog("[CloudKit] ERROR: iCloud ubiquity container URL is nil!")
@@ -93,7 +108,7 @@ class CloudKitService {
 
         guard let documentsURL = iCloudDocumentsURL else {
             NSLog("[CloudKit] ERROR: iCloud container not available - documentsURL is nil")
-            NSLog("[CloudKit] Check that: 1) iCloud is enabled, 2) Container ID '\(containerIdentifier)' matches entitlements")
+            NSLog("[CloudKit] Check that: 1) iCloud is enabled, 2) Container ID '\(CloudKitConfig.containerIdentifier)' matches entitlements")
             completion(.failure("iCloud container not available"))
             return
         }
@@ -407,10 +422,10 @@ class CloudKitService {
         var result: [String: Any] = [:]
 
         // Container info
-        result["containerIdentifier"] = containerIdentifier
+        result["containerIdentifier"] = CloudKitConfig.containerIdentifier
 
         // Check ubiquity container URL
-        if let ubiquityURL = FileManager.default.url(forUbiquityContainerIdentifier: containerIdentifier) {
+        if let ubiquityURL = FileManager.default.url(forUbiquityContainerIdentifier: CloudKitConfig.containerIdentifier) {
             result["ubiquityContainerURL"] = ubiquityURL.path
             result["ubiquityContainerAvailable"] = true
             NSLog("[CloudKit] Ubiquity container URL: \(ubiquityURL.path)")

@@ -7,7 +7,7 @@ import UIKit
 public class CloudKitPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
-            name: "com.yourcompany.futureproof/cloudkit",
+            name: CloudKitConfig.methodChannelName,
             binaryMessenger: registrar.messenger()
         )
         let instance = CloudKitPlugin()
@@ -36,6 +36,9 @@ public class CloudKitPlugin: NSObject, FlutterPlugin {
             uploadVaultMetadata(call: call, result: result)
         case "deleteVaultMetadata":
             deleteVaultMetadata(call: call, result: result)
+        // Diagnostics
+        case "getDiagnostics":
+            getDiagnostics(result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -213,6 +216,15 @@ public class CloudKitPlugin: NSObject, FlutterPlugin {
                                     message: error,
                                     details: nil))
             }
+        }
+    }
+
+    private func getDiagnostics(result: @escaping FlutterResult) {
+        CloudKitService.shared.getDiagnostics { diagnostics in
+            result([
+                "success": true,
+                "diagnostics": diagnostics
+            ])
         }
     }
 }
