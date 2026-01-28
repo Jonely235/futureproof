@@ -7,10 +7,11 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    // Register CloudKit plugin manually
+    // Use the default registrar for plugins not handled by Flutter's pod generation
+    CloudKitPlugin.register(with: self.registrar())
 
-    // Register CloudKit plugin (iOS only)
-    CloudKitPlugin.register(with: self.registrar(forPlugin: "CloudKitPlugin")!)
+    GeneratedPluginRegistrant.register(with: self)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
