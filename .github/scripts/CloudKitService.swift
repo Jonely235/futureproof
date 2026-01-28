@@ -257,41 +257,45 @@ class CloudKitService {
         let predicate = NSPredicate(format: "1 == 1")
         let query = CKQuery(recordType: "VaultIndex", predicate: predicate)
 
-        privateDatabase.fetch(withQuery: query) { result in
-            switch result {
-            case .success((let matchResults, _)):
-                // Process results
-                var vaultsData: [[String: Any]] = []
+        // Use CKQueryOperation for iOS 15+ compatibility
+        let operation = CKQueryOperation(query: query)
+        var vaultsData: [[String: Any]] = []
+        var activeVaultID: String = ""
 
-                for (_, result) in matchResults {
-                    switch result {
-                    case .success(let record):
-                        if let vaultsDataField = record["vaults"] as? [String] {
-                            // Parse vault IDs and metadata
-                            for vaultJson in vaultsDataField {
-                                if let data = vaultJson.data(using: .utf8),
-                                   let vaultDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                                    vaultsData.append(vaultDict)
-                                }
-                            }
+        operation.recordMatchedBlock = { _, result in
+            switch result {
+            case .success(let record):
+                if let vaultsDataField = record["vaults"] as? [String] {
+                    // Parse vault IDs and metadata
+                    for vaultJson in vaultsDataField {
+                        if let data = vaultJson.data(using: .utf8),
+                           let vaultDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                            vaultsData.append(vaultDict)
                         }
-                    case .failure(let error):
-                        completion(nil, error)
-                        return
                     }
                 }
+                if let id = record["activeVaultID"] as? String {
+                    activeVaultID = id
+                }
+            case .failure:
+                break
+            }
+        }
 
+        operation.queryResultBlock = { result in
+            switch result {
+            case .success:
                 let indexData: [String: Any] = [
                     "vaults": vaultsData,
-                    "activeVaultID": matchResults.first?.record["activeVaultID"] as? String ?? ""
+                    "activeVaultID": activeVaultID
                 ]
-
                 completion(indexData, nil)
-
             case .failure(let error):
                 completion(nil, error)
             }
         }
+
+        privateDatabase.add(operation)
     }
 
     /// Upload vault metadata to CloudKit
@@ -300,28 +304,28 @@ class CloudKitService {
         let predicate: NSPredicate = NSPredicate(format: "vaultID == %@", vaultId)
         let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
-        privateDatabase.fetch(withQuery: query) { [weak self] result in
+        // Use CKQueryOperation for iOS 15+ compatibility
+        let operation = CKQueryOperation(query: query)
+        var existingRecordID: CKRecord.ID?
+
+        operation.recordMatchedBlock = { _, result in
+            switch result {
+            case .success(let record):
+                existingRecordID = record.recordID
+            case .failure:
+                break
+            }
+        }
+
+        operation.queryResultBlock = { [weak self] result in
             guard let self = self else { return }
 
             switch result {
-            case .success((let matchResults, _)):
-                // Try to find existing record
-                var recordID: CKRecord.ID?
-
-                for (_, result) in matchResults {
-                    switch result {
-                    case .success(let record):
-                        recordID = record.recordID
-                        break
-                    case .failure:
-                        continue
-                    }
-                }
-
+            case .success:
                 let record: CKRecord
-                if let existingRecordID = recordID {
+                if let existingID = existingRecordID {
                     // Update existing record
-                    record = CKRecord(recordType: "VaultMetadata", recordID: existingRecordID)
+                    record = CKRecord(recordType: "VaultMetadata", recordID: existingID)
                 } else {
                     // Create new record
                     record = CKRecord(recordType: "VaultMetadata")
@@ -364,6 +368,8 @@ class CloudKitService {
                 completion(error)
             }
         }
+
+        privateDatabase.add(operation)
     }
 
     /// Delete vault metadata from CloudKit
@@ -371,33 +377,43 @@ class CloudKitService {
         let predicate: NSPredicate = NSPredicate(format: "vaultID == %@", vaultId)
         let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
-        privateDatabase.fetch(withQuery: query) { result in
+        // Use CKQueryOperation for iOS 15+ compatibility
+        let operation = CKQueryOperation(query: query)
+        var recordToDelete: CKRecord.ID?
+
+        operation.recordMatchedBlock = { _, result in
             switch result {
-            case .success((let matchResults, _)):
-                for (_, result) in matchResults {
-                    switch result {
-                    case .success(let record):
-                        // Delete record
-                        self.privateDatabase.deleteRecord(withID: record.recordID) { deleteResult in
-                            switch deleteResult {
-                            case .success:
-                                completion(nil)
-                            case .failure(let error):
-                                completion(error)
-                            }
+            case .success(let record):
+                recordToDelete = record.recordID
+            case .failure:
+                break
+            }
+        }
+
+        operation.queryResultBlock = { [weak self] result in
+            guard let self = self else { return }
+
+            switch result {
+            case .success:
+                if let recordID = recordToDelete {
+                    self.privateDatabase.deleteRecord(withID: recordID) { deleteResult in
+                        switch deleteResult {
+                        case .success:
+                            completion(nil)
+                        case .failure(let error):
+                            completion(error)
                         }
-                        return
-                    case .failure(let error):
-                        completion(error)
-                        return
                     }
+                } else {
+                    // No record found, consider it deleted
+                    completion(nil)
                 }
-                // No record found
-                completion(nil)
             case .failure(let error):
                 completion(error)
             }
         }
+
+        privateDatabase.add(operation)
     }
 
     // MARK: - Availability Check
