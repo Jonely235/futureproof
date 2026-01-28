@@ -147,24 +147,52 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
-            echo "=== Starting Flutter iOS build ==="
+            echo "=== Starting Xcode archive build ==="
 
-            # Use Flutter build which properly handles all Swift files
-            flutter build ios --release --no-codesign
+            cd ios
 
-            echo "=== Flutter iOS build completed ==="
+            # Only clean if explicitly needed (less aggressive)
+            rm -rf build/Runner.xcarchive
+
+            echo "=== Building archive with xcodebuild ==="
+            xcodebuild -workspace Runner.xcworkspace \
+              -scheme Runner \
+              -configuration Release \
+              -sdk iphoneos \
+              -destination generic/platform=iOS \
+              CODE_SIGN_IDENTITY="-" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              archive \
+              -archivePath build/Runner.xcarchive \
+              ONLY_ACTIVE_ARCH=NO
+
+            echo "=== Verifying archive created ==="
+            if [ ! -d "build/Runner.xcarchive" ]; then
+              echo "ERROR: Archive not created"
+              exit 1
+            fi
+
+            # Find Runner.app in xcarchive
+            APP_PATH=$(find build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+
+            if [ -z "$APP_PATH" ]; then
+              echo "ERROR: Runner.app not found in archive"
+              exit 1
+            fi
+
+            echo "=== Archive verification successful ==="
+            echo "Runner.app found at: $APP_PATH"
+            ls -lh "$APP_PATH"
 
       - name: Create IPA
         run: |
           set -x
-          # Flutter build ios creates the app at build/ios/Release-iphoneos/Runner.app
-          APP_PATH="build/ios/Release-iphoneos/Runner.app"
+          # Find Runner.app in xcarchive created by xcodebuild
+          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
 
-          # Verify app exists
-          if [ ! -d "$APP_PATH" ]; then
-            echo "ERROR: Runner.app not found at $APP_PATH"
-            echo "Searching for .app files..."
-            find build/ios -name "*.app" -type d 2>/dev/null || true
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found in xcarchive"
             exit 1
           fi
 
