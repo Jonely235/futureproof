@@ -106,6 +106,14 @@ jobs:
 
           echo "iOS preparation completed"
 
+      - name: Set iOS deployment target to 15.0
+        run: |
+          cd ios
+          # Update IPHONEOS_DEPLOYMENT_TARGET to 15.0 for CloudKit APIs
+          sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' Runner.xcodeproj/project.pbxproj
+          echo "iOS deployment target set to 15.0"
+          cd ..
+
       - name: Disable code signing
         run: |
           cd ios

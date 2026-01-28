@@ -355,12 +355,11 @@ class CloudKitService {
                 }
 
                 // Save record
-                self.privateDatabase.save(record) { saveResult in
-                    switch saveResult {
-                    case .success:
-                        completion(nil)
-                    case .failure(let error):
+                self.privateDatabase.save(record) { savedRecord, error in
+                    if let error = error {
                         completion(error)
+                    } else {
+                        completion(nil)
                     }
                 }
 
@@ -396,12 +395,11 @@ class CloudKitService {
             switch result {
             case .success:
                 if let recordID = recordToDelete {
-                    self.privateDatabase.deleteRecord(withID: recordID) { deleteResult in
-                        switch deleteResult {
-                        case .success:
-                            completion(nil)
-                        case .failure(let error):
+                    self.privateDatabase.deleteRecord(withID: recordID) { deletedID, error in
+                        if let error = error {
                             completion(error)
+                        } else {
+                            completion(nil)
                         }
                     }
                 } else {
