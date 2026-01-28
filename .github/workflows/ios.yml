@@ -92,7 +92,7 @@ jobs:
 
           # Run the script to add CloudKit files to Xcode project
           echo "Adding CloudKit files to Xcode project..."
-          python scripts/add_cloudkit_to_xcode.py
+          cd "$(git rev-parse --show-toplevel)" && python scripts/add_cloudkit_to_xcode.py
 
           # Verify CloudKit files were added
           if ! grep -q "CloudKitPlugin.swift" ios/Runner.xcodeproj/project.pbxproj; then
