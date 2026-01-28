@@ -254,7 +254,7 @@ class CloudKitService {
 
     /// Sync vault index from CloudKit
     func fetchVaultIndex(completion: @escaping ([String: Any]?, Error?) -> Void) {
-        let predicate = NSPredicate(value: true)
+        let predicate = NSPredicate(format: "1 == 1")
         let query = CKQuery(recordType: "VaultIndex", predicate: predicate)
 
         privateDatabase.fetch(withQuery: query) { result in
@@ -297,7 +297,7 @@ class CloudKitService {
     /// Upload vault metadata to CloudKit
     func uploadVaultMetadata(vaultId: String, metadata: [String: Any], completion: @escaping (Error?) -> Void) {
         // Check if record exists
-        let predicate = NSPredicate(format: "vaultID == %@", vaultId)
+        let predicate: NSPredicate = NSPredicate(format: "vaultID == %@", vaultId)
         let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
         privateDatabase.fetch(withQuery: query) { [weak self] result in
@@ -368,7 +368,7 @@ class CloudKitService {
 
     /// Delete vault metadata from CloudKit
     func deleteVaultMetadata(vaultId: String, completion: @escaping (Error?) -> Void) {
-        let predicate = NSPredicate(format: "vaultID == %@", vaultId)
+        let predicate: NSPredicate = NSPredicate(format: "vaultID == %@", vaultId)
         let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
         privateDatabase.fetch(withQuery: query) { result in
