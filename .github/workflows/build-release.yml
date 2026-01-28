@@ -136,64 +136,57 @@ jobs:
       # ============================================
       # BUILD - OPTIMIZED WITH LESS CLEANING
       # ============================================
-      - name: Build iOS app (with retry)
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 30
-          max_attempts: 3
-          retry_wait_seconds: 60
-          warning_on_retry: true
-          command: |
-            echo "=== Starting Xcode archive build ==="
+      - name: Build iOS app
+        run: |
+          echo "=== Starting Flutter iOS build ==="
 
-            cd ios
+          # Use Flutter build which sets up the Flutter framework properly
+          flutter build ios --release --no-codesign
 
-            # Only clean if explicitly needed (less aggressive)
-            rm -rf build/Runner.xcarchive
-
-            echo "=== Building archive with xcodebuild ==="
-            xcodebuild -workspace Runner.xcworkspace \
-              -scheme Runner \
-              -configuration Release \
-              -sdk iphoneos \
-              -destination generic/platform=iOS \
-              CODE_SIGN_IDENTITY="-" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              archive \
-              -archivePath build/Runner.xcarchive \
-              ONLY_ACTIVE_ARCH=NO
-
-            echo "=== Verifying archive created ==="
-            if [ ! -d "build/Runner.xcarchive" ]; then
-              echo "ERROR: Archive not created"
-              exit 1
-            fi
-
-            # Find Runner.app in xcarchive
-            APP_PATH=$(find build/Runner.xcarchive -name "Runner.app" -type d | head -1)
-
-            if [ -z "$APP_PATH" ]; then
-              echo "ERROR: Runner.app not found in archive"
-              exit 1
-            fi
-
-            echo "=== Archive verification successful ==="
-            echo "Runner.app found at: $APP_PATH"
-            ls -lh "$APP_PATH"
+          # Verify the build actually created an app
+          if [ -d "build/ios/archive" ]; then
+            echo "Build created archive at build/ios/archive/"
+            find build/ios/archive -name "Runner.app" -type d | head -1
+          elif [ -d "build/ios/iphoneos" ]; then
+            echo "Build created app at build/ios/iphoneos/"
+            ls -la build/ios/iphoneos/Runner.app
+          else
+            echo "ERROR: Build output not found"
+            find build/ios -name "*.app" -type d 2>/dev/null || true
+            exit 1
+          fi
 
       - name: Create IPA
         run: |
           set -x
-          # Find Runner.app in xcarchive created by xcodebuild
-          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+          # Find Runner.app created by Flutter build
+          # Flutter build ios creates either:
+          # 1. build/ios/archive/*.xcarchive/.../Runner.app (with codesigning)
+          # 2. build/ios/iphoneos/Runner.app (with --no-codesign)
 
-          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
-            echo "ERROR: Runner.app not found in xcarchive"
+          # Try xcarchive first
+          APP_PATH=$(find build/ios/archive -name "Runner.app" -type d 2>/dev/null | head -1)
+
+          # Fallback to iphoneos directory
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH="build/ios/iphoneos/Runner.app"
+          fi
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found"
+            echo "Contents of build/ios:"
+            find build/ios -name "*.app" -type d 2>/dev/null || true
             exit 1
           fi
 
           echo "Found Runner.app at: $APP_PATH"
+
+          # Verify app has content
+          if [ ! -f "$APP_PATH/Runner" ]; then
+            echo "ERROR: Runner.app is empty (no Runner executable)"
+            ls -la "$APP_PATH"
+            exit 1
+          fi
 
           # Create IPA
           mkdir -p Payload
