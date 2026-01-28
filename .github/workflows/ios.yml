@@ -92,11 +92,22 @@ jobs:
 
           # Run the script to add CloudKit files to Xcode project
           echo "Adding CloudKit files to Xcode project..."
-          cd "$(git rev-parse --show-toplevel)" && python scripts/add_cloudkit_to_xcode.py
+          echo "Current directory: $(pwd)"
+          echo "Python version: $(python --version 2>&1 || echo 'Python not found')"
+          echo "Script exists: $(test -f scripts/add_cloudkit_to_xcode.py && echo 'YES' || echo 'NO')"
+          echo "CloudKit files exist: $(test -f ios/Runner/CloudKitPlugin.swift && echo 'YES' || echo 'NO') $(test -f ios/Runner/CloudKitService.swift && echo 'YES' || echo 'NO')"
+          cd "$(git rev-parse --show-toplevel)" && python scripts/add_cloudkit_to_xcode.py || echo "Python script failed with exit code $?"
+          echo "Script completed, checking if files were added..."
 
           # Verify CloudKit files were added
+          echo "Checking for CloudKit files in project.pbxproj..."
+          grep -c "CloudKitPlugin.swift" ios/Runner.xcodeproj/project.pbxproj || echo "CloudKitPlugin.swift not found"
+          grep -c "CloudKitService.swift" ios/Runner.xcodeproj/project.pbxproj || echo "CloudKitService.swift not found"
+
           if ! grep -q "CloudKitPlugin.swift" ios/Runner.xcodeproj/project.pbxproj; then
             echo "ERROR: CloudKitPlugin.swift not in Xcode project"
+            echo "Contents of project.pbxproj around Runner group:"
+            grep -A 15 "Runner \*\/ = {" ios/Runner.xcodeproj/project.pbxproj | head -20 || true
             exit 1
           fi
           if ! grep -q "CloudKitService.swift" ios/Runner.xcodeproj/project.pbxproj; then
