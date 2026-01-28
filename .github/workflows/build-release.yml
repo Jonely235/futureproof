@@ -141,6 +141,9 @@ jobs:
         run: |
           echo "=== Starting Flutter iOS build ==="
 
+          # Clean DerivedData to avoid stale compilation artifacts
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+
           # Use Flutter build which sets up the Flutter framework properly
           flutter build ios --release --no-codesign
 
