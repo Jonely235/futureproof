@@ -154,19 +154,13 @@ jobs:
       - name: Create IPA
         run: |
           set -x
-          # Find Runner.app created by Flutter build
-          # Flutter creates an xcarchive, so we need to find the app inside it
-          APP_PATH=$(find build/ios/archive/*.xcarchive -name "Runner.app" -type d 2>/dev/null | head -1)
-
-          # Fallback: check if build/ios/iphoneos/Runner.app exists
-          if [ -z "$APP_PATH" ] && [ -d "build/ios/iphoneos/Runner.app" ]; then
-            APP_PATH="build/ios/iphoneos/Runner.app"
-          fi
+          # Flutter build ios creates the app at build/ios/Release-iphoneos/Runner.app
+          APP_PATH="build/ios/Release-iphoneos/Runner.app"
 
           # Verify app exists
-          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
-            echo "ERROR: Runner.app not found"
-            echo "Contents of build/ios:"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found at $APP_PATH"
+            echo "Searching for .app files..."
             find build/ios -name "*.app" -type d 2>/dev/null || true
             exit 1
           fi
