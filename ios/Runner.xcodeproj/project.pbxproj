@@ -14,6 +14,10 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		1F05C63821149640B53B4501 /* CloudKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5B859B6379E3FA96EFC75A /* CloudKitPlugin.swift */; };
+		A3D2FE34BC677AC8B6BF2EAF /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40036B84E7C36BE8E2FFD195 /* CloudKitService.swift */; };
+		A77136C0044ACF95DFAA79C3 /* CloudKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B330FAB83F3FFBBC04C9BE94 /* CloudKitPlugin.swift */; };
+		36BCCB5BF3A555F3307C0C9C /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33FB98783191E984F0FC5192 /* CloudKitService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +59,10 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2F5B859B6379E3FA96EFC75A /* CloudKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitPlugin.swift; sourceTree = "<group>"; };
+		40036B84E7C36BE8E2FFD195 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
+		B330FAB83F3FFBBC04C9BE94 /* CloudKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitPlugin.swift; sourceTree = "<group>"; };
+		33FB98783191E984F0FC5192 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +125,10 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				2F5B859B6379E3FA96EFC75A /* CloudKitPlugin.swift */,
+				40036B84E7C36BE8E2FFD195 /* CloudKitService.swift */,
+				B330FAB83F3FFBBC04C9BE94 /* CloudKitPlugin.swift */,
+				33FB98783191E984F0FC5192 /* CloudKitService.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -270,7 +282,11 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
-			);
+					1F05C63821149640B53B4501 /* CloudKitPlugin.swift in Sources */,
+				A3D2FE34BC677AC8B6BF2EAF /* CloudKitService.swift in Sources */,
+				A77136C0044ACF95DFAA79C3 /* CloudKitPlugin.swift in Sources */,
+				36BCCB5BF3A555F3307C0C9C /* CloudKitService.swift in Sources */,
+		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
