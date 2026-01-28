@@ -78,32 +78,28 @@ jobs:
       # ============================================
       # iOS PREPARATION
       # ============================================
-      - name: Verify iOS setup
+      - name: Prepare iOS platform
         run: |
-          # iOS folder is tracked in git with CloudKit files properly integrated
-          echo "Verifying iOS setup..."
+          # Regenerate iOS folder to ensure sync with Flutter
+          echo "Regenerating iOS folder..."
+          rm -rf ios
+          flutter create --platforms=ios . --project-name futureproof
 
-          # Verify CloudKit Swift files exist
-          if [ ! -f "ios/Runner/CloudKitPlugin.swift" ]; then
-            echo "ERROR: CloudKitPlugin.swift not found in ios/Runner/"
-            exit 1
-          fi
-          if [ ! -f "ios/Runner/CloudKitService.swift" ]; then
-            echo "ERROR: CloudKitService.swift not found in ios/Runner/"
-            exit 1
-          fi
-          if [ ! -f "ios/Runner/AppDelegate.swift" ]; then
-            echo "ERROR: AppDelegate.swift not found in ios/Runner/"
-            exit 1
-          fi
+          # Run the script to add CloudKit files to Xcode project
+          echo "Adding CloudKit files to Xcode project..."
+          python scripts/add_cloudkit_to_xcode.py
 
-          # Verify AppDelegate has CloudKit registration
-          if ! grep -q "CloudKitPlugin.register" ios/Runner/AppDelegate.swift; then
-            echo "ERROR: AppDelegate.swift missing CloudKitPlugin.register() call"
+          # Verify CloudKit files were added
+          if ! grep -q "CloudKitPlugin.swift" ios/Runner.xcodeproj/project.pbxproj; then
+            echo "ERROR: CloudKitPlugin.swift not in Xcode project"
+            exit 1
+          fi
+          if ! grep -q "CloudKitService.swift" ios/Runner.xcodeproj/project.pbxproj; then
+            echo "ERROR: CloudKitService.swift not in Xcode project"
             exit 1
           fi
 
-          echo "iOS setup verified successfully"
+          echo "iOS preparation completed"
 
       - name: Disable code signing
         run: |
