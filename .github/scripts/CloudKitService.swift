@@ -262,36 +262,30 @@ class CloudKitService {
         var vaultsData: [[String: Any]] = []
         var activeVaultID: String = ""
 
-        operation.recordMatchedBlock = { _, result in
-            switch result {
-            case .success(let record):
-                if let vaultsDataField = record["vaults"] as? [String] {
-                    // Parse vault IDs and metadata
-                    for vaultJson in vaultsDataField {
-                        if let data = vaultJson.data(using: .utf8),
-                           let vaultDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                            vaultsData.append(vaultDict)
-                        }
+        operation.recordFetchedBlock = { record in
+            if let vaultsDataField = record["vaults"] as? [String] {
+                // Parse vault IDs and metadata
+                for vaultJson in vaultsDataField {
+                    if let data = vaultJson.data(using: .utf8),
+                       let vaultDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        vaultsData.append(vaultDict)
                     }
                 }
-                if let id = record["activeVaultID"] as? String {
-                    activeVaultID = id
-                }
-            case .failure:
-                break
+            }
+            if let id = record["activeVaultID"] as? String {
+                activeVaultID = id
             }
         }
 
-        operation.queryResultBlock = { result in
-            switch result {
-            case .success:
+        operation.queryCompletionBlock = { cursor, error in
+            if let error = error {
+                completion(nil, error)
+            } else {
                 let indexData: [String: Any] = [
                     "vaults": vaultsData,
                     "activeVaultID": activeVaultID
                 ]
                 completion(indexData, nil)
-            case .failure(let error):
-                completion(nil, error)
             }
         }
 
@@ -308,63 +302,57 @@ class CloudKitService {
         let operation = CKQueryOperation(query: query)
         var existingRecordID: CKRecord.ID?
 
-        operation.recordMatchedBlock = { _, result in
-            switch result {
-            case .success(let record):
-                existingRecordID = record.recordID
-            case .failure:
-                break
-            }
+        operation.recordFetchedBlock = { record in
+            existingRecordID = record.recordID
         }
 
-        operation.queryResultBlock = { [weak self] result in
+        operation.queryCompletionBlock = { [weak self] cursor, error in
             guard let self = self else { return }
 
-            switch result {
-            case .success:
-                let record: CKRecord
-                if let existingID = existingRecordID {
-                    // Update existing record
-                    record = CKRecord(recordType: "VaultMetadata", recordID: existingID)
-                } else {
-                    // Create new record
-                    record = CKRecord(recordType: "VaultMetadata")
-                }
-
-                // Set record fields
-                record["vaultID"] = vaultId
-                record["name"] = metadata["name"] as? String ?? ""
-                record["type"] = metadata["type"] as? String ?? "personal"
-
-                if let createdAtString = metadata["createdAt"] as? String,
-                   let createdAt = ISO8601DateFormatter().date(from: createdAtString) {
-                    record["createdAt"] = createdAt
-                }
-
-                if let lastModifiedString = metadata["lastModified"] as? String,
-                   let lastModified = ISO8601DateFormatter().date(from: lastModifiedString) {
-                    record["lastModified"] = lastModified
-                }
-
-                record["transactionCount"] = metadata["transactionCount"] as? Int ?? 0
-
-                // Save settings as JSON data
-                if let settings = metadata["settings"] as? [String: Any],
-                   let settingsData = try? JSONSerialization.data(withJSONObject: settings) {
-                    record["settings"] = settingsData
-                }
-
-                // Save record
-                self.privateDatabase.save(record) { savedRecord, error in
-                    if let error = error {
-                        completion(error)
-                    } else {
-                        completion(nil)
-                    }
-                }
-
-            case .failure(let error):
+            if let error = error {
                 completion(error)
+                return
+            }
+
+            let record: CKRecord
+            if let existingID = existingRecordID {
+                // Update existing record
+                record = CKRecord(recordType: "VaultMetadata", recordID: existingID)
+            } else {
+                // Create new record
+                record = CKRecord(recordType: "VaultMetadata")
+            }
+
+            // Set record fields
+            record["vaultID"] = vaultId
+            record["name"] = metadata["name"] as? String ?? ""
+            record["type"] = metadata["type"] as? String ?? "personal"
+
+            if let createdAtString = metadata["createdAt"] as? String,
+               let createdAt = ISO8601DateFormatter().date(from: createdAtString) {
+                record["createdAt"] = createdAt
+            }
+
+            if let lastModifiedString = metadata["lastModified"] as? String,
+               let lastModified = ISO8601DateFormatter().date(from: lastModifiedString) {
+                record["lastModified"] = lastModified
+            }
+
+            record["transactionCount"] = metadata["transactionCount"] as? Int ?? 0
+
+            // Save settings as JSON data
+            if let settings = metadata["settings"] as? [String: Any],
+               let settingsData = try? JSONSerialization.data(withJSONObject: settings) {
+                record["settings"] = settingsData
+            }
+
+            // Save record
+            self.privateDatabase.save(record) { savedRecord, error in
+                if let error = error {
+                    completion(error)
+                } else {
+                    completion(nil)
+                }
             }
         }
 
@@ -380,34 +368,29 @@ class CloudKitService {
         let operation = CKQueryOperation(query: query)
         var recordToDelete: CKRecord.ID?
 
-        operation.recordMatchedBlock = { _, result in
-            switch result {
-            case .success(let record):
-                recordToDelete = record.recordID
-            case .failure:
-                break
-            }
+        operation.recordFetchedBlock = { record in
+            recordToDelete = record.recordID
         }
 
-        operation.queryResultBlock = { [weak self] result in
+        operation.queryCompletionBlock = { [weak self] cursor, error in
             guard let self = self else { return }
 
-            switch result {
-            case .success:
-                if let recordID = recordToDelete {
-                    self.privateDatabase.deleteRecord(withID: recordID) { deletedID, error in
-                        if let error = error {
-                            completion(error)
-                        } else {
-                            completion(nil)
-                        }
-                    }
-                } else {
-                    // No record found, consider it deleted
-                    completion(nil)
-                }
-            case .failure(let error):
+            if let error = error {
                 completion(error)
+                return
+            }
+
+            if let recordID = recordToDelete {
+                self.privateDatabase.deleteRecord(withID: recordID) { deletedID, error in
+                    if let error = error {
+                        completion(error)
+                    } else {
+                        completion(nil)
+                    }
+                }
+            } else {
+                // No record found, consider it deleted
+                completion(nil)
             }
         }
 
