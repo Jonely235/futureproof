@@ -39,7 +39,8 @@ class CloudKitService {
 
     private init() {
         // Initialize CloudKit container with configured identifier
-        self.container = CKContainer(identifier: CKContainer.ID(CloudKitConfig.containerIdentifier))
+        // For iOS 15+, use identifier string directly instead of CKContainer.ID()
+        self.container = CKContainer(identifier: CloudKitConfig.containerIdentifier)
         self.privateDatabase = container.privateCloudDatabase
 
         // Ensure iCloud Drive directory exists
@@ -474,7 +475,7 @@ class CloudKitService {
         }
     }
 
-    private func statusDescription(_ status: CKContainer.AccountStatus) -> String {
+    private func statusDescription(_ status: CKAccountStatus) -> String {
         switch status {
         case .available: return "available"
         case .noAccount: return "noAccount"
