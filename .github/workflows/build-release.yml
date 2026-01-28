@@ -73,41 +73,34 @@ jobs:
         run: flutter pub get
 
       # ============================================
-      # iOS PREPARATION - OPTIMIZED
+      # iOS PREPARATION
       # ============================================
-      - name: Prepare iOS platform
+      - name: Verify iOS setup
         run: |
-          # ALWAYS regenerate iOS folder from scratch (Golden Rule #1)
-          echo "Regenerating iOS folder from scratch..."
-          rm -rf ios
-          flutter create --platforms=ios . --project-name futureproof
+          # iOS folder is tracked in git with CloudKit files properly integrated
+          echo "Verifying iOS setup..."
 
-          # Always update deployment target to be safe
-          cd ios
-          sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' Runner.xcodeproj/project.pbxproj || true
-          sed -i.bak "s/platform :ios,.*/platform :ios, '15.0'/" Podfile
-
-          # Add modular headers if not present (cross-platform compatible)
-          if ! grep -q "use_modular_headers" Podfile; then
-            # Use awk for cross-platform compatibility
-            awk 'NR==2 {print; print "use_modular_headers!"; next} 1' Podfile > Podfile.tmp && mv Podfile.tmp Podfile
-          fi
-          cd ..
-
-      - name: Restore custom Swift files
-        run: |
-          set -e  # Exit on error
-          # Restore CloudKit Swift files for iCloud Drive functionality
-          cp .github/scripts/CloudKitService.swift ios/Runner/
-          cp .github/scripts/CloudKitPlugin.swift ios/Runner/
-          # Restore AppDelegate with CloudKit plugin registration fix
-          cp .github/scripts/AppDelegate.swift ios/Runner/
-          # Verify files were copied
-          if [ ! -f "ios/Runner/AppDelegate.swift" ]; then
-            echo "ERROR: Failed to copy AppDelegate.swift"
+          # Verify CloudKit Swift files exist
+          if [ ! -f "ios/Runner/CloudKitPlugin.swift" ]; then
+            echo "ERROR: CloudKitPlugin.swift not found in ios/Runner/"
             exit 1
           fi
-          echo "Custom Swift files restored"
+          if [ ! -f "ios/Runner/CloudKitService.swift" ]; then
+            echo "ERROR: CloudKitService.swift not found in ios/Runner/"
+            exit 1
+          fi
+          if [ ! -f "ios/Runner/AppDelegate.swift" ]; then
+            echo "ERROR: AppDelegate.swift not found in ios/Runner/"
+            exit 1
+          fi
+
+          # Verify AppDelegate has CloudKit registration
+          if ! grep -q "CloudKitPlugin.register" ios/Runner/AppDelegate.swift; then
+            echo "ERROR: AppDelegate.swift missing CloudKitPlugin.register() call"
+            exit 1
+          fi
+
+          echo "iOS setup verified successfully"
 
       - name: Disable code signing
         run: |
@@ -151,51 +144,26 @@ jobs:
           retry_wait_seconds: 60
           warning_on_retry: true
           command: |
-            echo "=== Starting Xcode archive build ==="
+            echo "=== Starting Flutter iOS build ==="
 
-            cd ios
+            # Use Flutter build which properly handles all Swift files
+            flutter build ios --release --no-codesign
 
-            # Only clean if explicitly needed (less aggressive)
-            rm -rf build/Runner.xcarchive
-
-            echo "=== Building archive with xcodebuild ==="
-            xcodebuild -workspace Runner.xcworkspace \
-              -scheme Runner \
-              -configuration Release \
-              -sdk iphoneos \
-              -destination generic/platform=iOS \
-              CODE_SIGN_IDENTITY="-" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              archive \
-              -archivePath build/Runner.xcarchive \
-              ONLY_ACTIVE_ARCH=NO
-
-            echo "=== Verifying archive created ==="
-            if [ ! -d "build/Runner.xcarchive" ]; then
-              echo "ERROR: Archive not created"
-              exit 1
-            fi
-
-            # Find Runner.app in xcarchive
-            APP_PATH=$(find build/Runner.xcarchive -name "Runner.app" -type d | head -1)
-
-            if [ -z "$APP_PATH" ]; then
-              echo "ERROR: Runner.app not found in archive"
-              exit 1
-            fi
-
-            echo "=== Archive verification successful ==="
-            echo "Runner.app found at: $APP_PATH"
-            ls -lh "$APP_PATH"
+            echo "=== Flutter iOS build completed ==="
 
       - name: Create IPA
         run: |
           set -x
-          # Find Runner.app in xcarchive
-          APP_PATH=$(find ios/build/Runner.xcarchive -name "Runner.app" -type d | head -1)
+          # Flutter builds to build/ios/iphoneos/Runner.app
+          APP_PATH="build/ios/iphoneos/Runner.app"
 
-          # Verify and create IPA
+          # Verify app exists
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found at $APP_PATH"
+            exit 1
+          fi
+
+          # Create IPA
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/Runner.app
           zip -r FutureProof.ipa Payload/
