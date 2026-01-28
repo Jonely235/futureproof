@@ -96,9 +96,17 @@ jobs:
 
       - name: Restore custom Swift files
         run: |
+          set -e  # Exit on error
           # Restore CloudKit Swift files for iCloud Drive functionality
           cp .github/scripts/CloudKitService.swift ios/Runner/
           cp .github/scripts/CloudKitPlugin.swift ios/Runner/
+          # Restore AppDelegate with CloudKit plugin registration fix
+          cp .github/scripts/AppDelegate.swift ios/Runner/
+          # Verify files were copied
+          if [ ! -f "ios/Runner/AppDelegate.swift" ]; then
+            echo "ERROR: Failed to copy AppDelegate.swift"
+            exit 1
+          fi
           echo "Custom Swift files restored"
 
       - name: Disable code signing
