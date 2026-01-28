@@ -157,14 +157,24 @@ jobs:
       - name: Create IPA
         run: |
           set -x
-          # Flutter builds to build/ios/iphoneos/Runner.app
-          APP_PATH="build/ios/iphoneos/Runner.app"
+          # Find Runner.app created by Flutter build
+          # Flutter creates an xcarchive, so we need to find the app inside it
+          APP_PATH=$(find build/ios/archive/*.xcarchive -name "Runner.app" -type d 2>/dev/null | head -1)
+
+          # Fallback: check if build/ios/iphoneos/Runner.app exists
+          if [ -z "$APP_PATH" ] && [ -d "build/ios/iphoneos/Runner.app" ]; then
+            APP_PATH="build/ios/iphoneos/Runner.app"
+          fi
 
           # Verify app exists
-          if [ ! -d "$APP_PATH" ]; then
-            echo "ERROR: Runner.app not found at $APP_PATH"
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found"
+            echo "Contents of build/ios:"
+            find build/ios -name "*.app" -type d 2>/dev/null || true
             exit 1
           fi
+
+          echo "Found Runner.app at: $APP_PATH"
 
           # Create IPA
           mkdir -p Payload
