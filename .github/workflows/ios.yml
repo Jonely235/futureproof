@@ -85,6 +85,11 @@ jobs:
           rm -rf ios
           flutter create --platforms=ios . --project-name futureproof
 
+          # Copy CloudKit Swift files from scripts
+          echo "Copying CloudKit files..."
+          cp .github/scripts/CloudKitPlugin.swift ios/Runner/
+          cp .github/scripts/CloudKitService.swift ios/Runner/
+
           # Run the script to add CloudKit files to Xcode project
           echo "Adding CloudKit files to Xcode project..."
           python scripts/add_cloudkit_to_xcode.py
