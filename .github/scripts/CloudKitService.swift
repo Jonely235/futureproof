@@ -258,7 +258,8 @@ class CloudKitService {
         let query = CKQuery(recordType: "VaultIndex", predicate: predicate)
 
         // Use CKQueryOperation for iOS 15+ compatibility
-        let operation = CKQueryOperation(query: query)
+        let operation = CKQueryOperation()
+        operation.query = query
         var vaultsData: [[String: Any]] = []
         var activeVaultID: String = ""
 
@@ -299,7 +300,8 @@ class CloudKitService {
         let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
         // Use CKQueryOperation for iOS 15+ compatibility
-        let operation = CKQueryOperation(query: query)
+        let operation = CKQueryOperation()
+        operation.query = query
         var existingRecordID: CKRecord.ID?
 
         operation.recordFetchedBlock = { record in
@@ -365,7 +367,8 @@ class CloudKitService {
         let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
         // Use CKQueryOperation for iOS 15+ compatibility
-        let operation = CKQueryOperation(query: query)
+        let operation = CKQueryOperation()
+        operation.query = query
         var recordToDelete: CKRecord.ID?
 
         operation.recordFetchedBlock = { record in
