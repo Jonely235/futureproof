@@ -1,6 +1,17 @@
 import Flutter
 import UIKit
 
+// MARK: - Configuration
+
+/// CloudKit configuration
+struct CloudKitConfig {
+    /// The iCloud container identifier
+    static let containerIdentifier = "iCloud.com.example.futureproof"
+
+    /// Method channel name for Flutter communication
+    static let methodChannelName = "com.yourcompany.futureproof/cloudkit"
+}
+
 /// CloudKit plugin for Flutter
 ///
 /// Provides method channel interface for CloudKit operations
