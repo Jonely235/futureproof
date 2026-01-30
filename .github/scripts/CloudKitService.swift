@@ -254,8 +254,8 @@ class CloudKitService {
 
     /// Sync vault index from CloudKit
     func fetchVaultIndex(completion: @escaping ([String: Any]?, Error?) -> Void) {
-        let predicate = NSPredicate(format: "1 == 1")
-        let query = CKQuery(recordType: "VaultIndex", predicate: predicate)
+        let predicate: NSPredicate = NSPredicate(format: "1 == 1")
+        let query: CKQuery = CKQuery(recordType: "VaultIndex", predicate: predicate)
 
         // Use CKQueryOperation for iOS 15+ compatibility
         let operation = CKQueryOperation()
@@ -297,7 +297,7 @@ class CloudKitService {
     func uploadVaultMetadata(vaultId: String, metadata: [String: Any], completion: @escaping (Error?) -> Void) {
         // Check if record exists
         let predicate: NSPredicate = NSPredicate(format: "vaultID == %@", vaultId)
-        let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
+        let query: CKQuery = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
         // Use CKQueryOperation for iOS 15+ compatibility
         let operation = CKQueryOperation()
@@ -364,7 +364,7 @@ class CloudKitService {
     /// Delete vault metadata from CloudKit
     func deleteVaultMetadata(vaultId: String, completion: @escaping (Error?) -> Void) {
         let predicate: NSPredicate = NSPredicate(format: "vaultID == %@", vaultId)
-        let query = CKQuery(recordType: "VaultMetadata", predicate: predicate)
+        let query: CKQuery = CKQuery(recordType: "VaultMetadata", predicate: predicate)
 
         // Use CKQueryOperation for iOS 15+ compatibility
         let operation = CKQueryOperation()
