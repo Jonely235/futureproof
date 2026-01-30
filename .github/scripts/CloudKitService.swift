@@ -384,16 +384,13 @@ class CloudKitService {
             }
 
             if let recordID = recordToDelete {
-                // Use CKModifyRecordsOperation for iOS 15+ compatibility
-                let deleteOperation = CKModifyRecordsOperation(recordsToSave: nil, recordIDsToDelete: [recordID])
-                deleteOperation.modifyRecordsCompletionBlock = { _, deletedIDs, error in
+                self.privateDatabase.deleteRecord(withID: recordID) { deletedID, error in
                     if let error = error {
                         completion(error)
                     } else {
                         completion(nil)
                     }
                 }
-                self.privateDatabase.add(deleteOperation)
             } else {
                 // No record found, consider it deleted
                 completion(nil)

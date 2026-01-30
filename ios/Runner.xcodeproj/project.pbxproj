@@ -18,6 +18,8 @@
 		A3D2FE34BC677AC8B6BF2EAF /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40036B84E7C36BE8E2FFD195 /* CloudKitService.swift */; };
 		A77136C0044ACF95DFAA79C3 /* CloudKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B330FAB83F3FFBBC04C9BE94 /* CloudKitPlugin.swift */; };
 		36BCCB5BF3A555F3307C0C9C /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33FB98783191E984F0FC5192 /* CloudKitService.swift */; };
+		9E9DE60496117D6A7E67C05E /* CloudKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1CDC3603F5BD5FB8E12084 /* CloudKitPlugin.swift */; };
+		96D5A949AA05B659AAE69513 /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66B725221506DDC232FA21A1 /* CloudKitService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +65,8 @@
 		40036B84E7C36BE8E2FFD195 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
 		B330FAB83F3FFBBC04C9BE94 /* CloudKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitPlugin.swift; sourceTree = "<group>"; };
 		33FB98783191E984F0FC5192 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
+		EA1CDC3603F5BD5FB8E12084 /* CloudKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitPlugin.swift; sourceTree = "<group>"; };
+		66B725221506DDC232FA21A1 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +133,8 @@
 				40036B84E7C36BE8E2FFD195 /* CloudKitService.swift */,
 				B330FAB83F3FFBBC04C9BE94 /* CloudKitPlugin.swift */,
 				33FB98783191E984F0FC5192 /* CloudKitService.swift */,
+				EA1CDC3603F5BD5FB8E12084 /* CloudKitPlugin.swift */,
+				66B725221506DDC232FA21A1 /* CloudKitService.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -286,6 +292,8 @@
 				A3D2FE34BC677AC8B6BF2EAF /* CloudKitService.swift in Sources */,
 				A77136C0044ACF95DFAA79C3 /* CloudKitPlugin.swift in Sources */,
 				36BCCB5BF3A555F3307C0C9C /* CloudKitService.swift in Sources */,
+				9E9DE60496117D6A7E67C05E /* CloudKitPlugin.swift in Sources */,
+				96D5A949AA05B659AAE69513 /* CloudKitService.swift in Sources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
