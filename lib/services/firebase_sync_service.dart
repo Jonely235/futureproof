@@ -9,8 +9,8 @@ import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../models/transaction.dart' as models;
-import '../models/vault.dart';
+import '../domain/entities/vault_entity.dart';
+import '../models/transaction.dart';
 import '../utils/app_logger.dart';
 
 /// Firebase Sync Service
@@ -18,18 +18,15 @@ import '../utils/app_logger.dart';
 /// Manages Firebase Firestore sync for vaults and transactions.
 /// Provides cross-platform sync (iOS + Android) with client-side encryption.
 ///
-/// Features:
-/// - Real-time sync across devices
-/// - Client-side encryption (AES-256)
-/// - Offline support with automatic sync
-/// - Conflict resolution
+/// **NOTE:** This is a simplified version for initial compilation.
+/// Full sync functionality will be implemented after Firebase Console setup.
 class FirebaseSyncService {
   FirebaseSyncService._internal();
   static final FirebaseSyncService instance = FirebaseSyncService._internal();
 
   final _log = Logger('FirebaseSyncService');
-  late final FirebaseFirestore _firestore;
-  late final FirebaseAuth _auth;
+  FirebaseFirestore? _firestore;
+  FirebaseAuth? _auth;
 
   // Encryption key (derived from user's password/hardware)
   String? _encryptionKey;
@@ -62,9 +59,9 @@ class FirebaseSyncService {
       _auth = FirebaseAuth.instance;
 
       // Set Firestore settings
-      _firestore.settings = const Settings(
-        persistenceEnabled: true, // Enable offline support
-        cacheSizeBytes: 10485760, // 10MB cache
+      _firestore!.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: 10485760,
       );
 
       // Generate or load encryption key
@@ -86,11 +83,9 @@ class FirebaseSyncService {
   Future<void> _initializeEncryption() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Try to get existing key
     String? key = prefs.getString('firebase_encryption_key');
 
     if (key == null) {
-      // Generate new key
       _log.info('🔐 Generating new encryption key...');
       final uuid = const Uuid().v4();
       final bytes = utf8.encode(uuid + DateTime.now().toIso8601String());
@@ -104,7 +99,7 @@ class FirebaseSyncService {
     _log.fine('🔐 Encryption key loaded');
   }
 
-  /// Encrypt data using AES-256
+  /// Encrypt data using XOR (simple for now - upgrade to AES in production)
   String _encrypt(String data) {
     if (_encryptionKey == null) {
       throw StateError('Encryption key not initialized');
@@ -114,7 +109,6 @@ class FirebaseSyncService {
       final key = utf8.encode(_encryptionKey!);
       final bytes = utf8.encode(data);
 
-      // Simple XOR encryption (for demonstration - use proper AES in production!)
       final encrypted = List<int>.generate(
         bytes.length,
         (i) => bytes[i] ^ key[i % key.length],
@@ -137,7 +131,6 @@ class FirebaseSyncService {
       final key = utf8.encode(_encryptionKey!);
       final encrypted = base64Decode(encryptedData);
 
-      // Simple XOR decryption
       final decrypted = List<int>.generate(
         encrypted.length,
         (i) => encrypted[i] ^ key[i % key.length],
@@ -152,12 +145,12 @@ class FirebaseSyncService {
 
   /// Sign in anonymously
   Future<bool> signInAnonymously() async {
+    if (_auth == null) return false;
+
     try {
       _log.info('🔑 Signing in anonymously...');
-
-      final userCredential = await _auth.signInAnonymously();
+      final userCredential = await _auth!.signInAnonymously();
       _log.info('✅ Signed in as: ${userCredential.user?.uid}');
-
       return true;
     } catch (e) {
       _log.severe('❌ Sign in failed: $e');
@@ -167,18 +160,14 @@ class FirebaseSyncService {
   }
 
   /// Get current user ID
-  String? get currentUserId => _auth.currentUser?.uid;
+  String? get currentUserId => _auth?.currentUser?.uid;
 
   /// Check if user is signed in
-  bool get isSignedIn => _auth.currentUser != null;
+  bool get isSignedIn => _auth?.currentUser != null;
 
   /// Sync vault to Firebase
-  Future<bool> syncVault(Vault vault) async {
-    if (!_isInitialized) {
-      _log.warning('⚠️ Firebase not initialized');
-      return false;
-    }
-
+  Future<bool> syncVault(VaultEntity vault) async {
+    if (!_isInitialized || _firestore == null) return false;
     if (!isSignedIn) {
       final signedIn = await signInAnonymously();
       if (!signedIn) return false;
@@ -189,28 +178,27 @@ class FirebaseSyncService {
       _log.info('☁️ Syncing vault: ${vault.id}');
 
       final userId = currentUserId!;
-      final vaultRef = _firestore
+      final vaultRef = _firestore!
           .collection('users')
           .doc(userId)
           .collection('vaults')
           .doc(vault.id);
 
-      // Encrypt vault data
       final vaultJson = jsonEncode({
         'id': vault.id,
         'name': vault.name,
         'type': vault.type.toString(),
         'createdAt': vault.createdAt.toIso8601String(),
+        'lastModified': vault.lastModified.toIso8601String(),
         'transactionCount': vault.transactionCount,
+        'isActive': vault.isActive,
       });
 
       final encryptedData = _encrypt(vaultJson);
 
-      // Save to Firestore
       await vaultRef.set({
         'encryptedData': encryptedData,
         'updatedAt': FieldValue.serverTimestamp(),
-        'version': 1,
       }, SetOptions(merge: true));
 
       _updateStatus(SyncStatus.success);
@@ -218,7 +206,6 @@ class FirebaseSyncService {
       return true;
     } catch (e, stack) {
       _log.severe('❌ Vault sync failed: $e');
-      _log.severe('Stack: $stack');
       _updateStatus(SyncStatus.error);
       _errorController.add('Vault sync failed: $e');
       return false;
@@ -226,15 +213,8 @@ class FirebaseSyncService {
   }
 
   /// Sync transaction to Firebase
-  Future<bool> syncTransaction(
-    String vaultId,
-    models.Transaction transaction,
-  ) async {
-    if (!_isInitialized) {
-      _log.warning('⚠️ Firebase not initialized');
-      return false;
-    }
-
+  Future<bool> syncTransaction(Transaction transaction) async {
+    if (!_isInitialized || _firestore == null) return false;
     if (!isSignedIn) {
       final signedIn = await signInAnonymously();
       if (!signedIn) return false;
@@ -245,33 +225,27 @@ class FirebaseSyncService {
       _log.info('☁️ Syncing transaction: ${transaction.id}');
 
       final userId = currentUserId!;
-      final txRef = _firestore
+      final txRef = _firestore!
           .collection('users')
           .doc(userId)
-          .collection('vaults')
-          .doc(vaultId)
           .collection('transactions')
           .doc(transaction.id);
 
-      // Encrypt transaction data
       final txJson = jsonEncode({
         'id': transaction.id,
-        'vaultId': transaction.vaultId,
         'amount': transaction.amount,
-        'categoryId': transaction.categoryId,
+        'category': transaction.category,
         'note': transaction.note,
-        'transactionDate': transaction.transactionDate.toIso8601String(),
+        'date': transaction.date.toIso8601String(),
+        'householdId': transaction.householdId,
         'createdAt': transaction.createdAt.toIso8601String(),
-        'updatedAt': transaction.updatedAt.toIso8601String(),
       });
 
       final encryptedData = _encrypt(txJson);
 
-      // Save to Firestore
       await txRef.set({
         'encryptedData': encryptedData,
         'updatedAt': FieldValue.serverTimestamp(),
-        'version': 1,
       }, SetOptions(merge: true));
 
       _updateStatus(SyncStatus.success);
@@ -279,7 +253,6 @@ class FirebaseSyncService {
       return true;
     } catch (e, stack) {
       _log.severe('❌ Transaction sync failed: $e');
-      _log.severe('Stack: $stack');
       _updateStatus(SyncStatus.error);
       _errorController.add('Transaction sync failed: $e');
       return false;
@@ -287,14 +260,14 @@ class FirebaseSyncService {
   }
 
   /// Listen to vault updates from Firebase
-  Stream<List<Vault>> watchVaults() {
-    if (!_isInitialized || !isSignedIn) {
+  Stream<List<VaultEntity>> watchVaults() {
+    if (!_isInitialized || _firestore == null || !isSignedIn) {
       return Stream.value([]);
     }
 
     final userId = currentUserId!;
 
-    return _firestore
+    return _firestore!
         .collection('users')
         .doc(userId)
         .collection('vaults')
@@ -302,7 +275,7 @@ class FirebaseSyncService {
         .map((snapshot) {
       _log.info('📥 Received vault updates: ${snapshot.docs.length} vaults');
 
-      final vaults = <Vault>[];
+      final vaults = <VaultEntity>[];
 
       for (var doc in snapshot.docs) {
         try {
@@ -310,19 +283,17 @@ class FirebaseSyncService {
           final decryptedJson = _decrypt(encryptedData);
           final json = jsonDecode(decryptedJson) as Map<String, dynamic>;
 
-          vaults.add(Vault(
+          vaults.add(VaultEntity(
             id: json['id'] as String,
             name: json['name'] as String,
-            type: VaultType.values.firstWhere(
-              (e) => e.toString() == json['type'],
-              orElse: () => VaultType.personal,
-            ),
+            type: _parseVaultType(json['type'] as String?),
             createdAt: DateTime.parse(json['createdAt'] as String),
-            transactionCount: json['transactionCount'] as int,
+            lastModified: DateTime.parse(json['lastModified'] as String),
+            transactionCount: json['transactionCount'] as int? ?? 0,
+            isActive: json['isActive'] as bool? ?? false,
           ));
         } catch (e) {
           _log.severe('❌ Failed to decrypt vault: $e');
-          // Skip this vault but continue with others
         }
       }
 
@@ -331,24 +302,22 @@ class FirebaseSyncService {
   }
 
   /// Listen to transaction updates from Firebase
-  Stream<List<models.Transaction>> watchTransactions(String vaultId) {
-    if (!_isInitialized || !isSignedIn) {
+  Stream<List<Transaction>> watchTransactions() {
+    if (!_isInitialized || _firestore == null || !isSignedIn) {
       return Stream.value([]);
     }
 
     final userId = currentUserId!;
 
-    return _firestore
+    return _firestore!
         .collection('users')
         .doc(userId)
-        .collection('vaults')
-        .doc(vaultId)
         .collection('transactions')
         .snapshots()
         .map((snapshot) {
       _log.info('📥 Received transaction updates: ${snapshot.docs.length} transactions');
 
-      final transactions = <models.Transaction>[];
+      final transactions = <Transaction>[];
 
       for (var doc in snapshot.docs) {
         try {
@@ -356,19 +325,17 @@ class FirebaseSyncService {
           final decryptedJson = _decrypt(encryptedData);
           final json = jsonDecode(decryptedJson) as Map<String, dynamic>;
 
-          transactions.add(models.Transaction(
+          transactions.add(Transaction(
             id: json['id'] as String,
-            vaultId: json['vaultId'] as String,
             amount: (json['amount'] as num).toDouble(),
-            categoryId: json['categoryId'] as String,
+            category: json['category'] as String,
             note: json['note'] as String?,
-            transactionDate: DateTime.parse(json['transactionDate'] as String),
+            date: DateTime.parse(json['date'] as String),
+            householdId: json['householdId'] as String? ?? '',
             createdAt: DateTime.parse(json['createdAt'] as String),
-            updatedAt: DateTime.parse(json['updatedAt'] as String),
           ));
         } catch (e) {
           _log.severe('❌ Failed to decrypt transaction: $e');
-          // Skip this transaction but continue with others
         }
       }
 
@@ -376,13 +343,23 @@ class FirebaseSyncService {
     });
   }
 
+  /// Parse VaultType from string
+  VaultType _parseVaultType(String? typeString) {
+    if (typeString == null) return VaultType.personal;
+
+    return VaultType.values.firstWhere(
+      (e) => e.toString() == typeString,
+      orElse: () => VaultType.personal,
+    );
+  }
+
   /// Delete vault from Firebase
   Future<bool> deleteVault(String vaultId) async {
-    if (!_isInitialized || !isSignedIn) return false;
+    if (!_isInitialized || _firestore == null || !isSignedIn) return false;
 
     try {
       final userId = currentUserId!;
-      await _firestore
+      await _firestore!
           .collection('users')
           .doc(userId)
           .collection('vaults')
@@ -398,16 +375,14 @@ class FirebaseSyncService {
   }
 
   /// Delete transaction from Firebase
-  Future<bool> deleteTransaction(String vaultId, String transactionId) async {
-    if (!_isInitialized || !isSignedIn) return false;
+  Future<bool> deleteTransaction(String transactionId) async {
+    if (!_isInitialized || _firestore == null || !isSignedIn) return false;
 
     try {
       final userId = currentUserId!;
-      await _firestore
+      await _firestore!
           .collection('users')
           .doc(userId)
-          .collection('vaults')
-          .doc(vaultId)
           .collection('transactions')
           .doc(transactionId)
           .delete();
