@@ -302,13 +302,15 @@ class FirebaseSyncService {
         .map((snapshot) {
       _log.info('📥 Received vault updates: ${snapshot.docs.length} vaults');
 
-      return snapshot.docs.map((doc) {
+      final vaults = <Vault>[];
+
+      for (var doc in snapshot.docs) {
         try {
           final encryptedData = doc.data()['encryptedData'] as String;
           final decryptedJson = _decrypt(encryptedData);
           final json = jsonDecode(decryptedJson) as Map<String, dynamic>;
 
-          return Vault(
+          vaults.add(Vault(
             id: json['id'] as String,
             name: json['name'] as String,
             type: VaultType.values.firstWhere(
@@ -317,15 +319,14 @@ class FirebaseSyncService {
             ),
             createdAt: DateTime.parse(json['createdAt'] as String),
             transactionCount: json['transactionCount'] as int,
-          );
+          ));
         } catch (e) {
           _log.severe('❌ Failed to decrypt vault: $e');
-          rethrow;
+          // Skip this vault but continue with others
         }
-      }).toList();
-    }).handleError((error) {
-      _log.severe('❌ Error watching vaults: $error');
-      _errorController.add('Watch vaults failed: $error');
+      }
+
+      return vaults;
     });
   }
 
@@ -347,30 +348,31 @@ class FirebaseSyncService {
         .map((snapshot) {
       _log.info('📥 Received transaction updates: ${snapshot.docs.length} transactions');
 
-      return snapshot.docs.map((doc) {
+      final transactions = <models.Transaction>[];
+
+      for (var doc in snapshot.docs) {
         try {
           final encryptedData = doc.data()['encryptedData'] as String;
           final decryptedJson = _decrypt(encryptedData);
           final json = jsonDecode(decryptedJson) as Map<String, dynamic>;
 
-          return models.Transaction(
+          transactions.add(models.Transaction(
             id: json['id'] as String,
             vaultId: json['vaultId'] as String,
-            amount: json['amount'] as double,
+            amount: (json['amount'] as num).toDouble(),
             categoryId: json['categoryId'] as String,
             note: json['note'] as String?,
             transactionDate: DateTime.parse(json['transactionDate'] as String),
             createdAt: DateTime.parse(json['createdAt'] as String),
             updatedAt: DateTime.parse(json['updatedAt'] as String),
-          );
+          ));
         } catch (e) {
           _log.severe('❌ Failed to decrypt transaction: $e');
-          rethrow;
+          // Skip this transaction but continue with others
         }
-      }).toList();
-    }).handleError((error) {
-      _log.severe('❌ Error watching transactions: $error');
-      _errorController.add('Watch transactions failed: $error');
+      }
+
+      return transactions;
     });
   }
 
