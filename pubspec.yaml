@@ -30,9 +30,11 @@ dependencies:
   shared_preferences: ^2.2.2
   share_plus: ^10.0.0
 
-  # Cloud Sync (iCloud via CloudKit - iOS only)
-  # Native iOS integration via CloudKit
-  # No additional Flutter packages needed for basic sync
+  # Cloud Sync (Firebase - Cross-platform)
+  firebase_core: ^3.0.0
+  cloud_firestore: ^5.0.0
+  firebase_auth: ^5.0.0
+  crypto: ^3.0.3  # For client-side encryption
 
   # AI/ML - On-Device Llama Integration
   ffi: ^2.1.0

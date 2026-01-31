@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
@@ -32,6 +33,7 @@ import 'domain/services/rules/cash_flow_forecast_rule.dart';
 import 'domain/services/rules/goal_progress_rule.dart';
 import 'domain/services/rules/subscription_cluster_rule.dart';
 import 'domain/services/rules/scenario_based_alerts_rule.dart';
+import 'services/firebase_sync_service.dart';
 import 'theme/theme_manager.dart';
 import 'widgets/main_navigation.dart';
 
@@ -74,6 +76,17 @@ void main() async {
   // Initialize theme manager
   final themeManager = ThemeManager();
   await themeManager.init();
+
+  // Initialize Firebase
+  final firebaseSyncService = FirebaseSyncService.instance;
+  final firebaseInitialized = await firebaseSyncService.initialize();
+  if (firebaseInitialized) {
+    // Sign in anonymously
+    await firebaseSyncService.signInAnonymously();
+    Logger('Firebase').info('🔥 Firebase ready for sync');
+  } else {
+    Logger('Firebase').warning('⚠️ Firebase initialization failed - sync will be disabled');
+  }
 
   // Initialize Clean Architecture repositories
   final transactionRepository = TransactionRepositoryImpl();
