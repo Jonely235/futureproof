@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../domain/entities/vault_entity.dart';
-import '../models/transaction.dart';
+import '../models/transaction.dart' as models;
 import '../utils/app_logger.dart';
 
 /// Firebase Sync Service
@@ -213,7 +213,7 @@ class FirebaseSyncService {
   }
 
   /// Sync transaction to Firebase
-  Future<bool> syncTransaction(Transaction transaction) async {
+  Future<bool> syncTransaction(models.Transaction transaction) async {
     if (!_isInitialized || _firestore == null) return false;
     if (!isSignedIn) {
       final signedIn = await signInAnonymously();
@@ -302,7 +302,7 @@ class FirebaseSyncService {
   }
 
   /// Listen to transaction updates from Firebase
-  Stream<List<Transaction>> watchTransactions() {
+  Stream<List<models.Transaction>> watchTransactions() {
     if (!_isInitialized || _firestore == null || !isSignedIn) {
       return Stream.value([]);
     }
@@ -317,7 +317,7 @@ class FirebaseSyncService {
         .map((snapshot) {
       _log.info('📥 Received transaction updates: ${snapshot.docs.length} transactions');
 
-      final transactions = <Transaction>[];
+      final transactions = <models.Transaction>[];
 
       for (var doc in snapshot.docs) {
         try {
@@ -325,7 +325,7 @@ class FirebaseSyncService {
           final decryptedJson = _decrypt(encryptedData);
           final json = jsonDecode(decryptedJson) as Map<String, dynamic>;
 
-          transactions.add(Transaction(
+          transactions.add(models.Transaction(
             id: json['id'] as String,
             amount: (json['amount'] as num).toDouble(),
             category: json['category'] as String,
