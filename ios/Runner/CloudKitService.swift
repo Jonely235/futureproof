@@ -13,7 +13,7 @@ struct CloudKitConfig {
     /// The iCloud container identifier
     /// MUST match: iCloud Containers entitlement in Xcode
     /// Format: "iCloud." + bundle ID (reversed dots)
-    static let containerIdentifier = "iCloud.com.example.futureproof"
+    static let containerIdentifier = "iCloud.com.jonely.futureproof"
 
     /// Method channel name for Flutter communication
     /// MUST match: MethodChannel name in icloud_drive_service.dart
